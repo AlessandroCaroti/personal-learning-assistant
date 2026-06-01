@@ -12,6 +12,10 @@ import { QuizSessionPage } from './pages/QuizSessionPage'
 import { SummaryPage } from './pages/SummaryPage'
 import { TutorialPage } from './pages/TutorialPage'
 
+export function isSessionRoute(pathname: string): boolean {
+  return pathname.endsWith('/quiz/sessione') || pathname.endsWith('/flashcard/sessione')
+}
+
 function useCapacitorBackButton() {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return
@@ -19,12 +23,17 @@ function useCapacitorBackButton() {
     let cleanup: (() => void) | undefined
     let cancelled = false
 
-    import('@capacitor/app').then(({ App }) => {
-      App.addListener('backButton', ({ canGoBack }) => {
-        if (canGoBack) {
-          window.history.back()
-        }
-      }).then((listener) => {
+    async function registerBackButton() {
+      try {
+        const { App } = await import('@capacitor/app')
+        const listener = await App.addListener('backButton', ({ canGoBack }) => {
+          if (isSessionRoute(window.location.pathname)) return
+
+          if (canGoBack) {
+            window.history.back()
+          }
+        })
+
         if (cancelled) {
           void listener.remove()
           return
@@ -33,8 +42,12 @@ function useCapacitorBackButton() {
         cleanup = () => {
           void listener.remove()
         }
-      })
-    })
+      } catch {
+        cleanup = undefined
+      }
+    }
+
+    void registerBackButton()
 
     return () => {
       cancelled = true
