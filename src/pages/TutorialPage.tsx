@@ -91,6 +91,7 @@ function setTutorialSeen() {
 
 function Step({ number, title, children, prompt }: StepProps) {
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle')
+  const promptLabel = `Prompt: ${title}`
 
   async function handleCopy() {
     if (!prompt) return
@@ -143,10 +144,32 @@ function Step({ number, title, children, prompt }: StepProps) {
 
       {prompt && (
         <div style={{ marginTop: '1rem' }}>
+          <textarea
+            readOnly
+            aria-label={promptLabel}
+            value={prompt}
+            style={{
+              width: '100%',
+              minHeight: '180px',
+              maxHeight: '320px',
+              resize: 'vertical',
+              overflow: 'auto',
+              padding: '0.85rem',
+              borderRadius: '8px',
+              background: 'var(--bg-elevated)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+              fontSize: '0.82rem',
+              lineHeight: 1.5,
+              whiteSpace: 'pre',
+            }}
+          />
           <button
             type="button"
             onClick={handleCopy}
             style={{
+              marginTop: '0.75rem',
               padding: '0.55rem 1rem',
               borderRadius: '8px',
               background: copied ? 'var(--success)' : 'var(--bg-elevated)',
@@ -159,7 +182,7 @@ function Step({ number, title, children, prompt }: StepProps) {
           </button>
           {copyStatus === 'error' && (
             <p role="status" style={{ color: 'var(--danger)', marginTop: '0.5rem', fontSize: '0.85rem' }}>
-              Copia non riuscita. Seleziona il testo del prompt e copialo manualmente.
+              Copia automatica non riuscita. Seleziona il testo nel riquadro del prompt e copialo manualmente.
             </p>
           )}
         </div>

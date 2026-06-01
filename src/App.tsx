@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { DashboardPage } from './pages/DashboardPage'
 import { FlashcardConfigPage } from './pages/FlashcardConfigPage'
@@ -26,13 +26,7 @@ function hasSeenTutorial(): boolean {
 }
 
 function OnboardingGuard({ children }: { children: ReactNode }) {
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    if (!hasSeenTutorial()) {
-      navigate('/onboarding', { replace: true })
-    }
-  }, [navigate])
+  if (!hasSeenTutorial()) return <Navigate replace to="/onboarding" />
 
   return <>{children}</>
 }
