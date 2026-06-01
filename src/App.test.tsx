@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import 'fake-indexeddb/auto'
 import App, { isSessionRoute } from './App'
 
 vi.mock('@capacitor/core', () => ({
@@ -29,7 +30,7 @@ describe('App routing shell', () => {
     expect(screen.getAllByRole('link', { name: 'Guida' })).toHaveLength(2)
     expect(screen.getAllByRole('button', { name: 'Cambia tema' })).toHaveLength(2)
     expect(screen.getByRole('main').className).toContain('main-content')
-    expect(screen.getByRole('heading', { name: 'Esami' })).not.toBeNull()
+    expect(screen.getByRole('heading', { name: 'I tuoi esami' })).not.toBeNull()
   })
 
   it('redirects the root route to onboarding when tutorialSeen is missing', async () => {
@@ -44,7 +45,7 @@ describe('App routing shell', () => {
 
     render(<App />)
 
-    expect(screen.getByRole('heading', { name: 'Esami' })).not.toBeNull()
+    expect(screen.getByRole('heading', { name: 'I tuoi esami' })).not.toBeNull()
     expect(screen.queryByRole('button', { name: 'Salta' })).toBeNull()
   })
 })
