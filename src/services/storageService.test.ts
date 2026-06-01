@@ -1,6 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import 'fake-indexeddb/auto'
-import { deleteDB } from 'idb'
 import type {
   Esame,
   FlashcardStats,
@@ -9,11 +8,23 @@ import type {
   QuizSession,
 } from '../types'
 
-const DB_NAME = 'study-app-db'
+let testDbSuffix = 0
 
 async function freshStorage() {
-  const storage = await import('./storageService')
-  return storage
+  vi.resetModules()
+  vi.doMock('idb', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('idb')>()
+    const openDB: typeof actual.openDB = ((name, version, callbacks) => {
+      return actual.openDB(`${String(name)}-${testDbSuffix}`, version, callbacks)
+    }) as typeof actual.openDB
+
+    return {
+      ...actual,
+      openDB,
+    }
+  })
+
+  return import('./storageService')
 }
 
 const exam: Esame = {
@@ -80,14 +91,8 @@ function pausedSession(id: string, examId: string): PausedSession {
 }
 
 describe('storageService', () => {
-  beforeEach(async () => {
-    await deleteDB(DB_NAME)
-  })
-
-  afterEach(async () => {
-    const storage = await freshStorage()
-    await storage.__resetStorageServiceForTests()
-    await deleteDB(DB_NAME)
+  beforeEach(() => {
+    testDbSuffix += 1
   })
 
   it('stores and reads exams plus exam-scoped records through indexes', async () => {

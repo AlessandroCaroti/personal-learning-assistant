@@ -187,11 +187,3 @@ export async function deletePausedSession(id: string): Promise<void> {
 export async function getPausedSessionsForExam(examId: string): Promise<PausedSession[]> {
   return (await getDB()).getAllFromIndex('pausedSessions', 'by-examId', examId)
 }
-
-export async function __resetStorageServiceForTests(): Promise<void> {
-  if (!dbPromise) return
-
-  const db = await dbPromise
-  db.close()
-  dbPromise = null
-}
