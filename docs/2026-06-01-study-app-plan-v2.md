@@ -70,14 +70,14 @@ study-app/
 - Create: `src/main.tsx`
 - Create: `src/index.css`
 
-- [ ] **Step 1: Inizializza progetto Vite + React + TypeScript**
+- [x] **Step 1: Inizializza progetto Vite + React + TypeScript**
 
 ```bash
 npm create vite@latest study-app -- --template react-ts
 cd study-app
 ```
 
-- [ ] **Step 2: Installa tutte le dipendenze**
+- [x] **Step 2: Installa tutte le dipendenze**
 
 ```bash
 npm install react-router-dom zustand idb mammoth pdfjs-dist \
@@ -86,7 +86,7 @@ npm install react-router-dom zustand idb mammoth pdfjs-dist \
 npm install -D @types/mammoth
 ```
 
-- [ ] **Step 3: Configura vite.config.ts**
+- [x] **Step 3: Configura vite.config.ts**
 
 ```typescript
 // vite.config.ts
@@ -102,7 +102,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 4: Configura capacitor.config.ts**
+- [x] **Step 4: Configura capacitor.config.ts**
 
 ```typescript
 // capacitor.config.ts
@@ -120,7 +120,7 @@ const config: CapacitorConfig = {
 export default config
 ```
 
-- [ ] **Step 5: Crea src/index.css con variabili tema dark/light**
+- [x] **Step 5: Crea src/index.css con variabili tema dark/light**
 
 ```css
 /* src/index.css */
@@ -174,7 +174,7 @@ button {
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 ```
 
-- [ ] **Step 6: Crea src/main.tsx**
+- [x] **Step 6: Crea src/main.tsx**
 
 ```tsx
 // src/main.tsx
@@ -190,7 +190,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add .
@@ -204,7 +204,7 @@ git commit -m "feat: scaffolding progetto Vite + dipendenze"
 **Files:**
 - Create: `src/types/index.ts`
 
-- [ ] **Step 1: Crea src/types/index.ts con tutte le interfacce**
+- [x] **Step 1: Crea src/types/index.ts con tutte le interfacce**
 
 ```typescript
 // src/types/index.ts
@@ -307,7 +307,7 @@ export interface FlashcardFile {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/types/index.ts
@@ -324,7 +324,7 @@ git commit -m "feat: TypeScript interfaces globali"
 - Create: `src/utils/shuffle.test.ts`
 - Create: `src/utils/formatTime.test.ts`
 
-- [ ] **Step 1: Installa Vitest**
+- [x] **Step 1: Installa Vitest**
 
 ```bash
 npm install -D vitest @vitest/ui
@@ -344,7 +344,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 2: Scrivi test Fisher-Yates**
+- [x] **Step 2: Scrivi test Fisher-Yates**
 
 ```typescript
 // src/utils/shuffle.test.ts
@@ -375,14 +375,14 @@ describe('shuffle', () => {
 })
 ```
 
-- [ ] **Step 3: Esegui test — verifica FAIL**
+- [x] **Step 3: Esegui test — verifica FAIL**
 
 ```bash
 npx vitest run src/utils/shuffle.test.ts
 ```
 Expected: FAIL con "Cannot find module './shuffle'"
 
-- [ ] **Step 4: Implementa shuffle.ts**
+- [x] **Step 4: Implementa shuffle.ts**
 
 ```typescript
 // src/utils/shuffle.ts
@@ -397,14 +397,14 @@ export function shuffle<T>(arr: T[]): T[] {
 }
 ```
 
-- [ ] **Step 5: Esegui test shuffle — verifica PASS**
+- [x] **Step 5: Esegui test shuffle — verifica PASS**
 
 ```bash
 npx vitest run src/utils/shuffle.test.ts
 ```
 Expected: PASS (4 test)
 
-- [ ] **Step 6: Scrivi test formatTime**
+- [x] **Step 6: Scrivi test formatTime**
 
 ```typescript
 // src/utils/formatTime.test.ts
@@ -434,7 +434,7 @@ describe('formatTime', () => {
 })
 ```
 
-- [ ] **Step 7: Implementa formatTime.ts**
+- [x] **Step 7: Implementa formatTime.ts**
 
 ```typescript
 // src/utils/formatTime.ts
@@ -446,14 +446,14 @@ export function formatTime(totalSeconds: number): string {
 }
 ```
 
-- [ ] **Step 8: Esegui tutti i test — verifica PASS**
+- [x] **Step 8: Esegui tutti i test — verifica PASS**
 
 ```bash
 npx vitest run
 ```
 Expected: PASS (8 test totali)
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/utils/
@@ -467,7 +467,7 @@ git commit -m "feat: utilities shuffle e formatTime con test"
 **Files:**
 - Create: `src/services/storageService.ts`
 
-- [ ] **Step 1: Crea storageService.ts**
+- [x] **Step 1: Crea storageService.ts**
 
 ```typescript
 // src/services/storageService.ts
@@ -614,7 +614,7 @@ export async function getPausedSessionsForExam(examId: string): Promise<PausedSe
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/services/storageService.ts
@@ -628,7 +628,7 @@ git commit -m "feat: storageService IndexedDB (versione 2)"
 **Files:**
 - Create: `src/services/fileService.ts`
 
-- [ ] **Step 1: Crea fileService.ts**
+- [x] **Step 1: Crea fileService.ts**
 
 ```typescript
 // src/services/fileService.ts
@@ -694,7 +694,7 @@ export const fileService: FileService = Capacitor.isNativePlatform()
   : { pickFile: pickFileBrowser }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/services/fileService.ts
@@ -709,7 +709,7 @@ git commit -m "feat: fileService abstraction layer web/Android"
 - Create: `src/services/quizService.ts`
 - Create: `src/services/quizService.test.ts`
 
-- [ ] **Step 1: Scrivi test quizService**
+- [x] **Step 1: Scrivi test quizService**
 
 ```typescript
 // src/services/quizService.test.ts
@@ -791,14 +791,14 @@ describe('buildSessionQuestions', () => {
 })
 ```
 
-- [ ] **Step 2: Esegui test — verifica FAIL**
+- [x] **Step 2: Esegui test — verifica FAIL**
 
 ```bash
 npx vitest run src/services/quizService.test.ts
 ```
 Expected: FAIL con "Cannot find module './quizService'"
 
-- [ ] **Step 3: Implementa quizService.ts**
+- [x] **Step 3: Implementa quizService.ts**
 
 ```typescript
 // src/services/quizService.ts
@@ -875,7 +875,7 @@ npx vitest run
 ```
 Expected: PASS (tutti i test)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/services/quizService.ts src/services/quizService.test.ts
@@ -890,7 +890,7 @@ git commit -m "feat: quizService con validazione schema, filtro e shuffle"
 - Create: `src/hooks/useTimer.ts`
 - Create: `src/hooks/useTimer.test.ts`
 
-- [ ] **Step 1: Scrivi test useTimer**
+- [x] **Step 1: Scrivi test useTimer**
 
 ```typescript
 // src/hooks/useTimer.test.ts
@@ -947,20 +947,20 @@ describe('useTimer - pause/resume', () => {
 })
 ```
 
-- [ ] **Step 2: Installa testing library**
+- [x] **Step 2: Installa testing library**
 
 ```bash
 npm install -D @testing-library/react @testing-library/react-hooks jsdom
 ```
 
-- [ ] **Step 3: Esegui test — verifica FAIL**
+- [x] **Step 3: Esegui test — verifica FAIL**
 
 ```bash
 npx vitest run src/hooks/useTimer.test.ts
 ```
 Expected: FAIL con "Cannot find module './useTimer'"
 
-- [ ] **Step 4: Implementa useTimer.ts**
+- [x] **Step 4: Implementa useTimer.ts**
 
 ```typescript
 // src/hooks/useTimer.ts
@@ -1013,14 +1013,14 @@ export function useTimer({ limitSeconds, initialElapsed = 0, onExpire }: TimerCo
 }
 ```
 
-- [ ] **Step 5: Esegui test — verifica PASS**
+- [x] **Step 5: Esegui test — verifica PASS**
 
 ```bash
 npx vitest run
 ```
 Expected: PASS (tutti i test)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/hooks/useTimer.ts src/hooks/useTimer.test.ts
