@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 type FilePickerOptions = {
-  types: string[]
-  multiple: boolean
-  readData: boolean
+  types?: string[]
+  limit?: number
+  readData?: boolean
 }
 
 type FilePickerResult = {
@@ -76,7 +76,30 @@ describe('fileService', () => {
     expect(new TextDecoder().decode(picked.data)).toBe('hello')
   })
 
-  it('uses Capacitor file picker in native mode and decodes base64 data', async () => {
+  it('falls back to a hidden file input in browsers without File System Access API', async () => {
+    const file = new File(['fallback'], 'summary.html', { type: 'text/html' })
+    const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function (
+      this: HTMLInputElement,
+    ) {
+      Object.defineProperty(this, 'files', {
+        configurable: true,
+        value: [file],
+      })
+      this.dispatchEvent(new Event('change'))
+    })
+
+    const { fileService } = await freshFileService(false)
+
+    const picked = await fileService.pickFile(['.html', '.pdf'])
+
+    expect(click).toHaveBeenCalledOnce()
+    expect(picked.name).toBe('summary.html')
+    expect(picked.type).toBe('text/html')
+    expect(new TextDecoder().decode(picked.data)).toBe('fallback')
+    expect(document.querySelector('input[type="file"]')).toBeNull()
+  })
+
+  it('uses Capacitor file picker with MIME filters in native mode and decodes base64 data', async () => {
     const pickFiles = vi.fn(async () => ({
       files: [
         {
@@ -92,8 +115,7 @@ describe('fileService', () => {
     const picked = await fileService.pickFile(['.json'])
 
     expect(pickFiles).toHaveBeenCalledWith({
-      types: ['.json'],
-      multiple: false,
+      types: ['application/json'],
       limit: 1,
       readData: true,
     })
@@ -115,5 +137,26 @@ describe('fileService', () => {
     })
 
     await expect(fileService.pickFile(['.json'])).rejects.toThrow('Dati file mancanti')
+  })
+
+  it('omits native type filters when extensions do not map to known MIME types', async () => {
+    const pickFiles = vi.fn(async () => ({
+      files: [
+        {
+          name: 'unknown.custom',
+          mimeType: '',
+          data: btoa('custom'),
+        },
+      ],
+    }))
+
+    const { fileService } = await freshFileService(true, { pickFiles })
+
+    await fileService.pickFile(['.custom'])
+
+    expect(pickFiles).toHaveBeenCalledWith({
+      limit: 1,
+      readData: true,
+    })
   })
 })

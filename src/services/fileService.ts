@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core'
+import type { PickFilesOptions } from '@capawesome/capacitor-file-picker'
 
 export interface PickedFile {
   name: string
@@ -39,6 +40,16 @@ type CapacitorFilePickerResult = {
   files?: CapacitorPickedFile[]
 }
 
+const NATIVE_MIME_TYPES_BY_EXTENSION: Record<string, string> = {
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.htm': 'text/html',
+  '.html': 'text/html',
+  '.json': 'application/json',
+  '.pdf': 'application/pdf',
+  '.txt': 'text/plain',
+}
+
 function acceptFiltersFromExtensions(accept: string[]): FilePickerAcceptType[] {
   return [
     {
@@ -50,6 +61,16 @@ function acceptFiltersFromExtensions(accept: string[]): FilePickerAcceptType[] {
         ]),
       ),
     },
+  ]
+}
+
+function nativeMimeTypesFromExtensions(accept: string[]): string[] {
+  return [
+    ...new Set(
+      accept
+        .map((extension) => NATIVE_MIME_TYPES_BY_EXTENSION[extension.toLowerCase()])
+        .filter((mimeType): mimeType is string => Boolean(mimeType)),
+    ),
   ]
 }
 
@@ -116,12 +137,16 @@ function base64ToArrayBuffer(data: string): ArrayBuffer {
 
 async function pickFileCapacitor(accept: string[]): Promise<PickedFile> {
   const { FilePicker } = await import('@capawesome/capacitor-file-picker')
-  const options = {
-    types: accept,
-    multiple: false,
+  const nativeTypes = nativeMimeTypesFromExtensions(accept)
+  const options: PickFilesOptions = {
     limit: 1,
     readData: true,
   }
+
+  if (nativeTypes.length > 0) {
+    options.types = nativeTypes
+  }
+
   const result = (await FilePicker.pickFiles(options)) as CapacitorFilePickerResult
   const file = result.files?.[0]
 
