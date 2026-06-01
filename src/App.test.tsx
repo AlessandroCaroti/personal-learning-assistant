@@ -19,7 +19,9 @@ describe('App routing shell', () => {
     document.documentElement.removeAttribute('data-theme')
   })
 
-  it('renders the responsive navigation shell and home route', () => {
+  it('renders the responsive navigation shell and home route after onboarding', () => {
+    localStorage.setItem('tutorialSeen', 'true')
+
     render(<App />)
 
     expect(screen.getByText('Study App')).not.toBeNull()
@@ -28,6 +30,22 @@ describe('App routing shell', () => {
     expect(screen.getAllByRole('button', { name: 'Cambia tema' })).toHaveLength(2)
     expect(screen.getByRole('main').className).toContain('main-content')
     expect(screen.getByRole('heading', { name: 'Esami' })).not.toBeNull()
+  })
+
+  it('redirects the root route to onboarding when tutorialSeen is missing', async () => {
+    render(<App />)
+
+    expect(await screen.findByRole('button', { name: 'Salta' })).not.toBeNull()
+    expect(screen.getByRole('heading', { name: 'Guida' })).not.toBeNull()
+  })
+
+  it('keeps the root route on HomePage when tutorialSeen is set', () => {
+    localStorage.setItem('tutorialSeen', 'true')
+
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: 'Esami' })).not.toBeNull()
+    expect(screen.queryByRole('button', { name: 'Salta' })).toBeNull()
   })
 })
 

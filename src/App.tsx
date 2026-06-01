@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
+import type { ReactNode } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { DashboardPage } from './pages/DashboardPage'
 import { FlashcardConfigPage } from './pages/FlashcardConfigPage'
@@ -14,6 +15,26 @@ import { TutorialPage } from './pages/TutorialPage'
 
 export function isSessionRoute(pathname: string): boolean {
   return pathname.endsWith('/quiz/sessione') || pathname.endsWith('/flashcard/sessione')
+}
+
+function hasSeenTutorial(): boolean {
+  try {
+    return window.localStorage?.getItem('tutorialSeen') === 'true'
+  } catch {
+    return true
+  }
+}
+
+function OnboardingGuard({ children }: { children: ReactNode }) {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!hasSeenTutorial()) {
+      navigate('/onboarding', { replace: true })
+    }
+  }, [navigate])
+
+  return <>{children}</>
 }
 
 function useCapacitorBackButton() {
@@ -63,7 +84,15 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route index element={<HomePage />} />
+          <Route
+            index
+            element={
+              <OnboardingGuard>
+                <HomePage />
+              </OnboardingGuard>
+            }
+          />
+          <Route path="/onboarding" element={<TutorialPage isOnboarding />} />
           <Route path="/guida" element={<TutorialPage />} />
           <Route path="/esame/:examId" element={<DashboardPage />} />
           <Route path="/esame/:examId/riassunto" element={<SummaryPage />} />
