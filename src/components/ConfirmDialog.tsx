@@ -1,3 +1,5 @@
+import { type KeyboardEvent, useEffect, useId, useRef } from 'react'
+
 interface ConfirmDialogProps {
   open: boolean
   title: string
@@ -19,6 +21,57 @@ export function ConfirmDialog({
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const titleId = useId()
+  const messageId = useId()
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const confirmButtonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    const previouslyFocused =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+
+    const focusTarget = confirmButtonRef.current ?? getFocusableElements(dialogRef.current)[0]
+    focusTarget?.focus()
+
+    return () => {
+      previouslyFocused?.focus()
+    }
+  }, [open])
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      onCancel()
+      return
+    }
+
+    if (event.key !== 'Tab') return
+
+    const focusableElements = getFocusableElements(dialogRef.current)
+    if (focusableElements.length === 0) {
+      event.preventDefault()
+      dialogRef.current?.focus()
+      return
+    }
+
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+    const activeElement = document.activeElement
+
+    if (event.shiftKey && activeElement === firstElement) {
+      event.preventDefault()
+      lastElement.focus()
+      return
+    }
+
+    if (!event.shiftKey && activeElement === lastElement) {
+      event.preventDefault()
+      firstElement.focus()
+    }
+  }
+
   if (!open) return null
 
   return (
@@ -36,10 +89,13 @@ export function ConfirmDialog({
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="confirm-dialog-title"
-        aria-describedby="confirm-dialog-message"
+        aria-labelledby={titleId}
+        aria-describedby={messageId}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
         style={{
           width: '100%',
           maxWidth: '400px',
@@ -51,11 +107,11 @@ export function ConfirmDialog({
           boxShadow: '0 20px 60px rgba(0, 0, 0, 0.35)',
         }}
       >
-        <h2 id="confirm-dialog-title" style={{ marginBottom: '0.75rem', fontSize: '1.1rem' }}>
+        <h2 id={titleId} style={{ marginBottom: '0.75rem', fontSize: '1.1rem' }}>
           {title}
         </h2>
         <p
-          id="confirm-dialog-message"
+          id={messageId}
           style={{ marginBottom: '1.5rem', color: 'var(--text-muted)', fontSize: '0.95rem' }}
         >
           {message}
@@ -74,6 +130,7 @@ export function ConfirmDialog({
             {cancelLabel}
           </button>
           <button
+            ref={confirmButtonRef}
             type="button"
             onClick={onConfirm}
             style={{
@@ -89,5 +146,15 @@ export function ConfirmDialog({
         </div>
       </div>
     </div>
+  )
+}
+
+function getFocusableElements(container: HTMLElement | null) {
+  if (!container) return []
+
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
   )
 }

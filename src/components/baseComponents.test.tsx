@@ -57,6 +57,62 @@ describe('base components', () => {
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 
+  it('ConfirmDialog focuses the confirm action when opened', () => {
+    render(
+      <ConfirmDialog
+        open
+        title="Elimina"
+        message="Confermi?"
+        confirmLabel="Sì"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    )
+
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Sì' }))
+  })
+
+  it('ConfirmDialog calls onCancel when Escape is pressed', () => {
+    const onCancel = vi.fn()
+
+    render(
+      <ConfirmDialog
+        open
+        title="Elimina"
+        message="Confermi?"
+        onConfirm={vi.fn()}
+        onCancel={onCancel}
+      />,
+    )
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
+  it('ConfirmDialog traps Tab and Shift+Tab inside the dialog', () => {
+    render(
+      <ConfirmDialog
+        open
+        title="Elimina"
+        message="Confermi?"
+        confirmLabel="Sì"
+        cancelLabel="No"
+        onConfirm={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    )
+
+    const confirmButton = screen.getByRole('button', { name: 'Sì' })
+    const cancelButton = screen.getByRole('button', { name: 'No' })
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Tab' })
+    expect(document.activeElement).toBe(cancelButton)
+
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(confirmButton)
+  })
+
   it('Timer shows remaining time and warns under one minute', () => {
     render(<Timer elapsed={30} remaining={59} />)
 
@@ -78,6 +134,16 @@ describe('base components', () => {
     expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('50')
   })
 
+  it('ProgressBar clamps unexpected percentages to the 0 to 100 range', () => {
+    const { rerender } = render(<ProgressBar current={6} total={4} />)
+
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('100')
+
+    rerender(<ProgressBar current={-1} total={4} />)
+
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('0')
+  })
+
   it('DotNav renders selectable question dots', () => {
     const onSelect = vi.fn()
 
@@ -90,9 +156,39 @@ describe('base components', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Vai alla domanda 3' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Domanda 3, risposta errata' }))
 
     expect(onSelect).toHaveBeenCalledWith(2)
+  })
+
+  it('DotNav exposes status, current state, and a larger hit target', () => {
+    render(
+      <DotNav
+        total={4}
+        current={1}
+        states={['unanswered', 'selected', 'correct', 'wrong']}
+        onSelect={vi.fn()}
+      />,
+    )
+
+    const unanswered = screen.getByRole('button', {
+      name: 'Domanda 1, non risposta',
+    })
+    const selectedCurrent = screen.getByRole('button', {
+      name: 'Domanda 2, corrente, risposta selezionata',
+    })
+    const correct = screen.getByRole('button', {
+      name: 'Domanda 3, risposta corretta',
+    })
+    const wrong = screen.getByRole('button', {
+      name: 'Domanda 4, risposta errata',
+    })
+
+    expect(selectedCurrent.getAttribute('aria-current')).toBe('step')
+    expect(unanswered.style.width).toBe('44px')
+    expect(unanswered.style.height).toBe('44px')
+    expect(correct).not.toBeNull()
+    expect(wrong).not.toBeNull()
   })
 
   it('ThemeToggle toggles the store theme', async () => {
