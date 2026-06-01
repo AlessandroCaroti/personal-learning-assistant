@@ -21,6 +21,11 @@ const statusLabel: Record<DotState, string> = {
   wrong: 'risposta errata',
 }
 
+const statusGlyph: Partial<Record<DotState, string>> = {
+  correct: '✓',
+  wrong: '×',
+}
+
 export function DotNav({ total, current, states, onSelect }: DotNavProps) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '6px' }}>
@@ -59,11 +64,53 @@ export function DotNav({ total, current, states, onSelect }: DotNavProps) {
                 borderRadius: '50%',
                 background: dotColor[state],
                 boxSizing: 'border-box',
+                color: '#fff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '11px',
+                fontWeight: 700,
+                lineHeight: 1,
               }}
-            />
+            >
+              <StatusCue state={state} />
+            </span>
           </button>
         )
       })}
     </div>
   )
+}
+
+function StatusCue({ state }: { state: DotState }) {
+  if (state === 'unanswered') {
+    return (
+      <span
+        data-status-cue={state}
+        style={{
+          width: '8px',
+          height: '2px',
+          borderRadius: '999px',
+          background: 'var(--text-muted)',
+        }}
+      />
+    )
+  }
+
+  if (state === 'selected') {
+    return (
+      <span
+        data-status-cue={state}
+        style={{
+          width: '6px',
+          height: '6px',
+          border: '2px solid #fff',
+          borderRadius: '50%',
+          boxSizing: 'border-box',
+        }}
+      />
+    )
+  }
+
+  return <span data-status-cue={state}>{statusGlyph[state]}</span>
 }

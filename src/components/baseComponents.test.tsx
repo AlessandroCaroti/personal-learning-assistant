@@ -191,6 +191,38 @@ describe('base components', () => {
     expect(wrong).not.toBeNull()
   })
 
+  it('DotNav gives each answer status a visible non-color cue', () => {
+    render(
+      <DotNav
+        total={4}
+        current={0}
+        states={['unanswered', 'selected', 'correct', 'wrong']}
+        onSelect={vi.fn()}
+      />,
+    )
+
+    expect(
+      screen
+        .getByRole('button', { name: 'Domanda 1, corrente, non risposta' })
+        .querySelector('[data-status-cue="unanswered"]'),
+    ).not.toBeNull()
+    expect(
+      screen
+        .getByRole('button', { name: 'Domanda 2, risposta selezionata' })
+        .querySelector('[data-status-cue="selected"]'),
+    ).not.toBeNull()
+    expect(
+      screen
+        .getByRole('button', { name: 'Domanda 3, risposta corretta' })
+        .querySelector('[data-status-cue="correct"]')?.textContent,
+    ).toBe('✓')
+    expect(
+      screen
+        .getByRole('button', { name: 'Domanda 4, risposta errata' })
+        .querySelector('[data-status-cue="wrong"]')?.textContent,
+    ).toBe('×')
+  })
+
   it('ThemeToggle toggles the store theme', async () => {
     vi.resetModules()
     const { ThemeToggle: FreshThemeToggle } = await import('./ThemeToggle')
