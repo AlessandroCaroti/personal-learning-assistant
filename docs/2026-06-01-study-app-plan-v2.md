@@ -1856,7 +1856,7 @@ git commit -m "feat: HomePage con lista esami e CRUD (crea, rinomina, elimina)"
 **Files:**
 - Create: `src/pages/DashboardPage.tsx`
 
-- [ ] **Step 1: Crea DashboardPage.tsx**
+- [x] **Step 1: Crea DashboardPage.tsx**
 
 ```tsx
 // src/pages/DashboardPage.tsx
@@ -2073,7 +2073,7 @@ function ReplaceDialog({ open, type, onCancel, onConfirm, accept }: {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/pages/DashboardPage.tsx
@@ -2087,7 +2087,7 @@ git commit -m "feat: DashboardPage con banner pausa, import file e CRUD sezioni"
 **Files:**
 - Create: `src/pages/SummaryPage.tsx`
 
-- [ ] **Step 1: Crea SummaryPage.tsx**
+- [x] **Step 1: Crea SummaryPage.tsx**
 
 ```tsx
 // src/pages/SummaryPage.tsx
@@ -2159,7 +2159,7 @@ export function SummaryPage() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/pages/SummaryPage.tsx
@@ -2174,7 +2174,7 @@ git commit -m "feat: SummaryPage viewer (iframe HTML, PDF, mammoth DOCX)"
 - Create: `src/pages/QuizConfigPage.tsx`
 - Create: `src/hooks/useQuiz.ts`
 
-- [ ] **Step 1: Crea useQuiz.ts**
+- [x] **Step 1: Crea useQuiz.ts**
 
 ```typescript
 // src/hooks/useQuiz.ts
@@ -2339,7 +2339,7 @@ export function useQuiz(examId: string) {
 }
 ```
 
-- [ ] **Step 2: Crea QuizConfigPage.tsx**
+- [x] **Step 2: Crea QuizConfigPage.tsx**
 
 ```tsx
 // src/pages/QuizConfigPage.tsx
@@ -2521,7 +2521,7 @@ function Chip({ label, selected, onClick }: { label: string; selected: boolean; 
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/hooks/useQuiz.ts src/pages/QuizConfigPage.tsx
