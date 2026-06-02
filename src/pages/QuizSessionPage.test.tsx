@@ -11,9 +11,29 @@ const deletePausedSession = vi.fn()
 const getQuestionStats = vi.fn()
 const saveQuestionStat = vi.fn()
 
+const capacitorState = vi.hoisted(() => ({
+  isNativePlatform: vi.fn(() => false),
+  backButtonListener: undefined as (() => void) | undefined,
+  removeBackButtonListener: vi.fn(),
+}))
+
 vi.mock('@capacitor/core', () => ({
   Capacitor: {
-    isNativePlatform: () => false,
+    isNativePlatform: capacitorState.isNativePlatform,
+  },
+}))
+
+vi.mock('@capacitor/app', () => ({
+  App: {
+    addListener: vi.fn(async (event: string, callback: () => void) => {
+      if (event === 'backButton') {
+        capacitorState.backButtonListener = callback
+      }
+
+      return {
+        remove: capacitorState.removeBackButtonListener,
+      }
+    }),
   },
 }))
 
@@ -160,6 +180,9 @@ describe('QuizSessionPage', () => {
     deletePausedSession.mockResolvedValue(undefined)
     getQuestionStats.mockResolvedValue([])
     saveQuestionStat.mockResolvedValue(undefined)
+    capacitorState.isNativePlatform.mockReturnValue(false)
+    capacitorState.backButtonListener = undefined
+    capacitorState.removeBackButtonListener.mockClear()
   })
 
   afterEach(() => {
@@ -318,6 +341,36 @@ describe('QuizSessionPage', () => {
     expect(savePausedSession).not.toHaveBeenCalled()
     expect(screen.queryByRole('heading', { name: 'Dashboard esame' })).toBeNull()
     expect(screen.getByText(/"completedByTimeout":true/)).not.toBeNull()
+  })
+
+  it('ignores native back while finish is in progress', async () => {
+    capacitorState.isNativePlatform.mockReturnValue(true)
+    const saveCompletion = deferred<void>()
+    saveQuizSession.mockReturnValueOnce(saveCompletion.promise)
+    renderPage({ entryState: { count: 1 } })
+
+    await screen.findByText('Domanda 1 di 1')
+    await waitFor(() => {
+      expect(capacitorState.backButtonListener).toBeDefined()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /Consegna quiz/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consegna' }))
+
+    await waitFor(() => {
+      expect(saveQuizSession).toHaveBeenCalledTimes(1)
+    })
+    act(() => {
+      capacitorState.backButtonListener?.()
+    })
+
+    expect(screen.queryByRole('button', { name: 'Metti in pausa' })).toBeNull()
+
+    await act(async () => {
+      saveCompletion.resolve(undefined)
+      await Promise.resolve()
+      await Promise.resolve()
+    })
   })
 
   it('shows a finish error after persistence fails and allows delivery retry', async () => {

@@ -270,6 +270,11 @@ function ActiveQuizSession({
       try {
         const { App } = await import('@capacitor/app')
         const listener = await App.addListener('backButton', () => {
+          if (finishingRef.current || timerRef.current?.isExpired) {
+            setPauseDialog(false)
+            return
+          }
+
           setPauseDialog(true)
         })
 
