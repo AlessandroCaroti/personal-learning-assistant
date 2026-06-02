@@ -1,0 +1,153 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm: dev",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "dev"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": [
+          {
+            "regexp": "^(.*)$",
+            "message": 1
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^\\s*VITE\\s",
+          "endsPattern": "^\\s*Local:\\s+http://"
+        }
+      }
+    },
+    {
+      "label": "npm: preview",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "preview"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite-preview",
+        "pattern": [
+          {
+            "regexp": "^(.*)$",
+            "message": 1
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^\\s*VITE\\s",
+          "endsPattern": "^\\s*Local:\\s+http://"
+        }
+      }
+    },
+    {
+      "label": "npm: build",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "build"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: test",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "test",
+        "--",
+        "--run"
+      ],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: cap sync",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "cap:sync"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: cap open android",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "cap:android"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: assembleDebug",
+      "type": "shell",
+      "command": "gradlew.bat",
+      "args": [
+        "assembleDebug"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/android"
+      },
+      "group": "build",
+      "problemMatcher": [
+        "$gradle"
+      ]
+    },
+    {
+      "label": "Android: assembleRelease",
+      "type": "shell",
+      "command": "gradlew.bat",
+      "args": [
+        "assembleRelease"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/android"
+      },
+      "group": "build",
+      "problemMatcher": [
+        "$gradle"
+      ]
+    },
+    {
+      "label": "Android: installDebug",
+      "type": "shell",
+      "command": "gradlew.bat",
+      "args": [
+        "installDebug"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/android"
+      },
+      "problemMatcher": [
+        "$gradle"
+      ]
+    },
+    {
+      "label": "Android: clean",
+      "type": "shell",
+      "command": "gradlew.bat",
+      "args": [
+        "clean"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/android"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Web: Debug Vite",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/src",
+      "preLaunchTask": "npm: dev",
+      "serverReadyAction": {
+        "pattern": "\\bLocal:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    },
+    {
+      "name": "Web: Preview",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4173",
+      "webRoot": "${workspaceFolder}/src",
+      "preLaunchTask": "npm: preview",
+      "serverReadyAction": {
+        "pattern": "\\bLocal:\\s+(https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
+    },
+    {
+      "name": "Android: Open Studio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run cap:android",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Android: Sync Only",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run cap:sync",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Build: Web App",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run build",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Web + Android Sync",
+      "configurations": [
+        "Web: Debug Vite",
+        "Android: Sync Only"
+      ]
+    }
+  ]
+}
