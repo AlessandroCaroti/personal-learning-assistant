@@ -85,7 +85,18 @@ describe('SummaryPage', () => {
 
     const iframe = await screen.findByTitle('Riassunto')
     expect(iframe.getAttribute('srcdoc')).toBe(html)
+    expect(iframe.getAttribute('sandbox')).toBe('')
     expect(screen.getByRole('heading', { name: 'summary.html' })).not.toBeNull()
+  })
+
+  it('renders empty HTML summaries without staying on loading', async () => {
+    getEsame.mockResolvedValue(makeExam(makeFile('empty.html', 'text/html', encodeText(''))))
+
+    renderSummary()
+
+    const iframe = await screen.findByTitle('Riassunto')
+    expect(iframe.getAttribute('srcdoc')).toBe('')
+    expect(screen.queryByText('Caricamento...')).toBeNull()
   })
 
   it('renders PDF summaries with a blob URL and revokes it on cleanup', async () => {
@@ -98,6 +109,7 @@ describe('SummaryPage', () => {
     const iframe = await screen.findByTitle('Riassunto PDF')
     expect(createObjectURL).toHaveBeenCalledTimes(1)
     expect(iframe.getAttribute('src')).toBe('blob:summary-pdf')
+    expect(iframe.getAttribute('sandbox')).toBe('')
 
     unmount()
 
@@ -117,6 +129,22 @@ describe('SummaryPage', () => {
     expect((await screen.findByTitle('Riassunto')).getAttribute('srcdoc')).toBe(
       '<p>DOCX convertito</p>',
     )
+  })
+
+  it('renders empty DOCX conversion results without staying on loading', async () => {
+    const data = encodeText('docx-bytes')
+    getEsame.mockResolvedValue(makeExam(makeFile('summary.docx', '', data)))
+    convertToHtml.mockResolvedValue({ value: '' })
+
+    renderSummary()
+
+    await waitFor(() => {
+      expect(convertToHtml).toHaveBeenCalledWith({ arrayBuffer: data })
+    })
+
+    const iframe = await screen.findByTitle('Riassunto')
+    expect(iframe.getAttribute('srcdoc')).toBe('')
+    expect(screen.queryByText('Caricamento...')).toBeNull()
   })
 
   it('shows an error for unsupported summary formats', async () => {

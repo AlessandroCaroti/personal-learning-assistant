@@ -93,7 +93,7 @@ export function SummaryPage() {
     }
   }, [examId, navigate])
 
-  const isLoading = !error && !htmlContent && !pdfUrl
+  const isLoading = !error && htmlContent === null && !pdfUrl
 
   return (
     <div style={pageStyle}>
@@ -110,15 +110,17 @@ export function SummaryPage() {
       </header>
 
       <main style={viewerStyle}>
-        {htmlContent && (
+        {htmlContent !== null && (
           <iframe
             srcDoc={htmlContent}
             title="Riassunto"
-            sandbox="allow-same-origin"
+            sandbox=""
             style={iframeStyle}
           />
         )}
-        {pdfUrl && <iframe src={pdfUrl} title="Riassunto PDF" style={iframeStyle} />}
+        {pdfUrl && (
+          <iframe src={pdfUrl} title="Riassunto PDF" sandbox="" style={iframeStyle} />
+        )}
         {isLoading && <p style={messageStyle}>Caricamento...</p>}
         {error && (
           <p role="alert" style={errorStyle}>
