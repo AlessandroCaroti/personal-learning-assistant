@@ -1,6 +1,6 @@
 # Study App — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Applicazione locale per studiare per esami universitari, disponibile come web app (PC) e APK Android (Capacitor), senza backend né connessione di rete.
 
@@ -868,7 +868,7 @@ export function buildSessionQuestions(domande: QuizDomanda[], n: number): Sessio
 }
 ```
 
-- [ ] **Step 4: Esegui test — verifica PASS**
+- [x] **Step 4: Esegui test — verifica PASS**
 
 ```bash
 npx vitest run
@@ -1124,7 +1124,7 @@ export function ConfirmDialog({
 }
 ```
 
-- [ ] **Step 3: Crea Timer.tsx**
+- [x] **Step 3: Crea Timer.tsx**
 
 ```tsx
 // src/components/Timer.tsx
@@ -2535,7 +2535,7 @@ git commit -m "feat: useQuiz hook e QuizConfigPage con filtri e configurazione"
 **Files:**
 - Create: `src/pages/QuizSessionPage.tsx`
 
-- [ ] **Step 1: Crea QuizSessionPage.tsx**
+- [x] **Step 1: Crea QuizSessionPage.tsx**
 
 ```tsx
 // src/pages/QuizSessionPage.tsx
@@ -2754,7 +2754,7 @@ export function QuizSessionPage() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/pages/QuizSessionPage.tsx
@@ -2768,7 +2768,7 @@ git commit -m "feat: QuizSessionPage con navigazione, conferma, pausa e consegna
 **Files:**
 - Create: `src/pages/QuizResultPage.tsx`
 
-- [ ] **Step 1: Crea QuizResultPage.tsx**
+- [x] **Step 1: Crea QuizResultPage.tsx**
 
 ```tsx
 // src/pages/QuizResultPage.tsx
@@ -2889,7 +2889,7 @@ export function QuizResultPage() {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/pages/QuizResultPage.tsx
@@ -2903,7 +2903,7 @@ git commit -m "feat: QuizResultPage con score, storico e analisi errori"
 **Files:**
 - Create: `src/hooks/useFlashcard.ts`
 
-- [ ] **Step 1: Crea useFlashcard.ts**
+- [x] **Step 1: Crea useFlashcard.ts**
 
 ```typescript
 // src/hooks/useFlashcard.ts
@@ -3060,7 +3060,7 @@ export function useFlashcard(examId: string) {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add src/hooks/useFlashcard.ts
@@ -3075,7 +3075,7 @@ git commit -m "feat: useFlashcard hook con coda ripasso e autovalutazione"
 - Create: `src/pages/FlashcardConfigPage.tsx`
 - Create: `src/pages/FlashcardSessionPage.tsx`
 
-- [ ] **Step 1: Crea FlashcardConfigPage.tsx**
+- [x] **Step 1: Crea FlashcardConfigPage.tsx**
 
 ```tsx
 // src/pages/FlashcardConfigPage.tsx
@@ -3242,7 +3242,7 @@ export function FlashcardConfigPage() {
 }
 ```
 
-- [ ] **Step 2: Crea FlashcardSessionPage.tsx**
+- [x] **Step 2: Crea FlashcardSessionPage.tsx**
 
 ```tsx
 // src/pages/FlashcardSessionPage.tsx
@@ -3422,7 +3422,7 @@ export function FlashcardSessionPage() {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/pages/FlashcardConfigPage.tsx src/pages/FlashcardSessionPage.tsx
@@ -3436,7 +3436,7 @@ git commit -m "feat: FlashcardConfigPage e FlashcardSessionPage con coda ripasso
 **Files:**
 - Modify: `package.json` (aggiunge script)
 
-- [ ] **Step 1: Aggiungi script in package.json**
+- [x] **Step 1: Aggiungi script in package.json**
 
 ```json
 {
@@ -3451,21 +3451,21 @@ git commit -m "feat: FlashcardConfigPage e FlashcardSessionPage con coda ripasso
 }
 ```
 
-- [ ] **Step 2: Inizializza progetto Capacitor**
+- [x] **Step 2: Inizializza progetto Capacitor**
 
 ```bash
 npx cap init "Study App" com.studyapp.local --web-dir dist
 npx cap add android
 ```
 
-- [ ] **Step 3: Build web e sync Android**
+- [x] **Step 3: Build web e sync Android**
 
 ```bash
 npm run cap:sync
 ```
 Expected: build Vite OK + "Sync finished in Xs"
 
-- [ ] **Step 4: Verifica APK su emulatore o dispositivo**
+- [x] **Step 4: Verifica APK su emulatore o dispositivo**
 
 ```bash
 npx cap open android
@@ -3473,14 +3473,14 @@ npx cap open android
 ```
 Expected: APK generato senza errori
 
-- [ ] **Step 5: Esegui suite test completa**
+- [x] **Step 5: Esegui suite test completa**
 
 ```bash
 npx vitest run
 ```
 Expected: tutti i test PASS
 
-- [ ] **Step 6: Commit finale**
+- [x] **Step 6: Commit finale**
 
 ```bash
 git add .

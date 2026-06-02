@@ -7,9 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:android": "npm run cap:sync && npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.5",
     "@capacitor/app": "^7.0.0",
     "@capacitor/core": "^7.0.0",
     "@capawesome/capacitor-file-picker": "^7.0.0",
