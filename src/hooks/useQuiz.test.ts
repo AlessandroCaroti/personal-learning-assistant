@@ -255,7 +255,49 @@ describe('useQuiz', () => {
       questionIds: ['q3', 'q1'],
       currentQuestionIndex: 1,
       confirmedAnswers: { q3: '6' },
+      isReview: false,
     })
+  })
+
+  it('preserves review marker across pause, resume, and finish', async () => {
+    const { result } = renderHook(() => useQuiz('exam-1'))
+
+    act(() => {
+      result.current.startReviewSession(['q1'], ['q2'], domande)
+      result.current.selectAnswer('4')
+      result.current.confirmAnswer('q1', 5)
+    })
+
+    await act(async () => {
+      await result.current.pauseSession(15)
+    })
+
+    expect(savePausedSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isReview: true,
+      }),
+    )
+
+    const pausedReview = savePausedSession.mock.calls[0][0] as PausedSession
+    cleanup()
+    const resumed = renderHook(() => useQuiz('exam-1'))
+
+    act(() => {
+      resumed.result.current.resumeFromPaused(pausedReview, domande)
+    })
+
+    let saved = null
+    await act(async () => {
+      saved = await resumed.result.current.finishSession(22, false, domande)
+    })
+
+    expect(saved).toMatchObject({
+      isReview: true,
+      score: 1,
+      total: 2,
+      unanswered: ['q2'],
+    })
+    expect(saveQuizSession).toHaveBeenCalledWith(saved)
   })
 
   it('resumes only valid quiz pauses and safely ignores missing question ids', () => {

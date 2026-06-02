@@ -233,6 +233,47 @@ describe('QuizSessionPage', () => {
     expect(savedSession.unanswered).toEqual(['q2'])
   })
 
+  it('resumes a paused review session and saves the result as review', async () => {
+    renderPage({
+      entryState: {
+        isReview: true,
+        reviewErrors: ['q1'],
+        reviewUnanswered: ['q2'],
+      },
+    })
+
+    await screen.findByText('Domanda 1 di 2')
+    fireEvent.click(screen.getByRole('button', { name: 'Pausa' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Metti in pausa' }))
+
+    await waitFor(() => {
+      expect(savePausedSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isReview: true,
+          questionIds: ['q1', 'q2'],
+        }),
+      )
+    })
+    const pausedReview = savePausedSession.mock.calls[0][0] as PausedSession
+
+    cleanup()
+    getPausedSession.mockResolvedValue(pausedReview)
+    renderPage({ entryState: { resume: true } })
+
+    expect(await screen.findByText('Domanda 1 di 2')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Consegna quiz/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consegna' }))
+
+    await waitFor(() => {
+      expect(saveQuizSession).toHaveBeenCalled()
+    })
+    const savedSession = saveQuizSession.mock.calls[0][0] as QuizSession
+    expect(savedSession.isReview).toBe(true)
+    expect(savedSession.timeLimitSeconds).toBeNull()
+    expect(savedSession.total).toBe(2)
+    expect(savedSession.unanswered).toEqual(['q1', 'q2'])
+  })
+
   it('redirects to config when resume is requested but the paused session is missing', async () => {
     renderPage({ entryState: { resume: true } })
 

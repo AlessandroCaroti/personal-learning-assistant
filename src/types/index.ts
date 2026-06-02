@@ -59,6 +59,7 @@ export interface PausedSession {
   questionIds?: string[]
   currentQuestionIndex?: number
   confirmedAnswers?: Record<string, string>
+  isReview?: boolean
   cardIds?: string[]
   currentCardIndex?: number
   cardEvals?: Record<string, CardEval>

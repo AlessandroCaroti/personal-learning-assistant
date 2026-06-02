@@ -155,7 +155,7 @@ export function useQuiz(examId: string) {
       setActiveSession(nextSessionState, {
         timeLimitSeconds: ps.timeLimitSeconds,
         macroargomenti: ps.macroargomenti ?? [],
-        isReviewSession: false,
+        isReviewSession: ps.isReview === true,
       })
     },
     [clearSelectedAnswer, setActiveSession],
@@ -232,6 +232,7 @@ export function useQuiz(examId: string) {
         questionIds: current.questions.map((question) => question.id),
         currentQuestionIndex: current.currentIndex,
         confirmedAnswers: current.confirmedAnswers,
+        isReview: metadata.isReviewSession,
       })
     },
     [examId],
