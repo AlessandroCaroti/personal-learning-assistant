@@ -1,6 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type {
   Esame,
+  FileRecord,
   FlashcardStats,
   PausedSession,
   QuestionStats,
@@ -100,6 +101,75 @@ export async function getEsame(id: string): Promise<Esame | undefined> {
 
 export async function saveEsame(esame: Esame): Promise<void> {
   await (await getDB()).put('esami', esame)
+}
+
+export async function replaceQuizFileForExam(examId: string, file: FileRecord): Promise<void> {
+  const db = await getDB()
+  const tx = db.transaction(
+    ['esami', 'quizSessions', 'questionStats', 'pausedSessions'],
+    'readwrite',
+  )
+
+  const examStore = tx.objectStore('esami')
+  const quizSessions = tx.objectStore('quizSessions')
+  const questionStats = tx.objectStore('questionStats')
+  const pausedSessions = tx.objectStore('pausedSessions')
+  const existingExam = await examStore.get(examId)
+
+  if (!existingExam) {
+    throw new Error(`Exam ${examId} not found`)
+  }
+
+  const [quizRecords, questionRecords] = await Promise.all([
+    quizSessions.index('by-examId').getAll(examId),
+    questionStats.index('by-examId').getAll(examId),
+  ])
+
+  await examStore.put({
+    ...existingExam,
+    files: {
+      ...existingExam.files,
+      quiz: file,
+    },
+  })
+  await Promise.all([
+    ...quizRecords.map((record) => quizSessions.delete(record.id)),
+    ...questionRecords.map((record) => questionStats.delete(record.id)),
+    pausedSessions.delete(`${examId}__quiz`),
+  ])
+  await tx.done
+}
+
+export async function replaceFlashcardFileForExam(
+  examId: string,
+  file: FileRecord,
+): Promise<void> {
+  const db = await getDB()
+  const tx = db.transaction(['esami', 'flashcardStats', 'pausedSessions'], 'readwrite')
+
+  const examStore = tx.objectStore('esami')
+  const flashcardStats = tx.objectStore('flashcardStats')
+  const pausedSessions = tx.objectStore('pausedSessions')
+  const existingExam = await examStore.get(examId)
+
+  if (!existingExam) {
+    throw new Error(`Exam ${examId} not found`)
+  }
+
+  const statsRecords = await flashcardStats.index('by-examId').getAll(examId)
+
+  await examStore.put({
+    ...existingExam,
+    files: {
+      ...existingExam.files,
+      flashcard: file,
+    },
+  })
+  await Promise.all([
+    ...statsRecords.map((record) => flashcardStats.delete(record.id)),
+    pausedSessions.delete(`${examId}__flashcard`),
+  ])
+  await tx.done
 }
 
 export async function deleteEsame(id: string): Promise<void> {

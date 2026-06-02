@@ -97,47 +97,18 @@ export function DashboardPage() {
       if (replaceTarget === 'quiz') {
         validateQuizFile(parseJsonFile(picked.data))
 
-        const currentExam = await storageService.getEsame(examId)
-        if (!currentExam) {
-          navigate('/', { replace: true })
-          return
-        }
-
-        await storageService.deleteQuizSessionsForExam(examId)
-        await storageService.deleteQuestionStatsForExam(examId)
-        await storageService.deletePausedSession(`${examId}__quiz`)
-        await storageService.saveEsame({
-          ...currentExam,
-          files: {
-            ...currentExam.files,
-            quiz: {
-              name: picked.name,
-              type: picked.type,
-              data: picked.data,
-            },
-          },
+        await storageService.replaceQuizFileForExam(examId, {
+          name: picked.name,
+          type: picked.type,
+          data: picked.data,
         })
       } else {
         validateFlashcardFile(parseJsonFile(picked.data))
 
-        const currentExam = await storageService.getEsame(examId)
-        if (!currentExam) {
-          navigate('/', { replace: true })
-          return
-        }
-
-        await storageService.deleteFlashcardStatsForExam(examId)
-        await storageService.deletePausedSession(`${examId}__flashcard`)
-        await storageService.saveEsame({
-          ...currentExam,
-          files: {
-            ...currentExam.files,
-            flashcard: {
-              name: picked.name,
-              type: picked.type,
-              data: picked.data,
-            },
-          },
+        await storageService.replaceFlashcardFileForExam(examId, {
+          name: picked.name,
+          type: picked.type,
+          data: picked.data,
         })
       }
 
@@ -145,6 +116,11 @@ export function DashboardPage() {
       await loadDashboard()
     } catch (error) {
       const message = errorMessage(error)
+      if (message === `Exam ${examId} not found`) {
+        navigate('/', { replace: true })
+        return
+      }
+
       if (message !== 'Selezione annullata') {
         setReplaceError(message)
       }
@@ -296,6 +272,7 @@ export function DashboardPage() {
         }
         cancelLabel="Annulla"
         dangerous
+        busy={replacing}
         onConfirm={() => void confirmReplacement()}
         onCancel={() => {
           if (!replacing) {

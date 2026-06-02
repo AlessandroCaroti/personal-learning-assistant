@@ -6,20 +6,16 @@ import type { Esame, PausedSession } from '../types'
 const getEsame = vi.fn()
 const saveEsame = vi.fn()
 const getPausedSession = vi.fn()
-const deletePausedSession = vi.fn()
-const deleteQuizSessionsForExam = vi.fn()
-const deleteQuestionStatsForExam = vi.fn()
-const deleteFlashcardStatsForExam = vi.fn()
+const replaceQuizFileForExam = vi.fn()
+const replaceFlashcardFileForExam = vi.fn()
 const pickFile = vi.fn()
 
 vi.mock('../services/storageService', () => ({
   getEsame,
   saveEsame,
   getPausedSession,
-  deletePausedSession,
-  deleteQuizSessionsForExam,
-  deleteQuestionStatsForExam,
-  deleteFlashcardStatsForExam,
+  replaceQuizFileForExam,
+  replaceFlashcardFileForExam,
 }))
 
 vi.mock('../services/fileService', () => ({
@@ -112,10 +108,8 @@ describe('DashboardPage', () => {
     getEsame.mockResolvedValue(makeExam())
     getPausedSession.mockResolvedValue(undefined)
     saveEsame.mockResolvedValue(undefined)
-    deletePausedSession.mockResolvedValue(undefined)
-    deleteQuizSessionsForExam.mockResolvedValue(undefined)
-    deleteQuestionStatsForExam.mockResolvedValue(undefined)
-    deleteFlashcardStatsForExam.mockResolvedValue(undefined)
+    replaceQuizFileForExam.mockResolvedValue(undefined)
+    replaceFlashcardFileForExam.mockResolvedValue(undefined)
   })
 
   it('redirects to all exams when the exam is missing', async () => {
@@ -173,31 +167,23 @@ describe('DashboardPage', () => {
     expect(await screen.findByText('quiz.json')).not.toBeNull()
   })
 
-  it('validates quiz replacement before deleting history and paused data', async () => {
+  it('validates quiz replacement before calling the transactional replacement helper', async () => {
     const current = makeExam({
       quiz: { name: 'old-quiz.json', type: 'application/json', data: encodeJson(validQuiz) },
     })
     const calls: string[] = []
     getEsame.mockResolvedValue(current)
+    const pickedData = encodeJson(validQuiz)
     pickFile.mockImplementation(async () => {
       calls.push('pick')
       return {
         name: 'new-quiz.json',
         type: 'application/json',
-        data: encodeJson(validQuiz),
+        data: pickedData,
       }
     })
-    deleteQuizSessionsForExam.mockImplementation(async () => {
-      calls.push('deleteSessions')
-    })
-    deleteQuestionStatsForExam.mockImplementation(async () => {
-      calls.push('deleteStats')
-    })
-    deletePausedSession.mockImplementation(async () => {
-      calls.push('deletePaused')
-    })
-    saveEsame.mockImplementation(async () => {
-      calls.push('save')
+    replaceQuizFileForExam.mockImplementation(async () => {
+      calls.push('replace')
     })
 
     renderDashboard()
@@ -206,12 +192,48 @@ describe('DashboardPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sostituisci quiz' }))
 
     await waitFor(() => {
-      expect(saveEsame).toHaveBeenCalled()
+      expect(replaceQuizFileForExam).toHaveBeenCalledWith('exam-1', {
+        name: 'new-quiz.json',
+        type: 'application/json',
+        data: pickedData,
+      })
     })
-    expect(calls).toEqual(['pick', 'deleteSessions', 'deleteStats', 'deletePaused', 'save'])
-    expect(deleteQuizSessionsForExam).toHaveBeenCalledWith('exam-1')
-    expect(deleteQuestionStatsForExam).toHaveBeenCalledWith('exam-1')
-    expect(deletePausedSession).toHaveBeenCalledWith('exam-1__quiz')
+    expect(calls).toEqual(['pick', 'replace'])
+    expect(saveEsame).not.toHaveBeenCalled()
+    expect(replaceFlashcardFileForExam).not.toHaveBeenCalled()
+  })
+
+  it('validates flashcard replacement before calling the transactional replacement helper', async () => {
+    getEsame.mockResolvedValue(
+      makeExam({
+        flashcard: {
+          name: 'old-flashcard.json',
+          type: 'application/json',
+          data: encodeJson(validFlashcards),
+        },
+      }),
+    )
+    const pickedData = encodeJson(validFlashcards)
+    pickFile.mockResolvedValue({
+      name: 'new-flashcard.json',
+      type: 'application/json',
+      data: pickedData,
+    })
+
+    renderDashboard()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Sostituisci flashcard.json' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sostituisci flashcard' }))
+
+    await waitFor(() => {
+      expect(replaceFlashcardFileForExam).toHaveBeenCalledWith('exam-1', {
+        name: 'new-flashcard.json',
+        type: 'application/json',
+        data: pickedData,
+      })
+    })
+    expect(saveEsame).not.toHaveBeenCalled()
+    expect(replaceQuizFileForExam).not.toHaveBeenCalled()
   })
 
   it('leaves existing quiz data untouched when replacement is invalid', async () => {
@@ -232,9 +254,8 @@ describe('DashboardPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sostituisci quiz' }))
 
     expect((await screen.findByRole('alert')).textContent).toMatch(/domande/i)
-    expect(deleteQuizSessionsForExam).not.toHaveBeenCalled()
-    expect(deleteQuestionStatsForExam).not.toHaveBeenCalled()
-    expect(deletePausedSession).not.toHaveBeenCalled()
+    expect(replaceQuizFileForExam).not.toHaveBeenCalled()
+    expect(replaceFlashcardFileForExam).not.toHaveBeenCalled()
     expect(saveEsame).not.toHaveBeenCalled()
     expect(screen.getByText('old-quiz.json')).not.toBeNull()
   })

@@ -7,6 +7,7 @@ interface ConfirmDialogProps {
   confirmLabel?: string
   cancelLabel?: string
   dangerous?: boolean
+  busy?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
@@ -18,6 +19,7 @@ export function ConfirmDialog({
   confirmLabel = 'Conferma',
   cancelLabel = 'Annulla',
   dangerous = false,
+  busy = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -43,7 +45,9 @@ export function ConfirmDialog({
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault()
-      onCancel()
+      if (!busy) {
+        onCancel()
+      }
       return
     }
 
@@ -94,6 +98,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={messageId}
+        aria-busy={busy}
         tabIndex={-1}
         onKeyDown={handleKeyDown}
         style={{
@@ -120,6 +125,7 @@ export function ConfirmDialog({
           <button
             type="button"
             onClick={onCancel}
+            disabled={busy}
             style={{
               padding: '0.6rem 1.2rem',
               borderRadius: '8px',
@@ -133,6 +139,7 @@ export function ConfirmDialog({
             ref={confirmButtonRef}
             type="button"
             onClick={onConfirm}
+            disabled={busy}
             style={{
               padding: '0.6rem 1.2rem',
               borderRadius: '8px',
