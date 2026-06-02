@@ -52,7 +52,7 @@ export function useQuiz(examId: string) {
   const [sessionState, setSessionState] = useState<QuizSessionState | null>(null)
   const [timeLimitSeconds, setTimeLimitSeconds] = useState<number | null>(null)
   const [macroargomenti, setMacroargomenti] = useState<string[]>([])
-  const [isReviewSession, setIsReviewSession] = useState(false)
+  const [, setIsReviewSession] = useState(false)
   const sessionStateRef = useRef<QuizSessionState | null>(null)
   const sessionMetadataRef = useRef<QuizSessionMetadata>({
     timeLimitSeconds: null,
@@ -325,7 +325,6 @@ export function useQuiz(examId: string) {
     sessionState,
     timeLimitSeconds,
     macroargomenti,
-    isReviewSession,
     startSession,
     resumeFromPaused,
     selectAnswer,
