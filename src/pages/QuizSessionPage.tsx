@@ -147,9 +147,16 @@ function ActiveQuizSession({
   const [initialized, setInitialized] = useState(false)
   const [pauseDialog, setPauseDialog] = useState(false)
   const [deliverDialog, setDeliverDialog] = useState(false)
+  const [isFinishing, setIsFinishing] = useState(false)
+  const [finishError, setFinishError] = useState<string | null>(null)
   const finishingRef = useRef(false)
   const pendingTimeoutElapsedRef = useRef<number | null>(null)
-  const timerRef = useRef<{ elapsed: number; pause: () => void } | null>(null)
+  const timerRef = useRef<{
+    elapsed: number
+    isExpired: boolean
+    pause: () => void
+    resume: () => void
+  } | null>(null)
   const sessionStateRef = useRef(quiz.sessionState)
 
   const initialElapsed =
@@ -190,19 +197,37 @@ function ActiveQuizSession({
         return
       }
 
+      const elapsed = elapsedOverride ?? timerRef.current?.elapsed ?? 0
       finishingRef.current = true
+      setIsFinishing(true)
+      setFinishError(null)
+      setPauseDialog(false)
+      setDeliverDialog(false)
       timerRef.current?.pause()
 
-      const session = await quiz.finishSession(
-        elapsedOverride ?? timerRef.current?.elapsed ?? 0,
-        completedByTimeout,
-        loadedSession.quizData.domande,
-      )
+      try {
+        const session = await quiz.finishSession(
+          elapsed,
+          completedByTimeout,
+          loadedSession.quizData.domande,
+        )
 
-      if (session) {
-        navigate(`/esame/${examId}/quiz/risultato`, { state: { session } })
-      } else {
+        if (session) {
+          navigate(`/esame/${examId}/quiz/risultato`, { state: { session } })
+          return
+        }
+
         finishingRef.current = false
+        setIsFinishing(false)
+        timerRef.current?.resume()
+      } catch (err) {
+        console.error('Failed to finish quiz session', err)
+        setFinishError('Impossibile salvare il risultato del quiz. Riprova.')
+        finishingRef.current = false
+        setIsFinishing(false)
+        if (!timerRef.current?.isExpired) {
+          timerRef.current?.resume()
+        }
       }
     },
     [examId, loadedSession.quizData.domande, navigate, quiz],
@@ -219,9 +244,11 @@ function ActiveQuizSession({
   useEffect(() => {
     timerRef.current = {
       elapsed: timer.elapsed,
+      isExpired: timer.isExpired,
       pause: timer.pause,
+      resume: timer.resume,
     }
-  }, [timer.elapsed, timer.pause])
+  }, [timer.elapsed, timer.isExpired, timer.pause, timer.resume])
 
   useEffect(() => {
     if (!initialized || !sessionStateRef.current || pendingTimeoutElapsedRef.current === null) {
@@ -268,9 +295,20 @@ function ActiveQuizSession({
   }, [])
 
   const handlePause = async () => {
+    if (finishingRef.current || timer.isExpired) {
+      setPauseDialog(false)
+      return
+    }
+
     timer.pause()
     await quiz.pauseSession(timer.elapsed)
+    if (finishingRef.current) return
+
     navigate(`/esame/${examId}`)
+  }
+
+  const handleDeliver = () => {
+    void finishAndNavigate(timer.isExpired, timer.elapsed)
   }
 
   const state = quiz.sessionState
@@ -318,7 +356,12 @@ function ActiveQuizSession({
       >
         <button
           type="button"
-          onClick={() => setPauseDialog(true)}
+          onClick={() => {
+            if (!isFinishing && !timer.isExpired) {
+              setPauseDialog(true)
+            }
+          }}
+          disabled={isFinishing || timer.isExpired}
           style={{
             padding: '0.45rem 0.75rem',
             borderRadius: '8px',
@@ -335,6 +378,21 @@ function ActiveQuizSession({
       </div>
 
       <ProgressBar current={state.currentIndex + 1} total={questions.length} />
+      {finishError && (
+        <div
+          role="alert"
+          style={{
+            margin: '0.75rem 0',
+            padding: '0.85rem',
+            border: '1px solid var(--danger)',
+            borderRadius: '8px',
+            background: 'rgba(224, 85, 85, 0.12)',
+            color: 'var(--text)',
+          }}
+        >
+          {finishError}
+        </div>
+      )}
       <div style={{ margin: '0.75rem 0' }}>
         <DotNav
           total={questions.length}
@@ -440,7 +498,12 @@ function ActiveQuizSession({
 
       <button
         type="button"
-        onClick={() => setDeliverDialog(true)}
+        onClick={() => {
+          if (!isFinishing) {
+            setDeliverDialog(true)
+          }
+        }}
+        disabled={isFinishing}
         style={{
           width: '100%',
           minHeight: '48px',
@@ -480,6 +543,7 @@ function ActiveQuizSession({
           void handlePause()
         }}
         onCancel={() => setPauseDialog(false)}
+        busy={isFinishing}
       />
 
       <ConfirmDialog
@@ -493,9 +557,10 @@ function ActiveQuizSession({
         confirmLabel="Consegna"
         onConfirm={() => {
           setDeliverDialog(false)
-          void finishAndNavigate(false)
+          handleDeliver()
         }}
         onCancel={() => setDeliverDialog(false)}
+        busy={isFinishing}
       />
     </div>
   )

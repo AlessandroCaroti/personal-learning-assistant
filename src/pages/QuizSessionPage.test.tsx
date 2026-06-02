@@ -95,6 +95,17 @@ function makePaused(overrides: Partial<PausedSession> = {}): PausedSession {
   }
 }
 
+function deferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve
+    reject = promiseReject
+  })
+
+  return { promise, resolve, reject }
+}
+
 function LocationStateView() {
   const location = useLocation()
   return <pre>{JSON.stringify(location.state)}</pre>
@@ -271,6 +282,65 @@ describe('QuizSessionPage', () => {
       )
     })
     expect(await screen.findByRole('heading', { name: 'Dashboard esame' })).not.toBeNull()
+  })
+
+  it('lets timeout completion win when pause dialog was open before expiration', async () => {
+    vi.useFakeTimers()
+    const saveCompletion = deferred<void>()
+    saveQuizSession.mockReturnValueOnce(saveCompletion.promise)
+    renderPage({ entryState: { count: 1, limitSeconds: 1 } })
+
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(screen.getByText('Domanda 1 di 1')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Pausa' }))
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000)
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(saveQuizSession).toHaveBeenCalledTimes(1)
+
+    const pauseConfirm = screen.queryByRole('button', { name: 'Metti in pausa' })
+    if (pauseConfirm) {
+      fireEvent.click(pauseConfirm)
+    }
+
+    await act(async () => {
+      saveCompletion.resolve(undefined)
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(savePausedSession).not.toHaveBeenCalled()
+    expect(screen.queryByRole('heading', { name: 'Dashboard esame' })).toBeNull()
+    expect(screen.getByText(/"completedByTimeout":true/)).not.toBeNull()
+  })
+
+  it('shows a finish error after persistence fails and allows delivery retry', async () => {
+    saveQuizSession
+      .mockRejectedValueOnce(new Error('IndexedDB unavailable'))
+      .mockResolvedValueOnce(undefined)
+    renderPage({ entryState: { count: 1 } })
+
+    await screen.findByText('Domanda 1 di 1')
+    fireEvent.click(screen.getByRole('button', { name: /Consegna quiz/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consegna' }))
+
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'Impossibile salvare il risultato del quiz. Riprova.',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Consegna quiz/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consegna' }))
+
+    await waitFor(() => {
+      expect(saveQuizSession).toHaveBeenCalledTimes(2)
+    })
+    expect(await screen.findByText(/"completedByTimeout":false/)).not.toBeNull()
   })
 
   it('supports free navigation through the dot nav', async () => {
