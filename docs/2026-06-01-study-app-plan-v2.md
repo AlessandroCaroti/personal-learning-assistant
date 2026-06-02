@@ -1040,7 +1040,7 @@ git commit -m "feat: useTimer hook con conta-su, conta-giù, pause/resume"
 - Create: `src/components/ThemeToggle.tsx`
 - Create: `src/components/FileImportButton.tsx`
 
-- [ ] **Step 1: Crea appStore.ts**
+- [x] **Step 1: Crea appStore.ts**
 
 ```typescript
 // src/store/appStore.ts
@@ -1076,7 +1076,7 @@ export const useAppStore = create<AppStore>((set) => ({
 }))
 ```
 
-- [ ] **Step 2: Crea ConfirmDialog.tsx**
+- [x] **Step 2: Crea ConfirmDialog.tsx**
 
 ```tsx
 // src/components/ConfirmDialog.tsx
@@ -1150,7 +1150,7 @@ export function Timer({ elapsed, remaining }: TimerProps) {
 }
 ```
 
-- [ ] **Step 4: Crea ProgressBar.tsx**
+- [x] **Step 4: Crea ProgressBar.tsx**
 
 ```tsx
 // src/components/ProgressBar.tsx
@@ -1169,7 +1169,7 @@ export function ProgressBar({ current, total }: ProgressBarProps) {
 }
 ```
 
-- [ ] **Step 5: Crea DotNav.tsx**
+- [x] **Step 5: Crea DotNav.tsx**
 
 ```tsx
 // src/components/DotNav.tsx
@@ -1210,7 +1210,7 @@ export function DotNav({ total, current, states, onSelect }: DotNavProps) {
 }
 ```
 
-- [ ] **Step 6: Crea ThemeToggle.tsx**
+- [x] **Step 6: Crea ThemeToggle.tsx**
 
 ```tsx
 // src/components/ThemeToggle.tsx
@@ -1226,7 +1226,7 @@ export function ThemeToggle() {
 }
 ```
 
-- [ ] **Step 7: Crea FileImportButton.tsx**
+- [x] **Step 7: Crea FileImportButton.tsx**
 
 ```tsx
 // src/components/FileImportButton.tsx
@@ -1277,7 +1277,7 @@ export function FileImportButton({ label, accept, onFile, disabled }: FileImport
 }
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/store/ src/components/
@@ -1292,7 +1292,7 @@ git commit -m "feat: Zustand store e componenti UI base (ConfirmDialog, Timer, D
 - Create: `src/components/Layout.tsx`
 - Create: `src/App.tsx`
 
-- [ ] **Step 1: Crea Layout.tsx con sidebar (desktop) e bottom-tab (Android/mobile)**
+- [x] **Step 1: Crea Layout.tsx con sidebar (desktop) e bottom-tab (Android/mobile)**
 
 ```tsx
 // src/components/Layout.tsx
@@ -1369,7 +1369,7 @@ Aggiungi in `src/index.css`:
 }
 ```
 
-- [ ] **Step 2: Crea App.tsx con tutte le route e Capacitor back button**
+- [x] **Step 2: Crea App.tsx con tutte le route e Capacitor back button**
 
 ```tsx
 // src/App.tsx
@@ -1424,7 +1424,7 @@ export default function App() {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/components/Layout.tsx src/App.tsx src/index.css
@@ -1438,7 +1438,7 @@ git commit -m "feat: Layout responsive (sidebar/bottom-tab) e React Router"
 **Files:**
 - Create: `src/pages/TutorialPage.tsx`
 
-- [ ] **Step 1: Crea TutorialPage.tsx**
+- [x] **Step 1: Crea TutorialPage.tsx**
 
 ```tsx
 // src/pages/TutorialPage.tsx
@@ -1610,7 +1610,7 @@ export function TutorialPage({ isOnboarding = false }: { isOnboarding?: boolean 
 }
 ```
 
-- [ ] **Step 2: Aggiungi logica onboarding in App.tsx**
+- [x] **Step 2: Aggiungi logica onboarding in App.tsx**
 
 Modifica `src/App.tsx` — aggiungi route onboarding e controllo `tutorialSeen`:
 
@@ -1633,7 +1633,7 @@ Nella Route `/`, avvolgi HomePage con OnboardingGuard. Aggiungi la route `/onboa
 <Route path="/" element={<OnboardingGuard><HomePage /></OnboardingGuard>} />
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/pages/TutorialPage.tsx src/App.tsx
@@ -1648,7 +1648,7 @@ git commit -m "feat: TutorialPage con prompt copiabili e onboarding al primo avv
 - Create: `src/pages/HomePage.tsx`
 - Create: `src/hooks/useExam.ts`
 
-- [ ] **Step 1: Crea useExam.ts**
+- [x] **Step 1: Crea useExam.ts**
 
 ```typescript
 // src/hooks/useExam.ts
@@ -1700,7 +1700,7 @@ npm install uuid
 npm install -D @types/uuid
 ```
 
-- [ ] **Step 2: Crea HomePage.tsx**
+- [x] **Step 2: Crea HomePage.tsx**
 
 ```tsx
 // src/pages/HomePage.tsx
@@ -1842,7 +1842,7 @@ export function HomePage() {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/hooks/useExam.ts src/pages/HomePage.tsx
