@@ -16,6 +16,12 @@ export interface QuizSessionState {
   selectedAnswer: string | null
 }
 
+interface QuizSessionMetadata {
+  timeLimitSeconds: number | null
+  macroargomenti: string[]
+  isReviewSession: boolean
+}
+
 function prepareQuestion(domanda: QuizDomanda): SessionQuestion {
   if (domanda.tipo !== 'multipla' || !domanda.opzioni) return { ...domanda }
 
@@ -48,11 +54,56 @@ export function useQuiz(examId: string) {
   const [macroargomenti, setMacroargomenti] = useState<string[]>([])
   const [isReviewSession, setIsReviewSession] = useState(false)
   const sessionStateRef = useRef<QuizSessionState | null>(null)
+  const sessionMetadataRef = useRef<QuizSessionMetadata>({
+    timeLimitSeconds: null,
+    macroargomenti: [],
+    isReviewSession: false,
+  })
   const selectedAnswerRef = useRef<string | null>(null)
+  const statsUpdateQueueRef = useRef<Promise<void>>(Promise.resolve())
 
   const clearSelectedAnswer = useCallback(() => {
     selectedAnswerRef.current = null
   }, [])
+
+  const setActiveSession = useCallback(
+    (nextSessionState: QuizSessionState | null, metadata: QuizSessionMetadata) => {
+      sessionMetadataRef.current = {
+        ...metadata,
+        macroargomenti: [...metadata.macroargomenti],
+      }
+      sessionStateRef.current = nextSessionState
+      setTimeLimitSeconds(metadata.timeLimitSeconds)
+      setMacroargomenti([...metadata.macroargomenti])
+      setIsReviewSession(metadata.isReviewSession)
+      setSessionState(nextSessionState)
+    },
+    [],
+  )
+
+  const enqueueStatsUpdate = useCallback(
+    (questionId: string, isCorrect: boolean) => {
+      const update = async () => {
+        const stats = await storage.getQuestionStats(examId)
+        const existing = stats.find((item) => item.questionId === questionId)
+        await storage.saveQuestionStat({
+          id: existing?.id ?? `${examId}__${questionId}`,
+          examId,
+          questionId,
+          timesShown: (existing?.timesShown ?? 0) + 1,
+          timesCorrect: (existing?.timesCorrect ?? 0) + (isCorrect ? 1 : 0),
+        })
+      }
+
+      statsUpdateQueueRef.current = statsUpdateQueueRef.current
+        .catch(() => undefined)
+        .then(update)
+        .catch((error) => {
+          console.error('Failed to update question stats', error)
+        })
+    },
+    [examId],
+  )
 
   const startSession = useCallback(
     (
@@ -65,19 +116,19 @@ export function useQuiz(examId: string) {
       const questions = buildSessionQuestions(filtered, Math.min(Math.max(0, n), filtered.length))
 
       clearSelectedAnswer()
-      setTimeLimitSeconds(limitSec)
-      setMacroargomenti([...selectedMacro])
-      setIsReviewSession(false)
       const nextSessionState = {
         questions,
         currentIndex: 0,
         confirmedAnswers: {},
         selectedAnswer: null,
       }
-      sessionStateRef.current = nextSessionState
-      setSessionState(nextSessionState)
+      setActiveSession(nextSessionState, {
+        timeLimitSeconds: limitSec,
+        macroargomenti: selectedMacro,
+        isReviewSession: false,
+      })
     },
-    [clearSelectedAnswer],
+    [clearSelectedAnswer, setActiveSession],
   )
 
   const resumeFromPaused = useCallback(
@@ -95,19 +146,19 @@ export function useQuiz(examId: string) {
       const validQuestionIds = new Set(questions.map((question) => question.id))
 
       clearSelectedAnswer()
-      setTimeLimitSeconds(ps.timeLimitSeconds)
-      setMacroargomenti([...(ps.macroargomenti ?? [])])
-      setIsReviewSession(false)
       const nextSessionState = {
         questions,
         currentIndex: clampIndex(ps.currentQuestionIndex ?? 0, questions.length),
         confirmedAnswers: filterConfirmedAnswers(ps.confirmedAnswers, validQuestionIds),
         selectedAnswer: null,
       }
-      sessionStateRef.current = nextSessionState
-      setSessionState(nextSessionState)
+      setActiveSession(nextSessionState, {
+        timeLimitSeconds: ps.timeLimitSeconds,
+        macroargomenti: ps.macroargomenti ?? [],
+        isReviewSession: false,
+      })
     },
-    [clearSelectedAnswer],
+    [clearSelectedAnswer, setActiveSession],
   )
 
   const selectAnswer = useCallback((answer: string) => {
@@ -142,21 +193,9 @@ export function useQuiz(examId: string) {
       sessionStateRef.current = nextSessionState
       setSessionState(nextSessionState)
 
-      void (async () => {
-        const stats = await storage.getQuestionStats(examId)
-        const existing = stats.find((item) => item.questionId === questionId)
-        await storage.saveQuestionStat({
-          id: existing?.id ?? `${examId}__${questionId}`,
-          examId,
-          questionId,
-          timesShown: (existing?.timesShown ?? 0) + 1,
-          timesCorrect:
-            (existing?.timesCorrect ?? 0) +
-            (capturedAnswer === question.risposta_corretta ? 1 : 0),
-        })
-      })()
+      enqueueStatsUpdate(questionId, capturedAnswer === question.risposta_corretta)
     },
-    [clearSelectedAnswer, examId],
+    [clearSelectedAnswer, enqueueStatsUpdate],
   )
 
   const goTo = useCallback(
@@ -180,6 +219,7 @@ export function useQuiz(examId: string) {
     async (elapsedSeconds: number) => {
       const current = sessionStateRef.current
       if (!current) return
+      const metadata = sessionMetadataRef.current
 
       await storage.savePausedSession({
         id: `${examId}__quiz`,
@@ -187,14 +227,14 @@ export function useQuiz(examId: string) {
         mode: 'quiz',
         savedAt: new Date().toISOString(),
         elapsedSeconds,
-        timeLimitSeconds,
-        macroargomenti,
+        timeLimitSeconds: metadata.timeLimitSeconds,
+        macroargomenti: metadata.macroargomenti,
         questionIds: current.questions.map((question) => question.id),
         currentQuestionIndex: current.currentIndex,
         confirmedAnswers: current.confirmedAnswers,
       })
     },
-    [examId, macroargomenti, timeLimitSeconds],
+    [examId],
   )
 
   const finishSession = useCallback(
@@ -206,6 +246,7 @@ export function useQuiz(examId: string) {
       void allDomande
       const current = sessionStateRef.current
       if (!current) return null
+      const metadata = sessionMetadataRef.current
 
       const errors: string[] = []
       const unanswered: string[] = []
@@ -229,29 +270,26 @@ export function useQuiz(examId: string) {
         score,
         total: current.questions.length,
         totalTime: elapsedSeconds,
-        timeLimitSeconds,
+        timeLimitSeconds: metadata.timeLimitSeconds,
         completedByTimeout,
-        macroargomenti,
+        macroargomenti: metadata.macroargomenti,
         errors,
         unanswered,
-        isReview: isReviewSession,
+        isReview: metadata.isReviewSession,
       }
 
       await storage.saveQuizSession(savedSession)
       await storage.deletePausedSession(`${examId}__quiz`)
       clearSelectedAnswer()
-      sessionStateRef.current = null
-      setSessionState(null)
+      setActiveSession(null, {
+        timeLimitSeconds: null,
+        macroargomenti: [],
+        isReviewSession: false,
+      })
 
       return savedSession
     },
-    [
-      clearSelectedAnswer,
-      examId,
-      isReviewSession,
-      macroargomenti,
-      timeLimitSeconds,
-    ],
+    [clearSelectedAnswer, examId, setActiveSession],
   )
 
   const startReviewSession = useCallback(
@@ -263,26 +301,31 @@ export function useQuiz(examId: string) {
         .filter((domanda): domanda is QuizDomanda => Boolean(domanda))
         .map(prepareQuestion)
 
+      if (questions.length === 0) {
+        throw new Error('Nessuna domanda disponibile per il ripasso')
+      }
+
       clearSelectedAnswer()
-      setTimeLimitSeconds(null)
-      setMacroargomenti([])
-      setIsReviewSession(true)
       const nextSessionState = {
         questions,
         currentIndex: 0,
         confirmedAnswers: {},
         selectedAnswer: null,
       }
-      sessionStateRef.current = nextSessionState
-      setSessionState(nextSessionState)
+      setActiveSession(nextSessionState, {
+        timeLimitSeconds: null,
+        macroargomenti: [],
+        isReviewSession: true,
+      })
     },
-    [clearSelectedAnswer],
+    [clearSelectedAnswer, setActiveSession],
   )
 
   return {
     sessionState,
     timeLimitSeconds,
     macroargomenti,
+    isReviewSession,
     startSession,
     resumeFromPaused,
     selectAnswer,

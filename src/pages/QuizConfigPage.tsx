@@ -147,10 +147,14 @@ export function QuizConfigPage() {
   }, [quizData, selectedMacro])
 
   const maxAvailable = availableQuestions.length
+  const rawRequestedCount =
+    countPreset === 'custom'
+      ? Number.parseInt(customCount, 10) || 1
+      : countPreset
   const requestedCount =
     countPreset === 'custom'
-      ? clampNumber(Number.parseInt(customCount, 10) || 1, 1, Math.max(1, maxAvailable))
-      : countPreset
+      ? clampNumber(rawRequestedCount, 1, Math.max(1, maxAvailable))
+      : rawRequestedCount
   const actualCount = Math.min(requestedCount, maxAvailable)
   const limitSeconds =
     timePreset === null
@@ -282,7 +286,7 @@ export function QuizConfigPage() {
             />
           </label>
         )}
-        {requestedCount > maxAvailable && maxAvailable > 0 && (
+        {rawRequestedCount > maxAvailable && maxAvailable > 0 && (
           <p role="status" style={{ marginTop: '0.75rem', color: 'var(--warning)' }}>
             Sono disponibili solo {maxAvailable} domande con i filtri selezionati.
           </p>

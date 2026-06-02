@@ -128,6 +128,78 @@ describe('useQuiz', () => {
     })
   })
 
+  it('serializes repeated stat updates and catches update failures', async () => {
+    const statsById = new Map<string, QuestionStats>()
+    getQuestionStats.mockImplementation(async () => [...statsById.values()])
+    saveQuestionStat.mockImplementation(async (stat: QuestionStats) => {
+      statsById.set(stat.questionId, stat)
+    })
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    const { result } = renderHook(() => useQuiz('exam-1'))
+
+    act(() => {
+      result.current.startSession([domande[0]], [], 1, null)
+      result.current.selectAnswer('4')
+      result.current.confirmAnswer('q1', 1)
+      result.current.selectAnswer('4')
+      result.current.confirmAnswer('q1', 2)
+    })
+
+    await waitFor(() => {
+      expect(statsById.get('q1')).toEqual({
+        id: 'exam-1__q1',
+        examId: 'exam-1',
+        questionId: 'q1',
+        timesShown: 2,
+        timesCorrect: 2,
+      })
+    })
+
+    saveQuestionStat.mockRejectedValueOnce(new Error('storage unavailable'))
+
+    act(() => {
+      result.current.selectAnswer('3')
+      result.current.confirmAnswer('q1', 3)
+    })
+
+    await waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(
+        'Failed to update question stats',
+        expect.any(Error),
+      )
+    })
+    consoleError.mockRestore()
+  })
+
+  it('uses same-tick start metadata when finishing before React state catches up', async () => {
+    const { result } = renderHook(() => useQuiz('exam-1'))
+    let normalSaved = null
+    let reviewSaved = null
+
+    await act(async () => {
+      result.current.startSession([domande[0], domande[2]], ['Algebra'], 2, 450)
+      normalSaved = await result.current.finishSession(12, false, domande)
+    })
+
+    await act(async () => {
+      result.current.startReviewSession(['q2'], [], domande)
+      reviewSaved = await result.current.finishSession(18, false, domande)
+    })
+
+    expect(normalSaved).toMatchObject({
+      total: 2,
+      timeLimitSeconds: 450,
+      macroargomenti: ['Algebra'],
+      isReview: false,
+    })
+    expect(reviewSaved).toMatchObject({
+      total: 1,
+      timeLimitSeconds: null,
+      macroargomenti: [],
+      isReview: true,
+    })
+  })
+
   it('finishes with score, errors, unanswered, deletes pause, and preserves review flag', async () => {
     const { result } = renderHook(() => useQuiz('exam-1'))
 
@@ -165,10 +237,7 @@ describe('useQuiz', () => {
     const { result } = renderHook(() => useQuiz('exam-1'))
 
     act(() => {
-      result.current.startSession([domande[0], domande[2]], ['Algebra'], 2, 900)
-      result.current.goTo(1)
-      result.current.selectAnswer('6')
-      result.current.confirmAnswer('q3', 8)
+      result.current.resumeFromPaused(makePaused(), domande)
     })
 
     await act(async () => {
@@ -181,9 +250,9 @@ describe('useQuiz', () => {
       mode: 'quiz',
       savedAt: expect.any(String),
       elapsedSeconds: 123,
-      timeLimitSeconds: 900,
+      timeLimitSeconds: 600,
       macroargomenti: ['Algebra'],
-      questionIds: expect.arrayContaining(['q1', 'q3']),
+      questionIds: ['q3', 'q1'],
       currentQuestionIndex: 1,
       confirmedAnswers: { q3: '6' },
     })
@@ -210,5 +279,22 @@ describe('useQuiz', () => {
     ])
     expect(result.current.sessionState?.currentIndex).toBe(1)
     expect(result.current.sessionState?.confirmedAnswers).toEqual({ q3: '6' })
+  })
+
+  it('does not create an active review session when there are no review questions', () => {
+    const { result } = renderHook(() => useQuiz('exam-1'))
+
+    act(() => {
+      result.current.startSession([domande[0]], ['Algebra'], 1, 300)
+    })
+
+    expect(() => {
+      act(() => {
+        result.current.startReviewSession(['missing'], [], domande)
+      })
+    }).toThrow('Nessuna domanda disponibile per il ripasso')
+    expect(result.current.sessionState?.questions.map((question) => question.id)).toEqual(['q1'])
+    expect(result.current.timeLimitSeconds).toBe(300)
+    expect(result.current.macroargomenti).toEqual(['Algebra'])
   })
 })

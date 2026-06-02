@@ -163,6 +163,20 @@ describe('QuizConfigPage', () => {
     expect(await screen.findByText(/sono disponibili solo 1 domande/i)).not.toBeNull()
   })
 
+  it('warns when a custom count exceeds all available questions before clamping', async () => {
+    renderPage()
+
+    const customCountButton = (await screen.findAllByRole('button', {
+      name: 'Personalizzato',
+    }))[0]
+    fireEvent.click(customCountButton)
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Domande' }), {
+      target: { value: '999' },
+    })
+
+    expect(await screen.findByText(/sono disponibili solo 3 domande/i)).not.toBeNull()
+  })
+
   it('disables start when no questions are available after filtering', async () => {
     getEsame.mockResolvedValue(
       makeExam({
