@@ -31,7 +31,7 @@ describe('TutorialPage', () => {
     expect(screen.getByRole('button', { name: 'Salta' })).not.toBeNull()
   })
 
-  it('copies the quiz and flashcard prompt and shows copied state', async () => {
+  it('copies the quiz prompt and shows copied state', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -48,7 +48,27 @@ describe('TutorialPage', () => {
 
     expect(await screen.findByRole('button', { name: 'Copiato!' })).not.toBeNull()
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining('quiz.json'))
+    expect(writeText).not.toHaveBeenCalledWith(expect.stringContaining('flashcard.json'))
+  })
+
+  it('copies the flashcard prompt separately', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText },
+    })
+
+    render(
+      <MemoryRouter>
+        <TutorialPage />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Copia prompt' })[1])
+
+    expect(await screen.findByRole('button', { name: 'Copiato!' })).not.toBeNull()
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining('flashcard.json'))
+    expect(writeText).not.toHaveBeenCalledWith(expect.stringContaining('quiz.json'))
   })
 
   it('shows visible prompt text and a manual-copy fallback when clipboard copy fails', async () => {
@@ -63,10 +83,13 @@ describe('TutorialPage', () => {
       </MemoryRouter>,
     )
 
-    const prompt = screen.getByLabelText('Prompt: Genera quiz e flashcard') as HTMLTextAreaElement
+    const quizPrompt = screen.getByLabelText('Prompt: Genera quiz') as HTMLTextAreaElement
+    const flashcardPrompt = screen.getByLabelText('Prompt: Genera flashcard') as HTMLTextAreaElement
 
-    expect(prompt.value).toContain('quiz.json')
-    expect(prompt.value).toContain('flashcard.json')
+    expect(quizPrompt.value).toContain('quiz.json')
+    expect(quizPrompt.value).not.toContain('flashcard.json')
+    expect(flashcardPrompt.value).toContain('flashcard.json')
+    expect(flashcardPrompt.value).not.toContain('quiz.json')
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Copia prompt' })[0])
 

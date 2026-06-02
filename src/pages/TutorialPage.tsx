@@ -2,10 +2,10 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export const PROMPT_QUIZ_FLASHCARD = `Ho allegato i miei documenti di studio per l'esame di [NOME ESAME].
-Analizza tutto il contenuto e genera due file JSON.
+export const PROMPT_QUIZ = `Ho allegato i miei documenti di studio per l'esame di [NOME ESAME].
+Analizza tutto il contenuto e genera un file JSON chiamato quiz.json.
 
-━━━ FILE 1: quiz.json ━━━
+━━━ FILE: quiz.json ━━━
 Schema:
 {
   "esame": "[NOME ESAME]",
@@ -39,7 +39,12 @@ Regole:
 - Copri uniformemente tutti gli argomenti del materiale
 - id sequenziale: q1, q2, q3...
 
-━━━ FILE 2: flashcard.json ━━━
+Rispondi con un solo blocco di codice JSON per quiz.json. Nient'altro.`
+
+export const PROMPT_FLASHCARD = `Ho allegato i miei documenti di studio per l'esame di [NOME ESAME].
+Analizza tutto il contenuto e genera un file JSON chiamato flashcard.json.
+
+━━━ FILE: flashcard.json ━━━
 Schema:
 {
   "esame": "[NOME ESAME]",
@@ -56,11 +61,10 @@ Regole:
 - Genera il maggior numero possibile di carte (minimo 60)
 - Il fronte è una domanda aperta, un termine chiave, o una formula
 - Il retro è la risposta completa, comprensibile da sola
-- macroargomenti: coerenti con quelli usati in quiz.json
+- macroargomenti: argomenti tematici coerenti, riutilizzati tra le carte
 - id sequenziale: f1, f2, f3...
 
-Rispondi con due blocchi di codice separati e ben etichettati:
-il primo per quiz.json, il secondo per flashcard.json. Nient'altro.`
+Rispondi con un solo blocco di codice JSON per flashcard.json. Nient'altro.`
 
 export const PROMPT_RIASSUNTO = `Ho allegato i miei documenti di studio per l'esame di [NOME ESAME].
 Crea un riassunto completo in formato HTML con queste caratteristiche:
@@ -242,21 +246,28 @@ export function TutorialPage({ isOnboarding = false }: { isOnboarding?: boolean 
         </p>
       </Step>
 
-      <Step number={2} title="Genera quiz e flashcard" prompt={PROMPT_QUIZ_FLASHCARD}>
+      <Step number={2} title="Genera quiz" prompt={PROMPT_QUIZ}>
         <p>
           Apri <strong>ChatGPT</strong> o <strong>Claude</strong>, carica tutti i file dell'esame, poi incolla il
           prompt qui sotto. Sostituisci <code>[NOME ESAME]</code> con il nome reale prima di inviare.
         </p>
       </Step>
 
-      <Step number={3} title="(Facoltativo) Genera il riassunto" prompt={PROMPT_RIASSUNTO}>
+      <Step number={3} title="Genera flashcard" prompt={PROMPT_FLASHCARD}>
+        <p>
+          Usa un secondo messaggio o una nuova chat con gli stessi file caricati, poi incolla questo prompt per
+          ottenere soltanto il file <code>flashcard.json</code>.
+        </p>
+      </Step>
+
+      <Step number={4} title="(Facoltativo) Genera il riassunto" prompt={PROMPT_RIASSUNTO}>
         <p>
           Se non hai già un riassunto, puoi chiederlo all'AI. Il file generato sarà in formato HTML,
           importabile direttamente nell'app.
         </p>
       </Step>
 
-      <Step number={4} title="Importa nell'app">
+      <Step number={5} title="Importa nell'app">
         <p>
           Salva i file generati sul tuo dispositivo, poi crea un nuovo esame e importa ciascun file nella
           sezione corrispondente.
