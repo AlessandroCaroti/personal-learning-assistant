@@ -24,6 +24,12 @@ type LoadedSession =
     config: StartConfig
   }
   | {
+    mode: 'review'
+    quizData: QuizFile
+    errors: string[]
+    unanswered: string[]
+  }
+  | {
     mode: 'resume'
     quizData: QuizFile
     pausedSession: PausedSession
@@ -53,6 +59,24 @@ function readStartConfig(state: unknown): StartConfig {
   return { selectedMacro, count, limitSeconds }
 }
 
+function readReviewConfig(state: unknown): { errors: string[]; unanswered: string[] } | null {
+  if (!state || typeof state !== 'object') return null
+
+  const record = state as Record<string, unknown>
+  if (record.isReview !== true) return null
+
+  const errors = Array.isArray(record.reviewErrors)
+    ? record.reviewErrors.filter((item): item is string => typeof item === 'string')
+    : []
+  const unanswered = Array.isArray(record.reviewUnanswered)
+    ? record.reviewUnanswered.filter((item): item is string => typeof item === 'string')
+    : []
+
+  if (errors.length === 0 && unanswered.length === 0) return null
+
+  return { errors, unanswered }
+}
+
 export function QuizSessionPage() {
   const { examId } = useParams<{ examId: string }>()
   const navigate = useNavigate()
@@ -77,6 +101,19 @@ export function QuizSessionPage() {
         }
 
         const quizData = validateQuizFile(parseJsonFile(esame.files.quiz.data))
+        const reviewConfig = readReviewConfig(location.state)
+
+        if (reviewConfig) {
+          if (!cancelled) {
+            setLoadedSession({
+              mode: 'review',
+              quizData,
+              errors: reviewConfig.errors,
+              unanswered: reviewConfig.unanswered,
+            })
+          }
+          return
+        }
 
         if ((location.state as { resume?: boolean } | null)?.resume === true) {
           const pausedSession = await storage.getPausedSession(`${examId}__quiz`)
@@ -164,13 +201,21 @@ function ActiveQuizSession({
   const initialLimitSeconds =
     loadedSession.mode === 'resume'
       ? loadedSession.pausedSession.timeLimitSeconds
-      : loadedSession.config.limitSeconds
+      : loadedSession.mode === 'review'
+        ? null
+        : loadedSession.config.limitSeconds
 
   useEffect(() => {
     if (initialized) return
 
     if (loadedSession.mode === 'resume') {
       quiz.resumeFromPaused(loadedSession.pausedSession, loadedSession.quizData.domande)
+    } else if (loadedSession.mode === 'review') {
+      quiz.startReviewSession(
+        loadedSession.errors,
+        loadedSession.unanswered,
+        loadedSession.quizData.domande,
+      )
     } else {
       quiz.startSession(
         loadedSession.quizData.domande,

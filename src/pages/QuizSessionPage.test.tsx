@@ -208,6 +208,31 @@ describe('QuizSessionPage', () => {
     expect(screen.getByLabelText('Tempo trascorso').textContent).toBe('0:42')
   })
 
+  it('starts a review session from result state and saves it as review without time limit', async () => {
+    renderPage({
+      entryState: {
+        isReview: true,
+        reviewErrors: ['q1'],
+        reviewUnanswered: ['q2'],
+      },
+    })
+
+    expect(await screen.findByText('Domanda 1 di 2')).not.toBeNull()
+    expect(screen.getByLabelText('Tempo trascorso').textContent).toBe('0:00')
+    await selectAndConfirm('4')
+    fireEvent.click(screen.getByRole('button', { name: /Consegna quiz/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consegna' }))
+
+    await waitFor(() => {
+      expect(saveQuizSession).toHaveBeenCalled()
+    })
+    const savedSession = saveQuizSession.mock.calls[0][0] as QuizSession
+    expect(savedSession.isReview).toBe(true)
+    expect(savedSession.timeLimitSeconds).toBeNull()
+    expect(savedSession.total).toBe(2)
+    expect(savedSession.unanswered).toEqual(['q2'])
+  })
+
   it('redirects to config when resume is requested but the paused session is missing', async () => {
     renderPage({ entryState: { resume: true } })
 
