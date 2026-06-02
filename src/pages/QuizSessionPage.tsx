@@ -148,6 +148,7 @@ function ActiveQuizSession({
   const [pauseDialog, setPauseDialog] = useState(false)
   const [deliverDialog, setDeliverDialog] = useState(false)
   const finishingRef = useRef(false)
+  const pendingTimeoutElapsedRef = useRef<number | null>(null)
   const timerRef = useRef<{ elapsed: number; pause: () => void } | null>(null)
   const sessionStateRef = useRef(quiz.sessionState)
 
@@ -180,15 +181,20 @@ function ActiveQuizSession({
   }, [quiz.sessionState])
 
   const finishAndNavigate = useCallback(
-    async (completedByTimeout: boolean) => {
+    async (completedByTimeout: boolean, elapsedOverride?: number) => {
       if (finishingRef.current) return
-      if (!sessionStateRef.current) return
+      if (!sessionStateRef.current) {
+        if (completedByTimeout) {
+          pendingTimeoutElapsedRef.current = elapsedOverride ?? timerRef.current?.elapsed ?? 0
+        }
+        return
+      }
 
       finishingRef.current = true
       timerRef.current?.pause()
 
       const session = await quiz.finishSession(
-        timerRef.current?.elapsed ?? 0,
+        elapsedOverride ?? timerRef.current?.elapsed ?? 0,
         completedByTimeout,
         loadedSession.quizData.domande,
       )
@@ -205,8 +211,8 @@ function ActiveQuizSession({
   const timer = useTimer({
     limitSeconds: quiz.timeLimitSeconds ?? initialLimitSeconds,
     initialElapsed,
-    onExpire: () => {
-      void finishAndNavigate(true)
+    onExpire: (elapsed) => {
+      void finishAndNavigate(true, elapsed)
     },
   })
 
@@ -216,6 +222,16 @@ function ActiveQuizSession({
       pause: timer.pause,
     }
   }, [timer.elapsed, timer.pause])
+
+  useEffect(() => {
+    if (!initialized || !sessionStateRef.current || pendingTimeoutElapsedRef.current === null) {
+      return
+    }
+
+    const elapsed = pendingTimeoutElapsedRef.current
+    pendingTimeoutElapsedRef.current = null
+    void finishAndNavigate(true, elapsed)
+  }, [finishAndNavigate, initialized, quiz.sessionState])
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return undefined

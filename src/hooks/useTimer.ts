@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 interface UseTimerOptions {
   limitSeconds: number | null
   initialElapsed?: number
-  onExpire?: () => void
+  onExpire?: (elapsed: number) => void
 }
 
 interface UseTimerResult {
@@ -44,8 +44,8 @@ export function useTimer({
     if (hasExpiredRef.current) return
 
     hasExpiredRef.current = true
-    onExpireRef.current?.()
-  }, [isExpired])
+    onExpireRef.current?.(elapsed)
+  }, [elapsed, isExpired])
 
   useEffect(() => {
     if (isPaused || isExpired) return undefined

@@ -223,12 +223,32 @@ describe('QuizSessionPage', () => {
     expect(saveQuizSession).toHaveBeenCalledTimes(1)
     const savedSession = saveQuizSession.mock.calls[0][0] as QuizSession
     expect(savedSession.completedByTimeout).toBe(true)
+    expect(savedSession.totalTime).toBe(1)
     expect(savedSession.unanswered).toEqual(['q1'])
     await act(async () => {
       await Promise.resolve()
       await Promise.resolve()
     })
     expect(screen.getByText(/"completedByTimeout":true/)).not.toBeNull()
+  })
+
+  it('auto-delivers an expired resumed session after initialization', async () => {
+    getPausedSession.mockResolvedValue(
+      makePaused({
+        elapsedSeconds: 60,
+        timeLimitSeconds: 60,
+      }),
+    )
+
+    renderPage({ entryState: { resume: true } })
+
+    await waitFor(() => {
+      expect(saveQuizSession).toHaveBeenCalledTimes(1)
+    })
+    const savedSession = saveQuizSession.mock.calls[0][0] as QuizSession
+    expect(savedSession.completedByTimeout).toBe(true)
+    expect(savedSession.totalTime).toBe(60)
+    expect(await screen.findByText(/"completedByTimeout":true/)).not.toBeNull()
   })
 
   it('pauses, saves elapsed state, and returns to the dashboard', async () => {

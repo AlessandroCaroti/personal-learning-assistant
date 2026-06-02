@@ -52,6 +52,7 @@ describe('useTimer', () => {
     expect(result.current.remaining).toBe(0)
     expect(result.current.isExpired).toBe(true)
     expect(onExpire).toHaveBeenCalledTimes(1)
+    expect(onExpire).toHaveBeenCalledWith(3)
   })
 
   it('pause stops timer', () => {
