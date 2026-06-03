@@ -51,6 +51,23 @@ describe('useExam', () => {
     expect(result.current.esami).toEqual([olderExam, newerExam])
   })
 
+  it('sorts exams by createdAt ascending after reload', async () => {
+    vi.mocked(storage.getAllEsami)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([newerExam, olderExam])
+
+    const { result } = renderHook(() => useExam())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.esami).toEqual([])
+
+    await act(async () => {
+      await result.current.reload()
+    })
+
+    expect(result.current.esami).toEqual([olderExam, newerExam])
+    expect(storage.getAllEsami).toHaveBeenCalledTimes(2)
+  })
+
   it('creates a trimmed exam, saves it, reloads, and returns it', async () => {
     const { result } = renderHook(() => useExam())
     await waitFor(() => expect(result.current.loading).toBe(false))

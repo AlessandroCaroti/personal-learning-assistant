@@ -109,7 +109,32 @@ describe('useTimer', () => {
     expect(result.current.remaining).toBe(5)
   })
 
-  it('calls onExpire exactly once and does not resume after expiry', () => {
+  it('keeps remaining at 0 after expiry and calls onExpire once after advancing beyond the limit', () => {
+    const onExpire = vi.fn()
+    const { result } = renderHook(() =>
+      useTimer({ limitSeconds: 2, onExpire }),
+    )
+
+    act(() => {
+      vi.advanceTimersByTime(5000)
+    })
+
+    expect(result.current.elapsed).toBe(2)
+    expect(result.current.remaining).toBe(0)
+    expect(result.current.isExpired).toBe(true)
+    expect(onExpire).toHaveBeenCalledTimes(1)
+
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(result.current.elapsed).toBe(2)
+    expect(result.current.remaining).toBe(0)
+    expect(result.current.isExpired).toBe(true)
+    expect(onExpire).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not resume after expiry', () => {
     const onExpire = vi.fn()
     const { result } = renderHook(() =>
       useTimer({ limitSeconds: 2, onExpire }),
