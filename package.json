@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "electron/main.mjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:win": "npm run build && electron-builder --win portable",
     "test": "vitest",
     "preview": "vite preview",
     "cap:sync": "npm run build && npx cap sync",
@@ -34,10 +36,32 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
     "@vitest/ui": "^4.1.8",
+    "electron": "^42.3.2",
+    "electron-builder": "^26.8.1",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.1.1",
     "typescript": "^5.6.0",
     "vite": "^6.0.0",
     "vitest": "^4.1.8"
+  },
+  "build": {
+    "appId": "com.carot.personal-learning-assistant",
+    "productName": "Personal Learning Assistant",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
   }
 }

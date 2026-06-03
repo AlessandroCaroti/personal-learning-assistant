@@ -7,6 +7,7 @@ Local study app built with React, Vite, TypeScript, and Capacitor.
 - Web dev server: `npm run dev`
 - Web production build: `npm run build`
 - Web preview of the build: `npm run preview`
+- Windows EXE build: `npm run build:win`
 - Capacitor sync: `npm run cap:sync`
 - Open Android project in Android Studio: `npm run cap:android`
 
@@ -37,3 +38,8 @@ Useful Gradle tasks in VS Code:
 - `Android: assembleRelease`
 - `Android: installDebug`
 - `Android: clean`
+
+## Windows EXE
+
+The `npm run build:win` command creates a portable Windows `.exe` in `release/`.
+It uses Electron to wrap the Vite build output, so the generated executable runs the same app without depending on a browser shell.
