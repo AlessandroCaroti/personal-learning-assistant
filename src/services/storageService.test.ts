@@ -78,6 +78,11 @@ describe('storageService', () => {
     await resetDb()
   })
 
+  it('returns empty exam results for an empty database and undefined for unknown ids', async () => {
+    await expect(getAllEsami()).resolves.toEqual([])
+    await expect(getEsame('unknown-exam')).resolves.toBeUndefined()
+  })
+
   it('creates, reads, updates, lists, and deletes exams', async () => {
     const updatedExam = {
       ...exam,
@@ -192,6 +197,8 @@ describe('storageService', () => {
   })
 
   it('gets, saves, updates, deletes, and filters paused quiz and flashcard sessions', async () => {
+    await expect(getPausedSession('unknown-session')).resolves.toBeUndefined()
+
     const quiz = makePausedQuiz({
       id: 'exam-1__quiz',
       examId: exam.id,
