@@ -21,4 +21,8 @@ describe('formatTime', () => {
   it('formats 3661 seconds as 61:01', () => {
     expect(formatTime(3661)).toBe('61:01')
   })
+
+  it('formats 7384 seconds as 123:04', () => {
+    expect(formatTime(7384)).toBe('123:04')
+  })
 })
