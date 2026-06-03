@@ -6,6 +6,7 @@
   "main": "electron/main.mjs",
   "scripts": {
     "dev": "vite",
+    "electron:dev": "electron .",
     "build": "tsc -b && vite build",
     "build:win": "npm run build && electron-builder --win portable",
     "test": "vitest",
@@ -56,6 +57,7 @@
       "package.json"
     ],
     "win": {
+      "signAndEditExecutable": false,
       "target": [
         "portable"
       ]

@@ -43,3 +43,30 @@ Useful Gradle tasks in VS Code:
 
 The `npm run build:win` command creates a portable Windows `.exe` in `release/`.
 It uses Electron to wrap the Vite build output, so the generated executable runs the same app without depending on a browser shell.
+
+To build the executable:
+
+```bash
+npm install
+npm run build:win
+```
+
+After the build completes, the portable executable is available in `release/` as `Personal Learning Assistant-<version>-x64.exe`.
+
+## Electron development
+
+Use two terminals:
+
+1. Start the renderer:
+
+```bash
+npm run dev
+```
+
+2. Start Electron:
+
+```bash
+npm run electron:dev
+```
+
+Electron loads `http://localhost:5173` during development and the built `dist/index.html` during packaging.

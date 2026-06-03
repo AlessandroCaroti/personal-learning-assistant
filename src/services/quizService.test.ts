@@ -89,7 +89,9 @@ describe('validateQuizFile', () => {
   })
 
   it('rejects unknown tipo', () => {
-    const bad = makeQuizFile([{ ...multiplaLimiti, tipo: 'aperta' } as QuizDomanda])
+    const bad = makeQuizFile([
+      { ...multiplaLimiti, tipo: 'aperta' } as unknown as QuizDomanda,
+    ])
 
     expect(() => validateQuizFile(bad)).toThrow(/tipo/i)
   })
