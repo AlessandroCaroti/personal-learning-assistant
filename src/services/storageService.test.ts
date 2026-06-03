@@ -1,182 +1,237 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import 'fake-indexeddb/auto'
-import type {
-  Esame,
-  FileRecord,
-  FlashcardStats,
-  PausedSession,
-  QuestionStats,
-  QuizSession,
-} from '../types'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { makeEsame, makePausedFlash, makePausedQuiz, makeQuizSession } from '../__tests__/factories'
+import { resetDb } from '../__tests__/resetDb'
+import type { FileRecord, FlashcardStats, QuestionStats } from '../types'
+import {
+  deleteEsame,
+  deleteFlashcardStatsForExam,
+  deletePausedSession,
+  deleteQuestionStatsForExam,
+  deleteQuizSessionsForExam,
+  getAllEsami,
+  getEsame,
+  getFlashcardStats,
+  getPausedSession,
+  getPausedSessionsForExam,
+  getQuestionStats,
+  getQuizSessions,
+  replaceFlashcardFileForExam,
+  replaceQuizFileForExam,
+  saveEsame,
+  saveFlashcardStat,
+  savePausedSession,
+  saveQuestionStat,
+  saveQuizSession,
+} from './storageService'
 
-let testDbSuffix = 0
-
-async function freshStorage() {
-  vi.resetModules()
-  vi.doMock('idb', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('idb')>()
-    const openDB: typeof actual.openDB = ((name, version, callbacks) => {
-      return actual.openDB(`${String(name)}-${testDbSuffix}`, version, callbacks)
-    }) as typeof actual.openDB
-
-    return {
-      ...actual,
-      openDB,
-    }
-  })
-
-  return import('./storageService')
-}
-
-const exam: Esame = {
+const exam = makeEsame({
   id: 'exam-1',
   name: 'Diritto privato',
   createdAt: '2026-06-01T10:00:00.000Z',
-  files: {},
-}
+})
 
-const otherExam: Esame = {
+const otherExam = makeEsame({
   id: 'exam-2',
   name: 'Economia',
   createdAt: '2026-06-01T11:00:00.000Z',
-  files: {},
-}
+})
 
-function quizSession(id: string, examId: string): QuizSession {
+function questionStat(overrides: Partial<QuestionStats> = {}): QuestionStats {
   return {
-    id,
-    examId,
-    date: '2026-06-01T12:00:00.000Z',
-    score: 7,
-    total: 10,
-    totalTime: 120,
-    timeLimitSeconds: null,
-    completedByTimeout: false,
-    macroargomenti: ['intro'],
-    errors: [],
-    unanswered: [],
-    isReview: false,
-  }
-}
-
-function questionStat(id: string, examId: string): QuestionStats {
-  return {
-    id,
-    examId,
-    questionId: id.split('__')[1] ?? id,
+    id: 'exam-1__q1',
+    examId: 'exam-1',
+    questionId: 'q1',
     timesShown: 2,
     timesCorrect: 1,
+    ...overrides,
   }
 }
 
-function flashcardStat(id: string, examId: string): FlashcardStats {
+function flashcardStat(overrides: Partial<FlashcardStats> = {}): FlashcardStats {
   return {
-    id,
-    examId,
-    cardId: id.split('__')[1] ?? id,
+    id: 'exam-1__f1',
+    examId: 'exam-1',
+    cardId: 'f1',
     lastEval: 'Sì',
     lastSeen: '2026-06-01T12:30:00.000Z',
-  }
-}
-
-function pausedSession(
-  id: string,
-  examId: string,
-  mode: PausedSession['mode'] = 'quiz',
-): PausedSession {
-  return {
-    id,
-    examId,
-    mode,
-    savedAt: '2026-06-01T12:45:00.000Z',
-    elapsedSeconds: 45,
-    timeLimitSeconds: null,
-    macroargomenti: ['intro'],
+    ...overrides,
   }
 }
 
 function fileRecord(name: string): FileRecord {
+  const bytes = new TextEncoder().encode(name)
+
   return {
     name,
     type: 'application/json',
-    data: new TextEncoder().encode(name).buffer,
+    data: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
   }
 }
 
+function byId<T extends { id: string }>(records: T[]): T[] {
+  return [...records].sort((a, b) => a.id.localeCompare(b.id))
+}
+
 describe('storageService', () => {
-  beforeEach(() => {
-    testDbSuffix += 1
+  beforeEach(async () => {
+    await resetDb()
   })
 
-  it('stores and reads exams plus exam-scoped records through indexes', async () => {
-    const storage = await freshStorage()
+  it('creates, reads, updates, lists, and deletes exams', async () => {
+    const updatedExam = {
+      ...exam,
+      name: 'Diritto privato aggiornato',
+      files: {
+        quiz: fileRecord('quiz.json'),
+      },
+    }
 
-    await storage.saveEsame(exam)
-    await storage.saveEsame(otherExam)
-    await storage.saveQuizSession(quizSession('qs-1', exam.id))
-    await storage.saveQuizSession(quizSession('qs-2', otherExam.id))
-    await storage.saveQuestionStat(questionStat(`${exam.id}__q1`, exam.id))
-    await storage.saveFlashcardStat(flashcardStat(`${exam.id}__c1`, exam.id))
-    await storage.savePausedSession(pausedSession(`${exam.id}__quiz`, exam.id))
+    await saveEsame(exam)
+    await saveEsame(otherExam)
+    await saveEsame(updatedExam)
 
-    await expect(storage.getEsame(exam.id)).resolves.toEqual(exam)
-    await expect(storage.getAllEsami()).resolves.toEqual([exam, otherExam])
-    await expect(storage.getQuizSessions(exam.id)).resolves.toEqual([
-      quizSession('qs-1', exam.id),
-    ])
-    await expect(storage.getQuestionStats(exam.id)).resolves.toEqual([
-      questionStat(`${exam.id}__q1`, exam.id),
-    ])
-    await expect(storage.getFlashcardStats(exam.id)).resolves.toEqual([
-      flashcardStat(`${exam.id}__c1`, exam.id),
-    ])
-    await expect(storage.getPausedSession(`${exam.id}__quiz`)).resolves.toEqual(
-      pausedSession(`${exam.id}__quiz`, exam.id),
-    )
-    await expect(storage.getPausedSessionsForExam(exam.id)).resolves.toEqual([
-      pausedSession(`${exam.id}__quiz`, exam.id),
-    ])
+    await expect(getEsame(exam.id)).resolves.toEqual(updatedExam)
+    await expect(getAllEsami()).resolves.toEqual([updatedExam, otherExam])
+
+    await deleteEsame(exam.id)
+
+    await expect(getEsame(exam.id)).resolves.toBeUndefined()
+    await expect(getAllEsami()).resolves.toEqual([otherExam])
   })
 
   it('deletes an exam and cascades only records for that exam', async () => {
-    const storage = await freshStorage()
+    const examQuiz = makeQuizSession({ id: 'quiz-1', examId: exam.id })
+    const otherQuiz = makeQuizSession({ id: 'quiz-2', examId: otherExam.id })
+    const examQuestion = questionStat({ id: 'exam-1__q1', examId: exam.id })
+    const otherQuestion = questionStat({ id: 'exam-2__q1', examId: otherExam.id })
+    const examFlashcard = flashcardStat({ id: 'exam-1__f1', examId: exam.id })
+    const otherFlashcard = flashcardStat({ id: 'exam-2__f1', examId: otherExam.id })
+    const examPausedQuiz = makePausedQuiz({ id: 'exam-1__quiz', examId: exam.id })
+    const examPausedFlash = makePausedFlash({ id: 'exam-1__flashcard', examId: exam.id })
+    const otherPausedQuiz = makePausedQuiz({ id: 'exam-2__quiz', examId: otherExam.id })
 
-    await storage.saveEsame(exam)
-    await storage.saveEsame(otherExam)
-    await storage.saveQuizSession(quizSession('qs-1', exam.id))
-    await storage.saveQuizSession(quizSession('qs-2', otherExam.id))
-    await storage.saveQuestionStat(questionStat(`${exam.id}__q1`, exam.id))
-    await storage.saveQuestionStat(questionStat(`${otherExam.id}__q1`, otherExam.id))
-    await storage.saveFlashcardStat(flashcardStat(`${exam.id}__c1`, exam.id))
-    await storage.saveFlashcardStat(flashcardStat(`${otherExam.id}__c1`, otherExam.id))
-    await storage.savePausedSession(pausedSession(`${exam.id}__quiz`, exam.id))
-    await storage.savePausedSession(pausedSession(`${otherExam.id}__quiz`, otherExam.id))
+    await saveEsame(exam)
+    await saveEsame(otherExam)
+    await saveQuizSession(examQuiz)
+    await saveQuizSession(otherQuiz)
+    await saveQuestionStat(examQuestion)
+    await saveQuestionStat(otherQuestion)
+    await saveFlashcardStat(examFlashcard)
+    await saveFlashcardStat(otherFlashcard)
+    await savePausedSession(examPausedQuiz)
+    await savePausedSession(examPausedFlash)
+    await savePausedSession(otherPausedQuiz)
 
-    await storage.deleteEsame(exam.id)
+    await deleteEsame(exam.id)
 
-    await expect(storage.getEsame(exam.id)).resolves.toBeUndefined()
-    await expect(storage.getEsame(otherExam.id)).resolves.toEqual(otherExam)
-    await expect(storage.getQuizSessions(exam.id)).resolves.toEqual([])
-    await expect(storage.getQuestionStats(exam.id)).resolves.toEqual([])
-    await expect(storage.getFlashcardStats(exam.id)).resolves.toEqual([])
-    await expect(storage.getPausedSessionsForExam(exam.id)).resolves.toEqual([])
-    await expect(storage.getQuizSessions(otherExam.id)).resolves.toEqual([
-      quizSession('qs-2', otherExam.id),
-    ])
-    await expect(storage.getQuestionStats(otherExam.id)).resolves.toEqual([
-      questionStat(`${otherExam.id}__q1`, otherExam.id),
-    ])
-    await expect(storage.getFlashcardStats(otherExam.id)).resolves.toEqual([
-      flashcardStat(`${otherExam.id}__c1`, otherExam.id),
-    ])
-    await expect(storage.getPausedSessionsForExam(otherExam.id)).resolves.toEqual([
-      pausedSession(`${otherExam.id}__quiz`, otherExam.id),
-    ])
+    await expect(getEsame(exam.id)).resolves.toBeUndefined()
+    await expect(getEsame(otherExam.id)).resolves.toEqual(otherExam)
+    await expect(getQuizSessions(exam.id)).resolves.toEqual([])
+    await expect(getQuestionStats(exam.id)).resolves.toEqual([])
+    await expect(getFlashcardStats(exam.id)).resolves.toEqual([])
+    await expect(getPausedSessionsForExam(exam.id)).resolves.toEqual([])
+    await expect(getQuizSessions(otherExam.id)).resolves.toEqual([otherQuiz])
+    await expect(getQuestionStats(otherExam.id)).resolves.toEqual([otherQuestion])
+    await expect(getFlashcardStats(otherExam.id)).resolves.toEqual([otherFlashcard])
+    await expect(getPausedSessionsForExam(otherExam.id)).resolves.toEqual([otherPausedQuiz])
   })
 
-  it('replaces a quiz file and deletes quiz history in one helper call', async () => {
-    const storage = await freshStorage()
-    const existingExam: Esame = {
+  it('creates, updates, filters, and deletes quiz sessions by exam', async () => {
+    const original = makeQuizSession({ id: 'quiz-1', examId: exam.id, score: 6 })
+    const updated = makeQuizSession({ id: 'quiz-1', examId: exam.id, score: 9 })
+    const other = makeQuizSession({ id: 'quiz-2', examId: otherExam.id, score: 7 })
+
+    await saveQuizSession(original)
+    await saveQuizSession(other)
+    await saveQuizSession(updated)
+
+    await expect(getQuizSessions(exam.id)).resolves.toEqual([updated])
+    await expect(getQuizSessions(otherExam.id)).resolves.toEqual([other])
+
+    await deleteQuizSessionsForExam(exam.id)
+
+    await expect(getQuizSessions(exam.id)).resolves.toEqual([])
+    await expect(getQuizSessions(otherExam.id)).resolves.toEqual([other])
+  })
+
+  it('creates, updates, filters, and deletes question stats by exam', async () => {
+    const original = questionStat({ id: 'exam-1__q1', examId: exam.id, timesShown: 1 })
+    const updated = questionStat({ id: 'exam-1__q1', examId: exam.id, timesShown: 3 })
+    const other = questionStat({ id: 'exam-2__q1', examId: otherExam.id })
+
+    await saveQuestionStat(original)
+    await saveQuestionStat(other)
+    await saveQuestionStat(updated)
+
+    await expect(getQuestionStats(exam.id)).resolves.toEqual([updated])
+    await expect(getQuestionStats(otherExam.id)).resolves.toEqual([other])
+
+    await deleteQuestionStatsForExam(exam.id)
+
+    await expect(getQuestionStats(exam.id)).resolves.toEqual([])
+    await expect(getQuestionStats(otherExam.id)).resolves.toEqual([other])
+  })
+
+  it('creates, updates, filters, and deletes flashcard stats by exam', async () => {
+    const original = flashcardStat({ id: 'exam-1__f1', examId: exam.id, lastEval: 'No' })
+    const updated = flashcardStat({ id: 'exam-1__f1', examId: exam.id, lastEval: 'In parte' })
+    const other = flashcardStat({ id: 'exam-2__f1', examId: otherExam.id })
+
+    await saveFlashcardStat(original)
+    await saveFlashcardStat(other)
+    await saveFlashcardStat(updated)
+
+    await expect(getFlashcardStats(exam.id)).resolves.toEqual([updated])
+    await expect(getFlashcardStats(otherExam.id)).resolves.toEqual([other])
+
+    await deleteFlashcardStatsForExam(exam.id)
+
+    await expect(getFlashcardStats(exam.id)).resolves.toEqual([])
+    await expect(getFlashcardStats(otherExam.id)).resolves.toEqual([other])
+  })
+
+  it('gets, saves, updates, deletes, and filters paused quiz and flashcard sessions', async () => {
+    const quiz = makePausedQuiz({
+      id: 'exam-1__quiz',
+      examId: exam.id,
+      elapsedSeconds: 30,
+    })
+    const updatedQuiz = makePausedQuiz({
+      id: 'exam-1__quiz',
+      examId: exam.id,
+      elapsedSeconds: 75,
+      currentQuestionIndex: 2,
+    })
+    const flashcard = makePausedFlash({
+      id: 'exam-1__flashcard',
+      examId: exam.id,
+      currentCardIndex: 1,
+    })
+    const otherQuiz = makePausedQuiz({
+      id: 'exam-2__quiz',
+      examId: otherExam.id,
+    })
+
+    await savePausedSession(quiz)
+    await savePausedSession(flashcard)
+    await savePausedSession(otherQuiz)
+    await savePausedSession(updatedQuiz)
+
+    await expect(getPausedSession('exam-1__quiz')).resolves.toEqual(updatedQuiz)
+    await expect(getPausedSession('exam-1__flashcard')).resolves.toEqual(flashcard)
+    expect(byId(await getPausedSessionsForExam(exam.id))).toEqual(byId([updatedQuiz, flashcard]))
+    await expect(getPausedSessionsForExam(otherExam.id)).resolves.toEqual([otherQuiz])
+
+    await deletePausedSession('exam-1__quiz')
+
+    await expect(getPausedSession('exam-1__quiz')).resolves.toBeUndefined()
+    await expect(getPausedSessionsForExam(exam.id)).resolves.toEqual([flashcard])
+    await expect(getPausedSessionsForExam(otherExam.id)).resolves.toEqual([otherQuiz])
+  })
+
+  it('replaces a quiz file and deletes only quiz-scoped progress', async () => {
+    const existingExam = {
       ...exam,
       files: {
         quiz: fileRecord('old-quiz.json'),
@@ -184,50 +239,43 @@ describe('storageService', () => {
       },
     }
     const replacement = fileRecord('new-quiz.json')
+    const quiz = makeQuizSession({ id: 'quiz-1', examId: exam.id })
+    const otherQuiz = makeQuizSession({ id: 'quiz-2', examId: otherExam.id })
+    const question = questionStat({ id: 'exam-1__q1', examId: exam.id })
+    const otherQuestion = questionStat({ id: 'exam-2__q1', examId: otherExam.id })
+    const flashcard = flashcardStat({ id: 'exam-1__f1', examId: exam.id })
+    const pausedQuiz = makePausedQuiz({ id: 'exam-1__quiz', examId: exam.id })
+    const pausedFlash = makePausedFlash({ id: 'exam-1__flashcard', examId: exam.id })
 
-    await storage.saveEsame(existingExam)
-    await storage.saveEsame(otherExam)
-    await storage.saveQuizSession(quizSession('qs-1', exam.id))
-    await storage.saveQuizSession(quizSession('qs-2', otherExam.id))
-    await storage.saveQuestionStat(questionStat(`${exam.id}__q1`, exam.id))
-    await storage.saveQuestionStat(questionStat(`${otherExam.id}__q1`, otherExam.id))
-    await storage.saveFlashcardStat(flashcardStat(`${exam.id}__c1`, exam.id))
-    await storage.savePausedSession(pausedSession(`${exam.id}__quiz`, exam.id))
-    await storage.savePausedSession(pausedSession(`${exam.id}__flashcard`, exam.id, 'flashcard'))
-    await storage.savePausedSession(pausedSession(`${otherExam.id}__quiz`, otherExam.id))
+    await saveEsame(existingExam)
+    await saveQuizSession(quiz)
+    await saveQuizSession(otherQuiz)
+    await saveQuestionStat(question)
+    await saveQuestionStat(otherQuestion)
+    await saveFlashcardStat(flashcard)
+    await savePausedSession(pausedQuiz)
+    await savePausedSession(pausedFlash)
 
-    await storage.replaceQuizFileForExam(exam.id, replacement)
+    await replaceQuizFileForExam(exam.id, replacement)
 
-    await expect(storage.getEsame(exam.id)).resolves.toEqual({
+    await expect(getEsame(exam.id)).resolves.toEqual({
       ...existingExam,
       files: {
         ...existingExam.files,
         quiz: replacement,
       },
     })
-    await expect(storage.getQuizSessions(exam.id)).resolves.toEqual([])
-    await expect(storage.getQuestionStats(exam.id)).resolves.toEqual([])
-    await expect(storage.getPausedSession(`${exam.id}__quiz`)).resolves.toBeUndefined()
-    await expect(storage.getFlashcardStats(exam.id)).resolves.toEqual([
-      flashcardStat(`${exam.id}__c1`, exam.id),
-    ])
-    await expect(storage.getPausedSession(`${exam.id}__flashcard`)).resolves.toEqual(
-      pausedSession(`${exam.id}__flashcard`, exam.id, 'flashcard'),
-    )
-    await expect(storage.getQuizSessions(otherExam.id)).resolves.toEqual([
-      quizSession('qs-2', otherExam.id),
-    ])
-    await expect(storage.getQuestionStats(otherExam.id)).resolves.toEqual([
-      questionStat(`${otherExam.id}__q1`, otherExam.id),
-    ])
-    await expect(storage.getPausedSession(`${otherExam.id}__quiz`)).resolves.toEqual(
-      pausedSession(`${otherExam.id}__quiz`, otherExam.id),
-    )
+    await expect(getQuizSessions(exam.id)).resolves.toEqual([])
+    await expect(getQuestionStats(exam.id)).resolves.toEqual([])
+    await expect(getPausedSession('exam-1__quiz')).resolves.toBeUndefined()
+    await expect(getFlashcardStats(exam.id)).resolves.toEqual([flashcard])
+    await expect(getPausedSession('exam-1__flashcard')).resolves.toEqual(pausedFlash)
+    await expect(getQuizSessions(otherExam.id)).resolves.toEqual([otherQuiz])
+    await expect(getQuestionStats(otherExam.id)).resolves.toEqual([otherQuestion])
   })
 
-  it('replaces a flashcard file and deletes flashcard progress in one helper call', async () => {
-    const storage = await freshStorage()
-    const existingExam: Esame = {
+  it('replaces a flashcard file and deletes only flashcard-scoped progress', async () => {
+    const existingExam = {
       ...exam,
       files: {
         quiz: fileRecord('quiz.json'),
@@ -235,53 +283,44 @@ describe('storageService', () => {
       },
     }
     const replacement = fileRecord('new-flashcard.json')
+    const quiz = makeQuizSession({ id: 'quiz-1', examId: exam.id })
+    const question = questionStat({ id: 'exam-1__q1', examId: exam.id })
+    const flashcard = flashcardStat({ id: 'exam-1__f1', examId: exam.id })
+    const otherFlashcard = flashcardStat({ id: 'exam-2__f1', examId: otherExam.id })
+    const pausedQuiz = makePausedQuiz({ id: 'exam-1__quiz', examId: exam.id })
+    const pausedFlash = makePausedFlash({ id: 'exam-1__flashcard', examId: exam.id })
 
-    await storage.saveEsame(existingExam)
-    await storage.saveEsame(otherExam)
-    await storage.saveQuizSession(quizSession('qs-1', exam.id))
-    await storage.saveQuestionStat(questionStat(`${exam.id}__q1`, exam.id))
-    await storage.saveFlashcardStat(flashcardStat(`${exam.id}__c1`, exam.id))
-    await storage.saveFlashcardStat(flashcardStat(`${otherExam.id}__c1`, otherExam.id))
-    await storage.savePausedSession(pausedSession(`${exam.id}__quiz`, exam.id))
-    await storage.savePausedSession(pausedSession(`${exam.id}__flashcard`, exam.id, 'flashcard'))
-    await storage.savePausedSession(pausedSession(`${otherExam.id}__flashcard`, otherExam.id, 'flashcard'))
+    await saveEsame(existingExam)
+    await saveQuizSession(quiz)
+    await saveQuestionStat(question)
+    await saveFlashcardStat(flashcard)
+    await saveFlashcardStat(otherFlashcard)
+    await savePausedSession(pausedQuiz)
+    await savePausedSession(pausedFlash)
 
-    await storage.replaceFlashcardFileForExam(exam.id, replacement)
+    await replaceFlashcardFileForExam(exam.id, replacement)
 
-    await expect(storage.getEsame(exam.id)).resolves.toEqual({
+    await expect(getEsame(exam.id)).resolves.toEqual({
       ...existingExam,
       files: {
         ...existingExam.files,
         flashcard: replacement,
       },
     })
-    await expect(storage.getFlashcardStats(exam.id)).resolves.toEqual([])
-    await expect(storage.getPausedSession(`${exam.id}__flashcard`)).resolves.toBeUndefined()
-    await expect(storage.getQuizSessions(exam.id)).resolves.toEqual([
-      quizSession('qs-1', exam.id),
-    ])
-    await expect(storage.getQuestionStats(exam.id)).resolves.toEqual([
-      questionStat(`${exam.id}__q1`, exam.id),
-    ])
-    await expect(storage.getPausedSession(`${exam.id}__quiz`)).resolves.toEqual(
-      pausedSession(`${exam.id}__quiz`, exam.id),
-    )
-    await expect(storage.getFlashcardStats(otherExam.id)).resolves.toEqual([
-      flashcardStat(`${otherExam.id}__c1`, otherExam.id),
-    ])
-    await expect(storage.getPausedSession(`${otherExam.id}__flashcard`)).resolves.toEqual(
-      pausedSession(`${otherExam.id}__flashcard`, otherExam.id, 'flashcard'),
-    )
+    await expect(getFlashcardStats(exam.id)).resolves.toEqual([])
+    await expect(getPausedSession('exam-1__flashcard')).resolves.toBeUndefined()
+    await expect(getQuizSessions(exam.id)).resolves.toEqual([quiz])
+    await expect(getQuestionStats(exam.id)).resolves.toEqual([question])
+    await expect(getPausedSession('exam-1__quiz')).resolves.toEqual(pausedQuiz)
+    await expect(getFlashcardStats(otherExam.id)).resolves.toEqual([otherFlashcard])
   })
 
   it('rejects replacement when the exam is missing', async () => {
-    const storage = await freshStorage()
-
-    await expect(storage.replaceQuizFileForExam('missing', fileRecord('quiz.json'))).rejects.toThrow(
+    await expect(replaceQuizFileForExam('missing', fileRecord('quiz.json'))).rejects.toThrow(
       'Exam missing not found',
     )
-    await expect(
-      storage.replaceFlashcardFileForExam('missing', fileRecord('flashcard.json')),
-    ).rejects.toThrow('Exam missing not found')
+    await expect(replaceFlashcardFileForExam('missing', fileRecord('flashcard.json'))).rejects.toThrow(
+      'Exam missing not found',
+    )
   })
 })
