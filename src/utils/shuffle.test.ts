@@ -26,4 +26,31 @@ describe('shuffle', () => {
   it('returns a single-element array unchanged', () => {
     expect(shuffle([42])).toEqual([42])
   })
+
+  it('produces both permutations of a two-element array across repeated shuffles', () => {
+    const seen = new Set<string>()
+
+    for (let i = 0; i < 100; i += 1) {
+      seen.add(shuffle([1, 2]).join(','))
+    }
+
+    expect(seen).toEqual(new Set(['1,2', '2,1']))
+  })
+
+  it('does not keep any element in its original index for every repeated shuffle', () => {
+    const arr = [1, 2, 3, 4, 5]
+    const stayedInOriginalIndexEveryTime = arr.map(() => true)
+
+    for (let i = 0; i < 100; i += 1) {
+      const result = shuffle(arr)
+
+      result.forEach((value, index) => {
+        if (value !== arr[index]) {
+          stayedInOriginalIndexEveryTime[index] = false
+        }
+      })
+    }
+
+    expect(stayedInOriginalIndexEveryTime).toEqual([false, false, false, false, false])
+  })
 })

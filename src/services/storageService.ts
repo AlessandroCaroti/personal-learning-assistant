@@ -46,6 +46,18 @@ type ExamScopedStoreName =
 
 let dbPromise: Promise<IDBPDatabase<StudyAppDB>> | null = null
 
+export async function resetForTesting(): Promise<void> {
+  const existingDbPromise = dbPromise
+  dbPromise = null
+
+  if (!existingDbPromise) {
+    return
+  }
+
+  const db = await existingDbPromise
+  db.close()
+}
+
 function getDB(): Promise<IDBPDatabase<StudyAppDB>> {
   dbPromise ??= openDB<StudyAppDB>(DB_NAME, DB_VERSION, {
     upgrade(db, oldVersion) {

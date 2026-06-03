@@ -24,6 +24,15 @@ describe('useAppStore', () => {
     expect(document.documentElement.dataset.theme).toBe('light')
   })
 
+  it('applies a persisted light theme on initialization', async () => {
+    localStorage.setItem('theme', 'light')
+
+    const { useAppStore } = await import('./appStore')
+
+    expect(useAppStore.getState().theme).toBe('light')
+    expect(document.documentElement.dataset.theme).toBe('light')
+  })
+
   it('stores the current exam id', async () => {
     const { useAppStore } = await import('./appStore')
 

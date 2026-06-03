@@ -1,6 +1,7 @@
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { FlashCard, PausedSession } from '../types'
+import { makeFlashCard, makePausedFlash } from '../__tests__/factories'
+import type { PausedSession } from '../types'
 
 const saveFlashcardStat = vi.fn()
 const savePausedSession = vi.fn()
@@ -18,40 +19,39 @@ vi.mock('../utils/shuffle', () => ({
 
 const { useFlashcard } = await import('./useFlashcard')
 
-const cards: FlashCard[] = [
-  {
+const cards = [
+  makeFlashCard({
     id: 'c1',
     macroargomenti: ['Algebra'],
     fronte: 'Front 1',
     retro: 'Back 1',
-  },
-  {
+  }),
+  makeFlashCard({
     id: 'c2',
     macroargomenti: ['Geometria'],
     fronte: 'Front 2',
     retro: 'Back 2',
-  },
-  {
+  }),
+  makeFlashCard({
     id: 'c3',
     macroargomenti: ['Algebra', 'Analisi'],
     fronte: 'Front 3',
     retro: 'Back 3',
-  },
+  }),
 ]
 
 function makePaused(overrides: Partial<PausedSession> = {}): PausedSession {
   return {
-    id: 'exam-1__flashcard',
-    examId: 'exam-1',
-    mode: 'flashcard',
-    savedAt: '2026-06-01T09:00:00.000Z',
-    elapsedSeconds: 12,
-    timeLimitSeconds: 900,
-    macroargomenti: ['Algebra'],
-    cardIds: ['c3', 'missing', 'c1'],
-    currentCardIndex: 1,
-    cardEvals: { c3: 'In parte', missing: 'No' },
-    reviewQueue: ['c3'],
+    ...makePausedFlash({
+      savedAt: '2026-06-01T09:00:00.000Z',
+      elapsedSeconds: 12,
+      timeLimitSeconds: 900,
+      macroargomenti: ['Algebra'],
+      cardIds: ['c3', 'missing', 'c1'],
+      currentCardIndex: 1,
+      cardEvals: { c3: 'In parte', missing: 'No' },
+      reviewQueue: ['c3'],
+    }),
     ...overrides,
   }
 }
@@ -86,6 +86,24 @@ describe('useFlashcard', () => {
       reviewQueue: [],
       isInReview: false,
     })
+  })
+
+  it('shows the back without evaluating the current card', () => {
+    const { result } = renderHook(() => useFlashcard('exam-1'))
+
+    act(() => {
+      result.current.startSession([cards[0]], [], 1, null)
+      result.current.showBack()
+    })
+
+    expect(result.current.sessionState).toMatchObject({
+      currentIndex: 0,
+      phase: 'back',
+      cardEvals: {},
+      reviewQueue: [],
+      isInReview: false,
+    })
+    expect(result.current.isDone).toBe(false)
   })
 
   it('moves uncertain cards through repeated review until all are known', () => {
@@ -132,6 +150,30 @@ describe('useFlashcard', () => {
     expect(result.current.isDone).toBe(true)
     expect(result.current.sessionState?.currentIndex).toBe(1)
     expect(result.current.sessionState?.cards).toHaveLength(1)
+  })
+
+  it('enters review mode when a No card remains after the final new card is evaluated', () => {
+    const reviewCards = [
+      makeFlashCard({ id: 'f1', fronte: 'Front 1', retro: 'Back 1' }),
+      makeFlashCard({ id: 'f2', fronte: 'Front 2', retro: 'Back 2' }),
+    ]
+    const { result } = renderHook(() => useFlashcard('exam-1'))
+
+    act(() => {
+      result.current.startSession(reviewCards, [], 2, null)
+      result.current.evaluate('f1', 'No')
+      result.current.evaluate('f2', 'Sì')
+    })
+
+    expect(result.current.sessionState).toEqual({
+      cards: [reviewCards[0]],
+      currentIndex: 0,
+      phase: 'front',
+      cardEvals: { f1: 'No', f2: 'Sì' },
+      reviewQueue: ['f1'],
+      isInReview: true,
+    })
+    expect(result.current.isDone).toBe(false)
   })
 
   it('ignores evaluations for cards that are not current', () => {
@@ -235,6 +277,20 @@ describe('useFlashcard', () => {
     expect(result.current.sessionState).toBeNull()
     expect(result.current.timeLimitSeconds).toBeNull()
     expect(result.current.macroargomenti).toEqual([])
+  })
+
+  it('pauseSession and finishSession are no-ops without an active session', async () => {
+    const { result } = renderHook(() => useFlashcard('exam-1'))
+
+    await act(async () => {
+      await result.current.pauseSession(12)
+      await result.current.finishSession(12, false)
+    })
+
+    expect(savePausedSession).not.toHaveBeenCalled()
+    expect(saveFlashcardStat).not.toHaveBeenCalled()
+    expect(deletePausedSession).not.toHaveBeenCalled()
+    expect(result.current.isDone).toBe(false)
   })
 
   it('finishes review mode by saving stats for the full original session', async () => {

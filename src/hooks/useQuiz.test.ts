@@ -1,6 +1,11 @@
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { PausedSession, QuestionStats, QuizDomanda } from '../types'
+import {
+  makePausedQuiz,
+  makeQuizDomanda,
+  makeVeroFalso,
+} from '../__tests__/factories'
+import type { PausedSession, QuestionStats } from '../types'
 
 const getQuestionStats = vi.fn()
 const saveQuestionStat = vi.fn()
@@ -22,41 +27,36 @@ vi.mock('uuid', () => ({
 
 const { useQuiz } = await import('./useQuiz')
 
-const domande: QuizDomanda[] = [
-  {
+type QuizPauseOverrides = Omit<Partial<PausedSession>, 'mode'>
+
+const domande = [
+  makeQuizDomanda({
     id: 'q1',
     macroargomenti: ['Algebra'],
-    tipo: 'multipla',
     testo: 'Quanto fa 2 + 2?',
     opzioni: ['3', '4'],
     risposta_corretta: '4',
     spiegazione: 'Somma.',
-  },
-  {
+  }),
+  makeVeroFalso({
     id: 'q2',
     macroargomenti: ['Geometria'],
-    tipo: 'vero_falso',
     testo: 'Un triangolo ha tre lati.',
     risposta_corretta: 'Vero',
     spiegazione: 'Definizione.',
-  },
-  {
+  }),
+  makeQuizDomanda({
     id: 'q3',
     macroargomenti: ['Algebra', 'Analisi'],
-    tipo: 'multipla',
     testo: 'Quanto fa 3 + 3?',
     opzioni: ['5', '6'],
     risposta_corretta: '6',
     spiegazione: 'Somma.',
-  },
+  }),
 ]
 
-function makePaused(overrides: Partial<PausedSession> = {}): PausedSession {
-  return {
-    id: 'exam-1__quiz',
-    examId: 'exam-1',
-    mode: 'quiz',
-    savedAt: '2026-06-01T09:00:00.000Z',
+function makePaused(overrides: QuizPauseOverrides = {}): PausedSession {
+  return makePausedQuiz({
     elapsedSeconds: 12,
     timeLimitSeconds: 600,
     macroargomenti: ['Algebra'],
@@ -64,7 +64,7 @@ function makePaused(overrides: Partial<PausedSession> = {}): PausedSession {
     currentQuestionIndex: 5,
     confirmedAnswers: { q3: '6', missing: 'x' },
     ...overrides,
-  }
+  })
 }
 
 describe('useQuiz', () => {
@@ -126,6 +126,38 @@ describe('useQuiz', () => {
         timesCorrect: 2,
       })
     })
+  })
+
+  it('confirmAnswer is a no-op when no answer is selected', async () => {
+    const { result } = renderHook(() => useQuiz('exam-1'))
+
+    act(() => {
+      result.current.startSession([domande[0]], [], 1, null)
+      result.current.confirmAnswer('q1', 10)
+    })
+
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    expect(result.current.sessionState?.confirmedAnswers).toEqual({})
+    expect(result.current.sessionState?.selectedAnswer).toBeNull()
+    expect(getQuestionStats).not.toHaveBeenCalled()
+    expect(saveQuestionStat).not.toHaveBeenCalled()
+  })
+
+  it('goTo clears any selected but unconfirmed answer', () => {
+    const { result } = renderHook(() => useQuiz('exam-1'))
+
+    act(() => {
+      result.current.startSession([domande[0], domande[1]], [], 2, null)
+      result.current.selectAnswer('4')
+      result.current.goTo(1)
+    })
+
+    expect(result.current.sessionState?.selectedAnswer).toBeNull()
+    expect(result.current.sessionState?.currentIndex).toBe(1)
+    expect(result.current.sessionState?.confirmedAnswers).toEqual({})
   })
 
   it('serializes repeated stat updates and catches update failures', async () => {
@@ -259,6 +291,54 @@ describe('useQuiz', () => {
     })
   })
 
+  it('stores pause payload with ordered question ids and elapsed time', async () => {
+    const { result } = renderHook(() => useQuiz('exam-1'))
+
+    act(() => {
+      result.current.startSession([domande[0], domande[2]], ['Algebra'], 2, 600)
+      result.current.selectAnswer('4')
+      result.current.confirmAnswer('q1', 5)
+      result.current.goTo(1)
+    })
+    const orderedQuestionIds = result.current.sessionState?.questions.map((question) => question.id)
+
+    await act(async () => {
+      await result.current.pauseSession(123)
+    })
+
+    expect(savePausedSession).toHaveBeenCalledWith({
+      id: 'exam-1__quiz',
+      examId: 'exam-1',
+      mode: 'quiz',
+      savedAt: expect.any(String),
+      elapsedSeconds: 123,
+      timeLimitSeconds: 600,
+      macroargomenti: ['Algebra'],
+      questionIds: orderedQuestionIds,
+      currentQuestionIndex: 1,
+      confirmedAnswers: { q1: '4' },
+      isReview: false,
+    })
+  })
+
+  it('pauseSession and finishSession are no-ops without an active session', async () => {
+    const { result } = renderHook(() => useQuiz('exam-1'))
+
+    await act(async () => {
+      await result.current.pauseSession(12)
+    })
+
+    let saved = null
+    await act(async () => {
+      saved = await result.current.finishSession(12, false, domande)
+    })
+
+    expect(saved).toBeNull()
+    expect(savePausedSession).not.toHaveBeenCalled()
+    expect(saveQuizSession).not.toHaveBeenCalled()
+    expect(deletePausedSession).not.toHaveBeenCalled()
+  })
+
   it('preserves review marker across pause, resume, and finish', async () => {
     const { result } = renderHook(() => useQuiz('exam-1'))
 
@@ -302,9 +382,18 @@ describe('useQuiz', () => {
 
   it('resumes only valid quiz pauses and safely ignores missing question ids', () => {
     const { result } = renderHook(() => useQuiz('exam-1'))
+    const flashcardPause: PausedSession = {
+      ...makePausedQuiz(),
+      id: 'exam-1__flashcard',
+      mode: 'flashcard',
+      cardIds: ['f1'],
+      currentCardIndex: 0,
+      cardEvals: {},
+      reviewQueue: [],
+    }
 
     act(() => {
-      result.current.resumeFromPaused(makePaused({ mode: 'flashcard' }), domande)
+      result.current.resumeFromPaused(flashcardPause, domande)
     })
 
     expect(result.current.sessionState).toBeNull()
