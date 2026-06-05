@@ -84,9 +84,22 @@ describe('SummaryPage', () => {
     renderSummary()
 
     const iframe = await screen.findByTitle('Riassunto')
-    expect(iframe.getAttribute('srcdoc')).toBe(html)
+    expect(iframe.getAttribute('srcdoc')).toContain('<base href="about:srcdoc">')
+    expect(iframe.getAttribute('srcdoc')).toContain(html)
     expect(iframe.getAttribute('sandbox')).toBe('')
     expect(screen.getByRole('heading', { name: 'summary.html' })).not.toBeNull()
+  })
+
+  it('adds an about:srcdoc base tag so table-of-contents anchors stay inside the summary', async () => {
+    const html =
+      '<!DOCTYPE html><html><head><title>Riassunto</title></head><body><nav><a href="#section-1">Indice</a></nav><h2 id="section-1">Sezione</h2></body></html>'
+    getEsame.mockResolvedValue(makeExam(makeFile('summary.html', 'text/html', encodeText(html))))
+
+    renderSummary()
+
+    const iframe = await screen.findByTitle('Riassunto')
+    expect(iframe.getAttribute('srcdoc')).toContain('<base href="about:srcdoc">')
+    expect(iframe.getAttribute('srcdoc')).toContain('<a href="#section-1">Indice</a>')
   })
 
   it('renders empty HTML summaries without staying on loading', async () => {
@@ -95,7 +108,7 @@ describe('SummaryPage', () => {
     renderSummary()
 
     const iframe = await screen.findByTitle('Riassunto')
-    expect(iframe.getAttribute('srcdoc')).toBe('')
+    expect(iframe.getAttribute('srcdoc')).toBe('<base href="about:srcdoc">')
     expect(screen.queryByText('Caricamento...')).toBeNull()
   })
 
@@ -127,7 +140,7 @@ describe('SummaryPage', () => {
       expect(convertToHtml).toHaveBeenCalledWith({ arrayBuffer: data })
     })
     expect((await screen.findByTitle('Riassunto')).getAttribute('srcdoc')).toBe(
-      '<p>DOCX convertito</p>',
+      '<base href="about:srcdoc"><p>DOCX convertito</p>',
     )
   })
 
@@ -143,7 +156,7 @@ describe('SummaryPage', () => {
     })
 
     const iframe = await screen.findByTitle('Riassunto')
-    expect(iframe.getAttribute('srcdoc')).toBe('')
+    expect(iframe.getAttribute('srcdoc')).toBe('<base href="about:srcdoc">')
     expect(screen.queryByText('Caricamento...')).toBeNull()
   })
 

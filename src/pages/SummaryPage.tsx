@@ -42,7 +42,7 @@ export function SummaryPage() {
 
         if (summaryType === 'text/html' || summaryName.endsWith('.html')) {
           const html = new TextDecoder().decode(summary.data)
-          if (mounted) setHtmlContent(html)
+          if (mounted) setHtmlContent(prepareHtmlForIframe(html))
           return
         }
 
@@ -63,7 +63,7 @@ export function SummaryPage() {
         if (summaryName.endsWith('.docx')) {
           const mammoth = await import('mammoth')
           const result = await mammoth.convertToHtml({ arrayBuffer: summary.data })
-          if (mounted) setHtmlContent(result.value)
+          if (mounted) setHtmlContent(prepareHtmlForIframe(result.value))
           return
         }
 
@@ -136,6 +136,24 @@ function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message
   if (typeof error === 'string') return error
   return 'Impossibile aprire il riassunto.'
+}
+
+function prepareHtmlForIframe(html: string): string {
+  const baseTag = '<base href="about:srcdoc">'
+
+  if (html.includes(baseTag)) return html
+
+  const headTagMatch = html.match(/<head\b[^>]*>/i)
+  if (headTagMatch) {
+    return html.replace(headTagMatch[0], `${headTagMatch[0]}${baseTag}`)
+  }
+
+  const htmlTagMatch = html.match(/<html\b[^>]*>/i)
+  if (htmlTagMatch) {
+    return html.replace(htmlTagMatch[0], `${htmlTagMatch[0]}<head>${baseTag}</head>`)
+  }
+
+  return `${baseTag}${html}`
 }
 
 const pageStyle = {
