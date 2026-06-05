@@ -103,3 +103,7 @@ Imported quiz and flashcard JSON must match the expected schemas before storage.
 - Offline-first, local-only study app
 - Web, Android, and Windows packaging workflows are configured
 - No backend services are required
+
+## License
+
+Released under the [MIT License](LICENSE).
