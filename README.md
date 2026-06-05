@@ -1,72 +1,105 @@
 # Personal Learning Assistant
 
-Local study app built with React, Vite, TypeScript, and Capacitor.
+Local study app for university exams, built with React, TypeScript, Vite, and Capacitor.
 
-## Run locally
+It runs as a web app on desktop and as an Android APK, with all study data stored locally on the device.
 
-- Web dev server: `npm run dev`
-- Web production build: `npm run build`
-- Web preview of the build: `npm run preview`
-- Windows EXE build: `npm run build:win`
-- Capacitor sync: `npm run cap:sync`
-- Open Android project in Android Studio: `npm run cap:android`
+## What It Does
 
-## VS Code debug
+- Create and manage exams from a local dashboard
+- Import `quiz.json`, `flashcard.json`, and summary files for each exam
+- Run quiz sessions with scoring, review mode, pause/resume, and question stats
+- Run flashcard sessions with spaced review queues and per-card stats
+- Read study summaries in `.html`, `.pdf`, or `.docx` format
+- Provide a tutorial/onboarding flow for generating import files with AI tools
+- Support Android back-button handling during active sessions
 
-Use the **Run and Debug** panel and pick one of these configs from [`.vscode/launch.json`](./.vscode/launch.json):
-
-- `Web: Debug Vite` starts the app in the browser against the Vite dev server.
-- `Web: Preview` runs the built app through `vite preview`.
-- `Android: Open Studio` syncs Capacitor and opens the Android project.
-- `Android: Sync Only` updates the Android project without opening Android Studio.
-- `Build: Web App` runs the web production build.
-
-The reusable commands live in [`.vscode/tasks.json`](./.vscode/tasks.json).
-
-## Android APK
-
-To create an APK:
-
-1. Run `npm run build`
-2. Run `npm run cap:sync`
-3. Open `android/` in Android Studio or use `npm run cap:android`
-4. Build the APK from Android Studio, or run the Gradle debug/release tasks from VS Code
-
-Useful Gradle tasks in VS Code:
-
-- `Android: assembleDebug`
-- `Android: assembleRelease`
-- `Android: installDebug`
-- `Android: clean`
-
-## Windows EXE
-
-The `npm run build:win` command creates a portable Windows `.exe` in `release/`.
-It uses Electron to wrap the Vite build output, so the generated executable runs the same app without depending on a browser shell.
-
-To build the executable:
+## Quick Start
 
 ```bash
 npm install
-npm run build:win
-```
-
-After the build completes, the portable executable is available in `release/` as `Personal Learning Assistant-<version>-x64.exe`.
-
-## Electron development
-
-Use two terminals:
-
-1. Start the renderer:
-
-```bash
 npm run dev
 ```
 
-2. Start Electron:
+Open the app at the Vite dev server shown in the terminal.
+
+### Common Commands
 
 ```bash
-npm run electron:dev
+npm run dev         # Start the web dev server
+npm run build       # Type-check and build the production web app
+npm run preview     # Preview the production build locally
+npm run test -- --run  # Run the test suite once
+npm run cap:sync    # Build and sync the web app into Android
+npm run cap:android # Sync and open the Android project in Android Studio
+npm run build:win   # Build a portable Windows EXE via Electron
 ```
 
-Electron loads `http://localhost:5173` during development and the built `dist/index.html` during packaging.
+## Project Structure
+
+- `src/` - app source: pages, components, hooks, services, store, types, and utilities
+- `docs/` - product and codebase documentation
+- `android/` - Capacitor-generated Android project
+- `electron/` - Electron entry point for Windows packaging
+- `.github/instructions/` - repository-specific engineering guidance
+- `.vscode/` - reusable VS Code tasks and debug configs
+
+## Architecture
+
+The app is a layered client-side SPA:
+
+- `src/App.tsx` owns the route tree and onboarding guard
+- `src/pages/` contains route-level screens
+- `src/hooks/` contains the session state machines for quiz, flashcard, timer, and exam workflows
+- `src/services/` contains the persistence, file-import, and quiz validation boundaries
+- `src/store/` contains only minimal global state
+
+Persistence is local-only through IndexedDB (`study-app-db`), with no backend or network dependency.
+
+> [!NOTE]
+> Platform-specific file picking is centralized in `src/services/fileService.ts`. Android back-button handling is also wired into the app shell and session pages.
+
+## Data Model
+
+The app works with these imported file types:
+
+- `quiz.json` - exam name plus a `domande` array
+- `flashcard.json` - exam name plus a `carte` array
+- Summary files - `.html`, `.pdf`, or `.docx`
+
+Stored exam data includes:
+
+- exam metadata
+- quiz session history
+- question statistics
+- flashcard statistics
+- paused session state
+
+## Documentation
+
+The `docs/` folder contains the project’s source documentation:
+
+- [docs/codebase/ARCHITECTURE.md](docs/codebase/ARCHITECTURE.md)
+- [docs/codebase/STACK.md](docs/codebase/STACK.md)
+- [docs/codebase/STRUCTURE.md](docs/codebase/STRUCTURE.md)
+- [docs/codebase/CONVENTIONS.md](docs/codebase/CONVENTIONS.md)
+- [docs/codebase/CONCERNS.md](docs/codebase/CONCERNS.md)
+- [docs/codebase/TESTING.md](docs/codebase/TESTING.md)
+- [docs/codebase/INTEGRATIONS.md](docs/codebase/INTEGRATIONS.md)
+
+## Development Notes
+
+- Use `npm run test -- --run` after code changes; tests are the main safety net.
+- Do not edit `android/` manually.
+- After web changes that need to reach Android, run `npm run build` and then `npm run cap:sync`.
+- The repo uses React 18, TypeScript strict mode, Vitest, React Testing Library, IndexedDB via `idb`, and Capacitor for native integration.
+
+## File Validation
+
+Imported quiz and flashcard JSON must match the expected schemas before storage. Validation happens in `src/services/quizService.ts`.
+
+## Status
+
+- Offline-first, local-only study app
+- Web, Android, and Windows packaging workflows are configured
+- No backend services are required
