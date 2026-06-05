@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { DashboardPage } from './pages/DashboardPage'
 import { FlashcardConfigPage } from './pages/FlashcardConfigPage'
@@ -15,6 +15,12 @@ import { TutorialPage } from './pages/TutorialPage'
 
 export function isSessionRoute(pathname: string): boolean {
   return pathname.endsWith('/quiz/sessione') || pathname.endsWith('/flashcard/sessione')
+}
+
+export function shouldUseHashRouter(
+  location: Pick<Location, 'pathname' | 'protocol'> = window.location,
+): boolean {
+  return location.protocol === 'file:' || location.pathname.endsWith('/index.html')
 }
 
 function hasSeenTutorial(): boolean {
@@ -73,9 +79,10 @@ function useCapacitorBackButton() {
 
 export default function App() {
   useCapacitorBackButton()
+  const Router = shouldUseHashRouter() ? HashRouter : BrowserRouter
 
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         <Route element={<Layout />}>
           <Route
@@ -97,6 +104,6 @@ export default function App() {
           <Route path="/esame/:examId/flashcard/sessione" element={<FlashcardSessionPage />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </Router>
   )
 }

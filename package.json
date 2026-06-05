@@ -1,6 +1,8 @@
 {
   "name": "personal-learning-assistant",
   "version": "0.1.0",
+  "author": "Alessandro Caroti",
+  "description": "Offline study app for university exams, built with React, TypeScript, Vite, and Capacitor for web and Android.",
   "private": true,
   "type": "module",
   "main": "electron/main.mjs",

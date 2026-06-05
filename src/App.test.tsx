@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import 'fake-indexeddb/auto'
-import App, { isSessionRoute } from './App'
+import App, { isSessionRoute, shouldUseHashRouter } from './App'
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: {
@@ -48,6 +48,15 @@ describe('App routing shell', () => {
     expect(screen.getByRole('heading', { name: 'I tuoi esami' })).not.toBeNull()
     expect(screen.queryByRole('button', { name: 'Salta' })).toBeNull()
   })
+
+  it('renders the home route when opened from a packaged index.html path', () => {
+    localStorage.setItem('tutorialSeen', 'true')
+    window.history.pushState({}, '', '/C:/Users/carot/Software/personal-learning-assistant/dist/index.html')
+
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: 'I tuoi esami' })).not.toBeNull()
+  })
 })
 
 describe('isSessionRoute', () => {
@@ -57,5 +66,18 @@ describe('isSessionRoute', () => {
     expect(isSessionRoute('/esame/abc/quiz/config')).toBe(false)
     expect(isSessionRoute('/esame/abc/flashcard/config')).toBe(false)
     expect(isSessionRoute('/guida')).toBe(false)
+  })
+})
+
+describe('shouldUseHashRouter', () => {
+  it('uses hash routing for packaged file URLs and index.html paths', () => {
+    expect(shouldUseHashRouter({ protocol: 'file:', pathname: '/dist/index.html' })).toBe(true)
+    expect(
+      shouldUseHashRouter({
+        protocol: 'http:',
+        pathname: '/C:/Users/carot/Software/personal-learning-assistant/dist/index.html',
+      }),
+    ).toBe(true)
+    expect(shouldUseHashRouter({ protocol: 'http:', pathname: '/' })).toBe(false)
   })
 })
