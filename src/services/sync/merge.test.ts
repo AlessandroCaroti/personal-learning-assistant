@@ -226,6 +226,42 @@ describe('mergeSyncStates', () => {
     expect(result.conflicts).toEqual([])
   })
 
+  it('converges flashcard stat ties by stable device id independent of merge order', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.flashcardStats.push({
+      id: 'exam-1__f1',
+      examId: 'exam-1',
+      cardId: 'f1',
+      lastEval: 'No',
+      lastSeen: '2026-06-01T10:00:00.000Z',
+      updatedByDeviceId: 'device-a',
+    })
+    remote.data.flashcardStats.push({
+      id: 'exam-1__f1',
+      examId: 'exam-1',
+      cardId: 'f1',
+      lastEval: 'Sì',
+      lastSeen: '2026-06-01T10:00:00.000Z',
+      updatedByDeviceId: 'device-z',
+    })
+
+    const localFirst = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+    const remoteFirst = mergeSyncStates(remote, local, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(localFirst.state.data.flashcardStats).toEqual(remoteFirst.state.data.flashcardStats)
+    expect(localFirst.state.data.flashcardStats).toEqual([
+      {
+        id: 'exam-1__f1',
+        examId: 'exam-1',
+        cardId: 'f1',
+        lastEval: 'Sì',
+        lastSeen: '2026-06-01T10:00:00.000Z',
+        updatedByDeviceId: 'device-z',
+      },
+    ])
+  })
+
   it('marks delete versus newer exam update as a conflict', () => {
     const local = emptyState('local-device')
     const remote = emptyState('remote-device')
@@ -255,6 +291,40 @@ describe('mergeSyncStates', () => {
         localDeviceId: 'local-device',
         remoteDeviceId: 'remote-device',
       },
+    ])
+  })
+
+  it('converges exam ties by stable device id independent of merge order', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        name: 'Local exam',
+        updatedAt: '2026-06-01T10:00:00.000Z',
+        updatedByDeviceId: 'device-a',
+      }),
+    )
+    remote.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        name: 'Remote exam',
+        updatedAt: '2026-06-01T10:00:00.000Z',
+        updatedByDeviceId: 'device-z',
+      }),
+    )
+
+    const localFirst = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+    const remoteFirst = mergeSyncStates(remote, local, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(localFirst.state.data.esami).toEqual(remoteFirst.state.data.esami)
+    expect(localFirst.state.data.esami).toEqual([
+      examRecord({
+        id: 'exam-1',
+        name: 'Remote exam',
+        updatedAt: '2026-06-01T10:00:00.000Z',
+        updatedByDeviceId: 'device-z',
+      }),
     ])
   })
 

@@ -86,7 +86,15 @@ function mergeQuizSession(
     localDeviceId: existing.updatedByDeviceId,
     remoteDeviceId: session.updatedByDeviceId,
   })
-  merged.set(session.id, newestByIso(existing, session, (value) => value.date))
+  merged.set(
+    session.id,
+    newestByStableTieBreak(
+      existing,
+      session,
+      (value) => value.date,
+      (value) => value.updatedByDeviceId,
+    ),
+  )
 }
 
 function mergeQuestionStats(
@@ -135,11 +143,21 @@ function mergeFlashcardStats(
   local: SyncFlashcardStatRecord[],
   remote: SyncFlashcardStatRecord[],
 ): SyncFlashcardStatRecord[] {
-  return mergeNewestById(local, remote, (stat) => stat.lastSeen)
+  return mergeNewestById(
+    local,
+    remote,
+    (stat) => stat.lastSeen,
+    (stat) => stat.updatedByDeviceId,
+  )
 }
 
 function mergeTombstones(local: SyncTombstone[], remote: SyncTombstone[]): SyncTombstone[] {
-  return mergeNewestById(local, remote, (tombstone) => tombstone.deletedAt)
+  return mergeNewestById(
+    local,
+    remote,
+    (tombstone) => tombstone.deletedAt,
+    (tombstone) => tombstone.deletedByDeviceId,
+  )
 }
 
 function mergeExams(
@@ -153,12 +171,18 @@ function mergeExams(
     localTombstones.filter(isExamTombstone),
     remoteTombstones.filter(isExamTombstone),
     (tombstone) => tombstone.deletedAt,
+    (tombstone) => tombstone.deletedByDeviceId,
   )
   const fileTombstones = newestFileTombstonesBySlot(
     localTombstones.filter(isFileTombstone),
     remoteTombstones.filter(isFileTombstone),
   )
-  const merged = newestByIdWithOrigin(local, remote, (exam) => exam.updatedAt)
+  const merged = newestByIdWithOrigin(
+    local,
+    remote,
+    (exam) => exam.updatedAt,
+    (exam) => exam.updatedByDeviceId,
+  )
   const kept: SyncExamRecord[] = []
 
   for (const exam of merged.values()) {
@@ -238,7 +262,17 @@ function mergeFileTombstone(
 ): void {
   const key = fileTombstoneKey(tombstone.value)
   const existing = merged.get(key)
-  merged.set(key, existing ? newestOriginByIso(existing, tombstone, (value) => value.deletedAt) : tombstone)
+  merged.set(
+    key,
+    existing
+      ? newestOriginByStableTieBreak(
+          existing,
+          tombstone,
+          (value) => value.deletedAt,
+          (value) => value.deletedByDeviceId,
+        )
+      : tombstone,
+  )
 }
 
 function applyFileTombstones(
@@ -305,12 +339,17 @@ function fileTombstoneKey(tombstone: FileTombstone): string {
   return `${tombstone.examId}__${tombstone.fileSlot}`
 }
 
-function mergeNewestById<T extends { id: string }>(local: T[], remote: T[], getIso: (value: T) => string): T[] {
+function mergeNewestById<T extends { id: string }>(
+  local: T[],
+  remote: T[],
+  getIso: (value: T) => string,
+  getOwnerId: (value: T) => string,
+): T[] {
   const merged = new Map<string, T>()
 
   for (const value of [...local, ...remote]) {
     const existing = merged.get(value.id)
-    merged.set(value.id, existing ? newestByIso(existing, value, getIso) : value)
+    merged.set(value.id, existing ? newestByStableTieBreak(existing, value, getIso, getOwnerId) : value)
   }
 
   return sortById([...merged.values()])
@@ -320,15 +359,16 @@ function newestByIdWithOrigin<T extends { id: string }>(
   local: T[],
   remote: T[],
   getIso: (value: T) => string,
+  getOwnerId: (value: T) => string,
 ): Map<string, OriginRecord<T>> {
   const merged = new Map<string, OriginRecord<T>>()
 
   for (const record of local) {
-    mergeOriginRecord(merged, { value: record, side: 'local' }, getIso)
+    mergeOriginRecord(merged, { value: record, side: 'local' }, getIso, getOwnerId)
   }
 
   for (const record of remote) {
-    mergeOriginRecord(merged, { value: record, side: 'remote' }, getIso)
+    mergeOriginRecord(merged, { value: record, side: 'remote' }, getIso, getOwnerId)
   }
 
   return merged
@@ -338,25 +378,74 @@ function mergeOriginRecord<T extends { id: string }>(
   merged: Map<string, OriginRecord<T>>,
   record: OriginRecord<T>,
   getIso: (value: T) => string,
+  getOwnerId: (value: T) => string,
 ): void {
   const existing = merged.get(record.value.id)
-  merged.set(record.value.id, existing ? newestOriginByIso(existing, record, getIso) : record)
+  merged.set(
+    record.value.id,
+    existing ? newestOriginByStableTieBreak(existing, record, getIso, getOwnerId) : record,
+  )
 }
 
-function newestOriginByIso<T>(
+function newestOriginByStableTieBreak<T>(
   left: OriginRecord<T>,
   right: OriginRecord<T>,
   getIso: (value: T) => string,
+  getOwnerId: (value: T) => string,
 ): OriginRecord<T> {
-  return compareIso(getIso(right.value), getIso(left.value)) > 0 ? right : left
+  return compareNewest(right.value, left.value, getIso, getOwnerId) > 0 ? right : left
 }
 
-function newestByIso<T>(left: T, right: T, getIso: (value: T) => string): T {
-  return compareIso(getIso(right), getIso(left)) > 0 ? right : left
+function newestByStableTieBreak<T>(
+  left: T,
+  right: T,
+  getIso: (value: T) => string,
+  getOwnerId: (value: T) => string,
+): T {
+  return compareNewest(right, left, getIso, getOwnerId) > 0 ? right : left
+}
+
+function compareNewest<T>(
+  left: T,
+  right: T,
+  getIso: (value: T) => string,
+  getOwnerId: (value: T) => string,
+): number {
+  const timestampComparison = compareIso(getIso(left), getIso(right))
+  if (timestampComparison !== 0) {
+    return timestampComparison
+  }
+
+  const ownerComparison = getOwnerId(left).localeCompare(getOwnerId(right))
+  if (ownerComparison !== 0) {
+    return ownerComparison
+  }
+
+  return canonicalSerialize(left).localeCompare(canonicalSerialize(right))
 }
 
 function compareIso(left: string, right: string): number {
   return left.localeCompare(right)
+}
+
+function canonicalSerialize(value: unknown): string {
+  return JSON.stringify(canonicalize(value))
+}
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(canonicalize)
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entryValue]) => [key, canonicalize(entryValue)]),
+    )
+  }
+
+  return value
 }
 
 function sortById<T extends { id: string }>(values: T[]): T[] {
