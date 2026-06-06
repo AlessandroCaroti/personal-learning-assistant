@@ -15,6 +15,8 @@ type OriginRecord<T> = {
   value: T
   side: MergeSide
 }
+type ExamTombstone = Extract<SyncTombstone, { kind: 'exam' }>
+type FileTombstone = Extract<SyncTombstone, { kind: 'file' }>
 
 export function mergeSyncStates(
   local: RemoteSyncState,
@@ -72,7 +74,7 @@ function mergeQuizSession(
     return
   }
 
-  if (areEqual(existing, session)) {
+  if (areQuizSessionsEqual(existing, session)) {
     return
   }
 
@@ -103,14 +105,30 @@ function mergeQuestionStats(
     merged.set(stat.id, {
       ...existing,
       ...stat,
-      deviceCounters: {
-        ...existing.deviceCounters,
-        ...stat.deviceCounters,
-      },
+      deviceCounters: mergeDeviceCounters(existing.deviceCounters, stat.deviceCounters),
     })
   }
 
   return sortById([...merged.values()])
+}
+
+function mergeDeviceCounters(
+  left: SyncQuestionStatRecord['deviceCounters'],
+  right: SyncQuestionStatRecord['deviceCounters'],
+): SyncQuestionStatRecord['deviceCounters'] {
+  const merged: SyncQuestionStatRecord['deviceCounters'] = { ...left }
+
+  for (const [deviceId, counter] of Object.entries(right)) {
+    const existing = merged[deviceId]
+    merged[deviceId] = existing
+      ? {
+          timesShown: Math.max(existing.timesShown, counter.timesShown),
+          timesCorrect: Math.max(existing.timesCorrect, counter.timesCorrect),
+        }
+      : counter
+  }
+
+  return merged
 }
 
 function mergeFlashcardStats(
@@ -132,9 +150,13 @@ function mergeExams(
   conflicts: SyncConflict[],
 ): SyncExamRecord[] {
   const examTombstones = newestByIdWithOrigin(
-    localTombstones.filter((tombstone) => tombstone.kind === 'exam'),
-    remoteTombstones.filter((tombstone) => tombstone.kind === 'exam'),
+    localTombstones.filter(isExamTombstone),
+    remoteTombstones.filter(isExamTombstone),
     (tombstone) => tombstone.deletedAt,
+  )
+  const fileTombstones = newestFileTombstonesBySlot(
+    localTombstones.filter(isFileTombstone),
+    remoteTombstones.filter(isFileTombstone),
   )
   const merged = newestByIdWithOrigin(local, remote, (exam) => exam.updatedAt)
   const kept: SyncExamRecord[] = []
@@ -142,7 +164,7 @@ function mergeExams(
   for (const exam of merged.values()) {
     const tombstone = examTombstones.get(exam.value.id)
     if (!tombstone) {
-      kept.push(exam.value)
+      kept.push(applyFileTombstones(exam, fileTombstones, conflicts))
       continue
     }
 
@@ -151,7 +173,7 @@ function mergeExams(
     }
 
     conflicts.push(examDeleteVsUpdateConflict(exam, tombstone))
-    kept.push(exam.value)
+    kept.push(applyFileTombstones(exam, fileTombstones, conflicts))
   }
 
   return sortById(kept)
@@ -159,7 +181,7 @@ function mergeExams(
 
 function examDeleteVsUpdateConflict(
   exam: OriginRecord<SyncExamRecord>,
-  tombstone: OriginRecord<Extract<SyncTombstone, { kind: 'exam' }>>,
+  tombstone: OriginRecord<ExamTombstone>,
 ): SyncConflict {
   if (exam.side === 'local' && tombstone.side === 'remote') {
     return {
@@ -191,6 +213,96 @@ function examDeleteVsUpdateConflict(
     localDeviceId: tombstone.value.deletedByDeviceId,
     remoteDeviceId: exam.value.updatedByDeviceId,
   }
+}
+
+function newestFileTombstonesBySlot(
+  local: FileTombstone[],
+  remote: FileTombstone[],
+): Map<string, OriginRecord<FileTombstone>> {
+  const merged = new Map<string, OriginRecord<FileTombstone>>()
+
+  for (const tombstone of local) {
+    mergeFileTombstone(merged, { value: tombstone, side: 'local' })
+  }
+
+  for (const tombstone of remote) {
+    mergeFileTombstone(merged, { value: tombstone, side: 'remote' })
+  }
+
+  return merged
+}
+
+function mergeFileTombstone(
+  merged: Map<string, OriginRecord<FileTombstone>>,
+  tombstone: OriginRecord<FileTombstone>,
+): void {
+  const key = fileTombstoneKey(tombstone.value)
+  const existing = merged.get(key)
+  merged.set(key, existing ? newestOriginByIso(existing, tombstone, (value) => value.deletedAt) : tombstone)
+}
+
+function applyFileTombstones(
+  exam: OriginRecord<SyncExamRecord>,
+  fileTombstones: Map<string, OriginRecord<FileTombstone>>,
+  conflicts: SyncConflict[],
+): SyncExamRecord {
+  let files = exam.value.files
+
+  for (const tombstone of fileTombstones.values()) {
+    if (tombstone.value.examId !== exam.value.id || !files[tombstone.value.fileSlot]) {
+      continue
+    }
+
+    if (compareIso(exam.value.updatedAt, tombstone.value.deletedAt) <= 0) {
+      files = { ...files }
+      delete files[tombstone.value.fileSlot]
+      continue
+    }
+
+    conflicts.push(fileDeleteVsUpdateConflict(exam, tombstone))
+  }
+
+  return files === exam.value.files ? exam.value : { ...exam.value, files }
+}
+
+function fileDeleteVsUpdateConflict(
+  exam: OriginRecord<SyncExamRecord>,
+  tombstone: OriginRecord<FileTombstone>,
+): SyncConflict {
+  if (exam.side === 'local' && tombstone.side === 'remote') {
+    return {
+      kind: 'file-delete-vs-update',
+      id: tombstone.value.id,
+      localUpdatedAt: exam.value.updatedAt,
+      remoteUpdatedAt: tombstone.value.deletedAt,
+      localDeviceId: exam.value.updatedByDeviceId,
+      remoteDeviceId: tombstone.value.deletedByDeviceId,
+    }
+  }
+
+  if (exam.side === 'remote' && tombstone.side === 'local') {
+    return {
+      kind: 'file-delete-vs-update',
+      id: tombstone.value.id,
+      localUpdatedAt: tombstone.value.deletedAt,
+      remoteUpdatedAt: exam.value.updatedAt,
+      localDeviceId: tombstone.value.deletedByDeviceId,
+      remoteDeviceId: exam.value.updatedByDeviceId,
+    }
+  }
+
+  return {
+    kind: 'file-delete-vs-update',
+    id: tombstone.value.id,
+    localUpdatedAt: tombstone.value.deletedAt,
+    remoteUpdatedAt: exam.value.updatedAt,
+    localDeviceId: tombstone.value.deletedByDeviceId,
+    remoteDeviceId: exam.value.updatedByDeviceId,
+  }
+}
+
+function fileTombstoneKey(tombstone: FileTombstone): string {
+  return `${tombstone.examId}__${tombstone.fileSlot}`
 }
 
 function mergeNewestById<T extends { id: string }>(local: T[], remote: T[], getIso: (value: T) => string): T[] {
@@ -251,6 +363,32 @@ function sortById<T extends { id: string }>(values: T[]): T[] {
   return [...values].sort((left, right) => left.id.localeCompare(right.id))
 }
 
-function areEqual(left: unknown, right: unknown): boolean {
-  return JSON.stringify(left) === JSON.stringify(right)
+function isExamTombstone(tombstone: SyncTombstone): tombstone is ExamTombstone {
+  return tombstone.kind === 'exam'
+}
+
+function isFileTombstone(tombstone: SyncTombstone): tombstone is FileTombstone {
+  return tombstone.kind === 'file'
+}
+
+function areQuizSessionsEqual(left: SyncQuizSessionRecord, right: SyncQuizSessionRecord): boolean {
+  return (
+    left.id === right.id &&
+    left.examId === right.examId &&
+    left.date === right.date &&
+    left.score === right.score &&
+    left.total === right.total &&
+    left.totalTime === right.totalTime &&
+    left.timeLimitSeconds === right.timeLimitSeconds &&
+    left.completedByTimeout === right.completedByTimeout &&
+    arraysEqual(left.macroargomenti, right.macroargomenti) &&
+    arraysEqual(left.errors, right.errors) &&
+    arraysEqual(left.unanswered, right.unanswered) &&
+    left.isReview === right.isReview &&
+    left.updatedByDeviceId === right.updatedByDeviceId
+  )
+}
+
+function arraysEqual(left: string[], right: string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index])
 }

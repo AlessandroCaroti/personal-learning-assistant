@@ -29,6 +29,14 @@ function examRecord(overrides: Partial<SyncExamRecord> = {}): SyncExamRecord {
   }
 }
 
+function encodedFileRecord(name: string) {
+  return {
+    name,
+    type: 'application/json',
+    dataBase64: 'e30=',
+  }
+}
+
 function quizSession(overrides: Partial<SyncQuizSessionRecord> = {}): SyncQuizSessionRecord {
   return {
     id: 'session-1',
@@ -148,6 +156,41 @@ describe('mergeSyncStates', () => {
     expect(result.conflicts).toEqual([])
   })
 
+  it('keeps maximum question stat counters when the same device has stale remote data', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.questionStats.push({
+      id: 'exam-1__q1',
+      examId: 'exam-1',
+      questionId: 'q1',
+      deviceCounters: {
+        'shared-device': { timesShown: 5, timesCorrect: 4 },
+      },
+    })
+    remote.data.questionStats.push({
+      id: 'exam-1__q1',
+      examId: 'exam-1',
+      questionId: 'q1',
+      deviceCounters: {
+        'shared-device': { timesShown: 3, timesCorrect: 2 },
+      },
+    })
+
+    const result = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(result.state.data.questionStats).toEqual([
+      {
+        id: 'exam-1__q1',
+        examId: 'exam-1',
+        questionId: 'q1',
+        deviceCounters: {
+          'shared-device': { timesShown: 5, timesCorrect: 4 },
+        },
+      },
+    ])
+    expect(result.conflicts).toEqual([])
+  })
+
   it('keeps the newest flashcard stat by lastSeen', () => {
     const local = emptyState('local-device')
     const remote = emptyState('remote-device')
@@ -239,6 +282,81 @@ describe('mergeSyncStates', () => {
       {
         kind: 'exam-delete-vs-update',
         id: 'exam-1',
+        localUpdatedAt: '2026-06-01T11:00:00.000Z',
+        remoteUpdatedAt: '2026-06-01T10:00:00.000Z',
+        localDeviceId: 'local-device',
+        remoteDeviceId: 'remote-device',
+      },
+    ])
+  })
+
+  it('removes exam file slots deleted by newer file tombstones', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        files: {
+          quiz: encodedFileRecord('quiz.json'),
+          flashcard: encodedFileRecord('flashcard.json'),
+        },
+        updatedAt: '2026-06-01T10:00:00.000Z',
+        updatedByDeviceId: 'local-device',
+      }),
+    )
+    remote.tombstones.push({
+      kind: 'file',
+      id: 'exam-1__quiz',
+      examId: 'exam-1',
+      fileSlot: 'quiz',
+      deletedAt: '2026-06-01T11:00:00.000Z',
+      deletedByDeviceId: 'remote-device',
+    })
+
+    const result = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(result.state.data.esami).toEqual([
+      examRecord({
+        id: 'exam-1',
+        files: {
+          flashcard: encodedFileRecord('flashcard.json'),
+        },
+        updatedAt: '2026-06-01T10:00:00.000Z',
+        updatedByDeviceId: 'local-device',
+      }),
+    ])
+    expect(result.conflicts).toEqual([])
+  })
+
+  it('marks local newer file update versus remote file delete with accurate conflict provenance', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        files: {
+          quiz: encodedFileRecord('quiz.json'),
+        },
+        updatedAt: '2026-06-01T11:00:00.000Z',
+        updatedByDeviceId: 'local-device',
+      }),
+    )
+    remote.tombstones.push({
+      kind: 'file',
+      id: 'exam-1__quiz',
+      examId: 'exam-1',
+      fileSlot: 'quiz',
+      deletedAt: '2026-06-01T10:00:00.000Z',
+      deletedByDeviceId: 'remote-device',
+    })
+
+    const result = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(result.state.data.esami.map((exam) => exam.files.quiz?.name)).toEqual(['quiz.json'])
+    expect(result.conflicts).toEqual([
+      {
+        kind: 'file-delete-vs-update',
+        id: 'exam-1__quiz',
         localUpdatedAt: '2026-06-01T11:00:00.000Z',
         remoteUpdatedAt: '2026-06-01T10:00:00.000Z',
         localDeviceId: 'local-device',
