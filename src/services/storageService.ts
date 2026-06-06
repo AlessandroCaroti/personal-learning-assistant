@@ -19,8 +19,16 @@ import {
 } from './sync/types'
 
 const DB_NAME = 'study-app-db'
-const DB_VERSION = 3
+const DB_VERSION = 4
 const SYNC_METADATA_ID = 'sync'
+
+interface LocalSyncQuestionCounter {
+  id: string
+  questionStatId: string
+  deviceId: string
+  timesShown: number
+  timesCorrect: number
+}
 
 interface StudyAppDB extends DBSchema {
   esami: {
@@ -60,6 +68,11 @@ interface StudyAppDB extends DBSchema {
     key: string
     value: SyncTombstone
   }
+  syncQuestionCounters: {
+    key: string
+    value: LocalSyncQuestionCounter
+    indexes: { 'by-questionStatId': string }
+  }
 }
 
 type ExamScopedStoreName =
@@ -76,6 +89,7 @@ type SyncMetadataTransaction = {
 type SyncDirtyTransaction = SyncMetadataTransaction & {
   objectStore(name: 'syncRecordMetadata'): {
     put(value: LocalSyncRecordMetadata): Promise<unknown>
+    delete(key: string): Promise<unknown>
   }
 }
 
@@ -122,6 +136,11 @@ function getDB(): Promise<IDBPDatabase<StudyAppDB>> {
 
         db.createObjectStore('syncTombstones', { keyPath: 'id' })
       }
+
+      if (oldVersion < 4) {
+        const syncQuestionCounters = db.createObjectStore('syncQuestionCounters', { keyPath: 'id' })
+        syncQuestionCounters.createIndex('by-questionStatId', 'questionStatId')
+      }
     },
   })
 
@@ -142,6 +161,10 @@ function newSyncMetadata(): SyncMetadata {
 
 function syncRecordMetadataId(store: SyncDirtyStore, recordId: string): string {
   return `${store}__${recordId}`
+}
+
+function syncQuestionCounterId(questionStatId: string, deviceId: string): string {
+  return `${questionStatId}__${deviceId}`
 }
 
 async function getOrCreateSyncMetadataInTransaction(
@@ -186,13 +209,6 @@ async function markRecordDirtyInTransaction(
   return dirtyMetadata
 }
 
-async function markRecordDirty(store: SyncDirtyStore, recordId: string): Promise<void> {
-  const db = await getDB()
-  const tx = db.transaction(['syncMetadata', 'syncRecordMetadata'], 'readwrite')
-  await markRecordDirtyInTransaction(tx, store, recordId)
-  await tx.done
-}
-
 export async function getSyncMetadata(): Promise<SyncMetadata> {
   const db = await getDB()
   const tx = db.transaction('syncMetadata', 'readwrite')
@@ -229,14 +245,26 @@ export async function getEsame(id: string): Promise<Esame | undefined> {
 }
 
 export async function saveEsame(esame: Esame): Promise<void> {
-  await (await getDB()).put('esami', esame)
-  await markRecordDirty('esami', esame.id)
+  const db = await getDB()
+  const tx = db.transaction(['esami', 'syncMetadata', 'syncRecordMetadata'], 'readwrite')
+
+  await tx.objectStore('esami').put(esame)
+  await markRecordDirtyInTransaction(tx, 'esami', esame.id)
+  await tx.done
 }
 
 export async function replaceQuizFileForExam(examId: string, file: FileRecord): Promise<void> {
   const db = await getDB()
   const tx = db.transaction(
-    ['esami', 'quizSessions', 'questionStats', 'pausedSessions', 'syncMetadata', 'syncRecordMetadata'],
+    [
+      'esami',
+      'quizSessions',
+      'questionStats',
+      'pausedSessions',
+      'syncMetadata',
+      'syncRecordMetadata',
+      'syncQuestionCounters',
+    ],
     'readwrite',
   )
 
@@ -342,6 +370,7 @@ export async function deleteEsame(id: string): Promise<void> {
 
   await tx.objectStore('esami').delete(id)
   const metadata = await markRecordDirtyInTransaction(tx, 'esami', id)
+  await tx.objectStore('syncRecordMetadata').delete(syncRecordMetadataId('esami', id))
   await tx.objectStore('syncTombstones').put({
     id,
     kind: 'exam',
@@ -362,8 +391,12 @@ export async function getQuizSessions(examId: string): Promise<QuizSession[]> {
 }
 
 export async function saveQuizSession(session: QuizSession): Promise<void> {
-  await (await getDB()).put('quizSessions', session)
-  await markRecordDirty('quizSessions', session.id)
+  const db = await getDB()
+  const tx = db.transaction(['quizSessions', 'syncMetadata', 'syncRecordMetadata'], 'readwrite')
+
+  await tx.objectStore('quizSessions').put(session)
+  await markRecordDirtyInTransaction(tx, 'quizSessions', session.id)
+  await tx.done
 }
 
 export async function deleteQuizSessionsForExam(examId: string): Promise<void> {
@@ -375,8 +408,31 @@ export async function getQuestionStats(examId: string): Promise<QuestionStats[]>
 }
 
 export async function saveQuestionStat(stat: QuestionStats): Promise<void> {
-  await (await getDB()).put('questionStats', stat)
-  await markRecordDirty('questionStats', stat.id)
+  const db = await getDB()
+  const tx = db.transaction(
+    ['questionStats', 'syncMetadata', 'syncRecordMetadata', 'syncQuestionCounters'],
+    'readwrite',
+  )
+  const questionStats = tx.objectStore('questionStats')
+  const previousStat = await questionStats.get(stat.id)
+  const metadata = await markRecordDirtyInTransaction(tx, 'questionStats', stat.id)
+  const counterStore = tx.objectStore('syncQuestionCounters')
+  const counterId = syncQuestionCounterId(stat.id, metadata.deviceId)
+  const previousCounter = await counterStore.get(counterId)
+  const shownDelta = Math.max(0, stat.timesShown - (previousStat?.timesShown ?? 0))
+  const correctDelta = Math.max(0, stat.timesCorrect - (previousStat?.timesCorrect ?? 0))
+
+  await Promise.all([
+    questionStats.put(stat),
+    counterStore.put({
+      id: counterId,
+      questionStatId: stat.id,
+      deviceId: metadata.deviceId,
+      timesShown: (previousCounter?.timesShown ?? 0) + shownDelta,
+      timesCorrect: (previousCounter?.timesCorrect ?? 0) + correctDelta,
+    }),
+  ])
+  await tx.done
 }
 
 export async function deleteQuestionStatsForExam(examId: string): Promise<void> {
@@ -388,8 +444,12 @@ export async function getFlashcardStats(examId: string): Promise<FlashcardStats[
 }
 
 export async function saveFlashcardStat(stat: FlashcardStats): Promise<void> {
-  await (await getDB()).put('flashcardStats', stat)
-  await markRecordDirty('flashcardStats', stat.id)
+  const db = await getDB()
+  const tx = db.transaction(['flashcardStats', 'syncMetadata', 'syncRecordMetadata'], 'readwrite')
+
+  await tx.objectStore('flashcardStats').put(stat)
+  await markRecordDirtyInTransaction(tx, 'flashcardStats', stat.id)
+  await tx.done
 }
 
 export async function deleteFlashcardStatsForExam(examId: string): Promise<void> {
@@ -417,60 +477,100 @@ export async function exportLocalSyncState(): Promise<{
   revision: string | null
 }> {
   const db = await getDB()
-  const metadata = await getSyncMetadata()
-  const [esami, quizSessions, questionStats, flashcardStats, recordMetadata, tombstones] =
+  await getSyncMetadata()
+
+  const tx = db.transaction(
+    [
+      'syncMetadata',
+      'esami',
+      'quizSessions',
+      'questionStats',
+      'flashcardStats',
+      'syncRecordMetadata',
+      'syncTombstones',
+      'syncQuestionCounters',
+    ],
+    'readonly',
+  )
+  const [metadata, esami, quizSessions, questionStats, flashcardStats, recordMetadata, tombstones, questionCounters] =
     await Promise.all([
-      db.getAll('esami'),
-      db.getAll('quizSessions'),
-      db.getAll('questionStats'),
-      db.getAll('flashcardStats'),
-      db.getAll('syncRecordMetadata'),
-      db.getAll('syncTombstones'),
+      tx.objectStore('syncMetadata').get(SYNC_METADATA_ID),
+      tx.objectStore('esami').getAll(),
+      tx.objectStore('quizSessions').getAll(),
+      tx.objectStore('questionStats').getAll(),
+      tx.objectStore('flashcardStats').getAll(),
+      tx.objectStore('syncRecordMetadata').getAll(),
+      tx.objectStore('syncTombstones').getAll(),
+      tx.objectStore('syncQuestionCounters').getAll(),
     ])
+  await tx.done
+  const syncMetadata = metadata ?? newSyncMetadata()
   const metadataByRecord = new Map(recordMetadata.map((entry) => [entry.id, entry]))
+  const questionCountersByStat = new Map<string, LocalSyncQuestionCounter[]>()
   const getRecordMetadata = (store: SyncDirtyStore, recordId: string) =>
     metadataByRecord.get(syncRecordMetadataId(store, recordId))
+
+  for (const counter of questionCounters) {
+    const existing = questionCountersByStat.get(counter.questionStatId) ?? []
+    existing.push(counter)
+    questionCountersByStat.set(counter.questionStatId, existing)
+  }
 
   return {
     state: {
       syncVersion: SYNC_SCHEMA_VERSION,
       updatedAt: new Date().toISOString(),
-      writerDeviceId: metadata.deviceId,
+      writerDeviceId: syncMetadata.deviceId,
       data: {
         esami: esami.map((esame) => {
-          const syncMetadata = getRecordMetadata('esami', esame.id)
+          const recordMetadataEntry = getRecordMetadata('esami', esame.id)
 
           return {
             ...esame,
             files: Object.fromEntries(
               Object.entries(esame.files).map(([slot, file]) => [slot, encodeFileRecord(file)]),
             ),
-            updatedAt: syncMetadata?.updatedAt ?? esame.createdAt,
-            updatedByDeviceId: syncMetadata?.updatedByDeviceId ?? metadata.deviceId,
+            updatedAt: recordMetadataEntry?.updatedAt ?? esame.createdAt,
+            updatedByDeviceId: recordMetadataEntry?.updatedByDeviceId ?? syncMetadata.deviceId,
           }
         }),
         quizSessions: quizSessions.map((session) => ({
           ...session,
           updatedByDeviceId:
-            getRecordMetadata('quizSessions', session.id)?.updatedByDeviceId ?? metadata.deviceId,
+            getRecordMetadata('quizSessions', session.id)?.updatedByDeviceId ?? syncMetadata.deviceId,
         })),
-        questionStats: questionStats.map(({ timesShown, timesCorrect, ...stat }) => ({
-          ...stat,
-          deviceCounters: {
-            [metadata.deviceId]: {
+        questionStats: questionStats.map(({ timesShown, timesCorrect, ...stat }) => {
+          const counters = questionCountersByStat.get(stat.id) ?? [
+            {
+              id: syncQuestionCounterId(stat.id, syncMetadata.deviceId),
+              questionStatId: stat.id,
+              deviceId: syncMetadata.deviceId,
               timesShown,
               timesCorrect,
             },
-          },
-        })),
+          ]
+
+          return {
+            ...stat,
+            deviceCounters: Object.fromEntries(
+              counters.map((counter) => [
+                counter.deviceId,
+                {
+                  timesShown: counter.timesShown,
+                  timesCorrect: counter.timesCorrect,
+                },
+              ]),
+            ),
+          }
+        }),
         flashcardStats: flashcardStats.map((stat) => ({
           ...stat,
           updatedByDeviceId:
-            getRecordMetadata('flashcardStats', stat.id)?.updatedByDeviceId ?? metadata.deviceId,
+            getRecordMetadata('flashcardStats', stat.id)?.updatedByDeviceId ?? syncMetadata.deviceId,
         })),
       },
       tombstones,
     },
-    revision: metadata.lastRemoteRevision,
+    revision: syncMetadata.lastRemoteRevision,
   }
 }

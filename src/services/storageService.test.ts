@@ -76,6 +76,39 @@ function byId<T extends { id: string }>(records: T[]): T[] {
   return [...records].sort((a, b) => a.id.localeCompare(b.id))
 }
 
+async function withRawDb<T>(
+  storeNames: string[],
+  mode: IDBTransactionMode,
+  callback: (db: IDBDatabase, tx: IDBTransaction) => Promise<T>,
+): Promise<T> {
+  const db = await new Promise<IDBDatabase>((resolve, reject) => {
+    const request = indexedDB.open('study-app-db')
+
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error ?? new Error('Failed to open raw test DB'))
+  })
+
+  try {
+    const tx = db.transaction(storeNames, mode)
+    const result = await callback(db, tx)
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => reject(tx.error ?? new Error('Raw test transaction failed'))
+      tx.onabort = () => reject(tx.error ?? new Error('Raw test transaction aborted'))
+    })
+    return result
+  } finally {
+    db.close()
+  }
+}
+
+function rawRequestResult<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error ?? new Error('Raw test request failed'))
+  })
+}
+
 describe('storageService', () => {
   beforeEach(async () => {
     await resetDb()
@@ -363,6 +396,152 @@ describe('storageService', () => {
     })
   })
 
+  it('marks quiz session writes as dirty sync records', async () => {
+    const session = makeQuizSession({ id: 'quiz-dirty', examId: exam.id })
+
+    await saveQuizSession(session)
+
+    const { state } = await exportLocalSyncState()
+    const metadata = await getSyncMetadata()
+    expect(metadata.pendingLocalChanges).toBe(true)
+    expect(state.data.quizSessions).toEqual([
+      {
+        ...session,
+        updatedByDeviceId: metadata.deviceId,
+      },
+    ])
+  })
+
+  it('marks question stat writes as dirty sync records and preserves local device counters', async () => {
+    const original = questionStat({ timesShown: 5, timesCorrect: 3 })
+    const updated = questionStat({ timesShown: 7, timesCorrect: 4 })
+
+    await saveQuestionStat(original)
+    await saveQuestionStat(updated)
+
+    const { state } = await exportLocalSyncState()
+    const metadata = await getSyncMetadata()
+    expect(metadata.pendingLocalChanges).toBe(true)
+    expect(state.data.questionStats).toEqual([
+      {
+        id: updated.id,
+        examId: updated.examId,
+        questionId: updated.questionId,
+        deviceCounters: {
+          [metadata.deviceId]: {
+            timesShown: 7,
+            timesCorrect: 4,
+          },
+        },
+      },
+    ])
+  })
+
+  it('exports preserved per-device question counters instead of relabeling aggregate stats', async () => {
+    const aggregate = questionStat({ timesShown: 12, timesCorrect: 8 })
+
+    await saveQuestionStat(aggregate)
+    const metadata = await getSyncMetadata()
+    await withRawDb(
+      ['questionStats', 'syncQuestionCounters'],
+      'readwrite',
+      async (_db, tx) => {
+        tx.objectStore('questionStats').put({
+          ...aggregate,
+          timesShown: 20,
+          timesCorrect: 13,
+        })
+        tx.objectStore('syncQuestionCounters').put({
+          id: `${aggregate.id}__remote-device`,
+          questionStatId: aggregate.id,
+          deviceId: 'remote-device',
+          timesShown: 8,
+          timesCorrect: 5,
+        })
+      },
+    )
+
+    const { state } = await exportLocalSyncState()
+
+    expect(state.data.questionStats).toEqual([
+      {
+        id: aggregate.id,
+        examId: aggregate.examId,
+        questionId: aggregate.questionId,
+        deviceCounters: {
+          [metadata.deviceId]: {
+            timesShown: 12,
+            timesCorrect: 8,
+          },
+          'remote-device': {
+            timesShown: 8,
+            timesCorrect: 5,
+          },
+        },
+      },
+    ])
+  })
+
+  it('marks flashcard stat writes as dirty sync records', async () => {
+    const stat = flashcardStat({ id: 'exam-1__f-dirty' })
+
+    await saveFlashcardStat(stat)
+
+    const { state } = await exportLocalSyncState()
+    const metadata = await getSyncMetadata()
+    expect(metadata.pendingLocalChanges).toBe(true)
+    expect(state.data.flashcardStats).toEqual([
+      {
+        ...stat,
+        updatedByDeviceId: metadata.deviceId,
+      },
+    ])
+  })
+
+  it('marks replacement writes as dirty exam sync records', async () => {
+    await saveEsame(exam)
+    const beforeReplacement = await exportLocalSyncState()
+    await new Promise((resolve) => setTimeout(resolve, 1))
+
+    await replaceQuizFileForExam(exam.id, fileRecord('replacement-quiz.json'))
+
+    const { state } = await exportLocalSyncState()
+    const metadata = await getSyncMetadata()
+    expect(metadata.pendingLocalChanges).toBe(true)
+    expect(state.data.esami).toEqual([
+      expect.objectContaining({
+        id: exam.id,
+        updatedByDeviceId: metadata.deviceId,
+      }),
+    ])
+    expect(state.data.esami[0].updatedAt).not.toBe(beforeReplacement.state.data.esami[0].updatedAt)
+  })
+
+  it('exports delete tombstones without stale live exam metadata', async () => {
+    await saveEsame(exam)
+
+    await deleteEsame(exam.id)
+
+    const { state } = await exportLocalSyncState()
+    const metadata = await getSyncMetadata()
+    const staleLiveMetadata = await withRawDb(
+      ['syncRecordMetadata'],
+      'readonly',
+      async (_db, tx) =>
+        rawRequestResult(tx.objectStore('syncRecordMetadata').get(`esami__${exam.id}`)),
+    )
+    expect(state.data.esami).toEqual([])
+    expect(staleLiveMetadata).toBeUndefined()
+    expect(state.tombstones).toEqual([
+      {
+        id: exam.id,
+        kind: 'exam',
+        deletedAt: expect.any(String),
+        deletedByDeviceId: metadata.deviceId,
+      },
+    ])
+  })
+
   it('exports syncable data and excludes paused sessions', async () => {
     const examWithFiles = {
       ...exam,
@@ -373,7 +552,13 @@ describe('storageService', () => {
     const quizSession = makeQuizSession({ id: 'quiz-1', examId: exam.id })
     const question = questionStat({ id: 'exam-1__q1', examId: exam.id })
     const flashcard = flashcardStat({ id: 'exam-1__f1', examId: exam.id })
-    const pausedQuiz = makePausedQuiz({ id: 'exam-1__quiz', examId: exam.id })
+    const pausedOnlyMarker = 'PAUSED_ONLY_MARKER_SHOULD_NOT_EXPORT'
+    const pausedQuiz = makePausedQuiz({
+      id: 'exam-1__quiz',
+      examId: exam.id,
+      macroargomenti: [pausedOnlyMarker],
+      questionIds: [pausedOnlyMarker],
+    })
 
     await saveEsame(examWithFiles)
     await saveQuizSession(quizSession)
@@ -427,5 +612,6 @@ describe('storageService', () => {
       },
     ])
     expect(state.tombstones).toEqual([])
+    expect(JSON.stringify(state)).not.toContain(pausedOnlyMarker)
   })
 })
