@@ -878,4 +878,144 @@ describe('storageService', () => {
 
     await expect(getPausedSession(pausedQuiz.id)).resolves.toEqual(pausedQuiz)
   })
+
+  it('leaves existing syncable stores intact when import normalization fails', async () => {
+    const existingExam = {
+      ...exam,
+      files: {
+        quiz: fileRecord('existing-quiz.json'),
+      },
+    }
+    const existingSession = makeQuizSession({ id: 'existing-session', examId: exam.id })
+    const existingQuestion = questionStat({ id: 'exam-1__existing-question' })
+    const existingFlashcard = flashcardStat({ id: 'exam-1__existing-flashcard' })
+    const malformedState: RemoteSyncState = {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: '2026-06-06T10:00:00.000Z',
+      writerDeviceId: 'remote-device',
+      data: {
+        esami: [
+          {
+            id: 'exam-imported',
+            name: 'Imported exam',
+            createdAt: '2026-06-05T09:00:00.000Z',
+            files: {
+              quiz: {
+                name: 'bad-quiz.json',
+                type: 'application/json',
+                dataBase64: '%%%not-valid-base64%%%',
+              },
+            },
+            updatedAt: '2026-06-05T10:00:00.000Z',
+            updatedByDeviceId: 'remote-device',
+          },
+        ],
+        quizSessions: [],
+        questionStats: [],
+        flashcardStats: [],
+      },
+      tombstones: [],
+    }
+
+    await saveEsame(existingExam)
+    await saveQuizSession(existingSession)
+    await saveQuestionStat(existingQuestion)
+    await saveFlashcardStat(existingFlashcard)
+
+    await expect(
+      importMergedSyncState(malformedState, 'bad-revision', '2026-06-06T10:01:00.000Z'),
+    ).rejects.toThrow()
+
+    await expect(getEsame(existingExam.id)).resolves.toEqual(existingExam)
+    await expect(getQuizSessions(existingExam.id)).resolves.toEqual([existingSession])
+    await expect(getQuestionStats(existingExam.id)).resolves.toEqual([existingQuestion])
+    await expect(getFlashcardStats(existingExam.id)).resolves.toEqual([existingFlashcard])
+    await expect(getEsame('exam-imported')).resolves.toBeUndefined()
+  })
+
+  it('strips unknown remote fields from imported app records', async () => {
+    const remoteState = {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: '2026-06-06T10:00:00.000Z',
+      writerDeviceId: 'remote-device',
+      data: {
+        esami: [
+          {
+            id: 'exam-imported',
+            name: 'Imported exam',
+            createdAt: '2026-06-05T09:00:00.000Z',
+            files: {},
+            updatedAt: '2026-06-05T10:00:00.000Z',
+            updatedByDeviceId: 'remote-device',
+            remoteOnlyExamField: 'must-not-persist',
+          },
+        ],
+        quizSessions: [
+          {
+            id: 'quiz-imported',
+            examId: 'exam-imported',
+            date: '2026-06-05T12:00:00.000Z',
+            score: 4,
+            total: 5,
+            totalTime: 120,
+            timeLimitSeconds: null,
+            completedByTimeout: false,
+            macroargomenti: ['contracts'],
+            errors: ['q2'],
+            unanswered: [],
+            isReview: false,
+            updatedByDeviceId: 'remote-device',
+            remoteOnlyQuizField: 'must-not-persist',
+          },
+        ],
+        questionStats: [],
+        flashcardStats: [
+          {
+            id: 'exam-imported__f1',
+            examId: 'exam-imported',
+            cardId: 'f1',
+            lastEval: 'Sì',
+            lastSeen: '2026-06-05T13:00:00.000Z',
+            updatedByDeviceId: 'remote-device',
+            remoteOnlyFlashcardField: 'must-not-persist',
+          },
+        ],
+      },
+      tombstones: [],
+    } as unknown as RemoteSyncState
+
+    await importMergedSyncState(remoteState, 'remote-revision-fields', '2026-06-06T10:01:00.000Z')
+
+    await expect(getEsame('exam-imported')).resolves.toEqual({
+      id: 'exam-imported',
+      name: 'Imported exam',
+      createdAt: '2026-06-05T09:00:00.000Z',
+      files: {},
+    })
+    await expect(getQuizSessions('exam-imported')).resolves.toEqual([
+      {
+        id: 'quiz-imported',
+        examId: 'exam-imported',
+        date: '2026-06-05T12:00:00.000Z',
+        score: 4,
+        total: 5,
+        totalTime: 120,
+        timeLimitSeconds: null,
+        completedByTimeout: false,
+        macroargomenti: ['contracts'],
+        errors: ['q2'],
+        unanswered: [],
+        isReview: false,
+      },
+    ])
+    await expect(getFlashcardStats('exam-imported')).resolves.toEqual([
+      {
+        id: 'exam-imported__f1',
+        examId: 'exam-imported',
+        cardId: 'f1',
+        lastEval: 'Sì',
+        lastSeen: '2026-06-05T13:00:00.000Z',
+      },
+    ])
+  })
 })

@@ -11,11 +11,9 @@ import type {
 import { decodeFileRecord, encodeFileRecord } from './sync/serialization'
 import {
   SYNC_SCHEMA_VERSION,
-  type EncodedFileRecord,
   type LocalSyncRecordMetadata,
   type RemoteSyncState,
   type SyncDirtyStore,
-  type SyncFileSlot,
   type SyncMetadata,
   type SyncTombstone,
 } from './sync/types'
@@ -637,6 +635,114 @@ export async function importMergedSyncState(
 ): Promise<void> {
   const db = await getDB()
   const currentMetadata = await getSyncMetadata()
+  const normalizedEsami: Esame[] = state.data.esami.map(
+    ({ id, name, createdAt, files }) => ({
+      id,
+      name,
+      createdAt,
+      files: {
+        ...(files.riassunto ? { riassunto: decodeFileRecord(files.riassunto) } : {}),
+        ...(files.quiz ? { quiz: decodeFileRecord(files.quiz) } : {}),
+        ...(files.flashcard ? { flashcard: decodeFileRecord(files.flashcard) } : {}),
+      },
+    }),
+  )
+  const esamiMetadata: LocalSyncRecordMetadata[] = state.data.esami.map(
+    ({ id, updatedAt, updatedByDeviceId }) => ({
+      id: syncRecordMetadataId('esami', id),
+      store: 'esami',
+      recordId: id,
+      updatedAt,
+      updatedByDeviceId,
+    }),
+  )
+  const normalizedQuizSessions: QuizSession[] = state.data.quizSessions.map(
+    ({
+      id,
+      examId,
+      date,
+      score,
+      total,
+      totalTime,
+      timeLimitSeconds,
+      completedByTimeout,
+      macroargomenti,
+      errors,
+      unanswered,
+      isReview,
+    }) => ({
+      id,
+      examId,
+      date,
+      score,
+      total,
+      totalTime,
+      timeLimitSeconds,
+      completedByTimeout,
+      macroargomenti,
+      errors,
+      unanswered,
+      isReview,
+    }),
+  )
+  const quizSessionMetadata: LocalSyncRecordMetadata[] = state.data.quizSessions.map(
+    ({ id, date, updatedByDeviceId }) => ({
+      id: syncRecordMetadataId('quizSessions', id),
+      store: 'quizSessions',
+      recordId: id,
+      updatedAt: date,
+      updatedByDeviceId,
+    }),
+  )
+  const normalizedQuestionStats: QuestionStats[] = state.data.questionStats.map(
+    ({ id, examId, questionId, deviceCounters }) => {
+      const aggregate = Object.values(deviceCounters).reduce(
+        (totals, counter) => ({
+          timesShown: totals.timesShown + counter.timesShown,
+          timesCorrect: totals.timesCorrect + counter.timesCorrect,
+        }),
+        { timesShown: 0, timesCorrect: 0 },
+      )
+
+      return {
+        id,
+        examId,
+        questionId,
+        ...aggregate,
+      }
+    },
+  )
+  const normalizedQuestionCounters: LocalSyncQuestionCounter[] = state.data.questionStats.flatMap(
+    ({ id, deviceCounters }) =>
+      Object.entries(deviceCounters).map(([deviceId, counter]) => ({
+        id: syncQuestionCounterId(id, deviceId),
+        questionStatId: id,
+        deviceId,
+        timesShown: counter.timesShown,
+        timesCorrect: counter.timesCorrect,
+      })),
+  )
+  const normalizedFlashcardStats: FlashcardStats[] = state.data.flashcardStats.map(
+    ({ id, examId, cardId, lastEval, lastSeen }) => ({
+      id,
+      examId,
+      cardId,
+      lastEval,
+      lastSeen,
+    }),
+  )
+  const flashcardMetadata: LocalSyncRecordMetadata[] = state.data.flashcardStats.map(
+    ({ id, lastSeen, updatedByDeviceId }) => ({
+      id: syncRecordMetadataId('flashcardStats', id),
+      store: 'flashcardStats',
+      recordId: id,
+      updatedAt: lastSeen,
+      updatedByDeviceId,
+    }),
+  )
+  const normalizedTombstones: SyncTombstone[] = state.tombstones.map((tombstone) => ({
+    ...tombstone,
+  }))
   const tx = db.transaction(
     [
       'syncMetadata',
@@ -678,92 +784,15 @@ export async function importMergedSyncState(
     }),
   ]
 
-  for (const remoteExam of state.data.esami) {
-    const { updatedAt, updatedByDeviceId, files, ...exam } = remoteExam
-    const decodedFiles = Object.fromEntries(
-      Object.entries(files).map(([slot, file]) => [
-        slot,
-        decodeFileRecord(file as EncodedFileRecord),
-      ]),
-    ) as Partial<Record<SyncFileSlot, FileRecord>>
-
-    writes.push(
-      esami.put({
-        ...exam,
-        files: decodedFiles,
-      }),
-      syncRecordMetadata.put({
-        id: syncRecordMetadataId('esami', remoteExam.id),
-        store: 'esami',
-        recordId: remoteExam.id,
-        updatedAt,
-        updatedByDeviceId,
-      }),
-    )
-  }
-
-  for (const remoteSession of state.data.quizSessions) {
-    const { updatedByDeviceId, ...session } = remoteSession
-
-    writes.push(
-      quizSessions.put(session),
-      syncRecordMetadata.put({
-        id: syncRecordMetadataId('quizSessions', remoteSession.id),
-        store: 'quizSessions',
-        recordId: remoteSession.id,
-        updatedAt: remoteSession.date,
-        updatedByDeviceId,
-      }),
-    )
-  }
-
-  for (const remoteStat of state.data.questionStats) {
-    const aggregate = Object.values(remoteStat.deviceCounters).reduce(
-      (totals, counter) => ({
-        timesShown: totals.timesShown + counter.timesShown,
-        timesCorrect: totals.timesCorrect + counter.timesCorrect,
-      }),
-      { timesShown: 0, timesCorrect: 0 },
-    )
-
-    writes.push(
-      questionStats.put({
-        id: remoteStat.id,
-        examId: remoteStat.examId,
-        questionId: remoteStat.questionId,
-        ...aggregate,
-      }),
-    )
-
-    for (const [deviceId, counter] of Object.entries(remoteStat.deviceCounters)) {
-      writes.push(
-        syncQuestionCounters.put({
-          id: syncQuestionCounterId(remoteStat.id, deviceId),
-          questionStatId: remoteStat.id,
-          deviceId,
-          timesShown: counter.timesShown,
-          timesCorrect: counter.timesCorrect,
-        }),
-      )
-    }
-  }
-
-  for (const remoteStat of state.data.flashcardStats) {
-    const { updatedByDeviceId, ...stat } = remoteStat
-
-    writes.push(
-      flashcardStats.put(stat),
-      syncRecordMetadata.put({
-        id: syncRecordMetadataId('flashcardStats', remoteStat.id),
-        store: 'flashcardStats',
-        recordId: remoteStat.id,
-        updatedAt: remoteStat.lastSeen,
-        updatedByDeviceId,
-      }),
-    )
-  }
-
-  writes.push(...state.tombstones.map((tombstone) => syncTombstones.put(tombstone)))
+  writes.push(...normalizedEsami.map((record) => esami.put(record)))
+  writes.push(...normalizedQuizSessions.map((record) => quizSessions.put(record)))
+  writes.push(...normalizedQuestionStats.map((record) => questionStats.put(record)))
+  writes.push(...normalizedFlashcardStats.map((record) => flashcardStats.put(record)))
+  writes.push(...esamiMetadata.map((record) => syncRecordMetadata.put(record)))
+  writes.push(...quizSessionMetadata.map((record) => syncRecordMetadata.put(record)))
+  writes.push(...flashcardMetadata.map((record) => syncRecordMetadata.put(record)))
+  writes.push(...normalizedQuestionCounters.map((record) => syncQuestionCounters.put(record)))
+  writes.push(...normalizedTombstones.map((tombstone) => syncTombstones.put(tombstone)))
 
   await Promise.all(writes)
   await tx.done
