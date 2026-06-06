@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { makeEsame, makePausedFlash, makePausedQuiz, makeQuizSession } from '../__tests__/factories'
 import { resetDb } from '../__tests__/resetDb'
 import type { FileRecord, FlashcardStats, QuestionStats } from '../types'
-import { SYNC_SCHEMA_VERSION } from './sync/types'
+import { SYNC_SCHEMA_VERSION, type RemoteSyncState } from './sync/types'
 import {
   deleteEsame,
   deleteFlashcardStatsForExam,
@@ -14,6 +14,7 @@ import {
   getAllEsami,
   getEsame,
   getFlashcardStats,
+  importMergedSyncState,
   getPausedSession,
   getPausedSessionsForExam,
   getQuestionStats,
@@ -749,5 +750,132 @@ describe('storageService', () => {
     ])
     expect(state.tombstones).toEqual([])
     expect(JSON.stringify(state)).not.toContain(pausedOnlyMarker)
+  })
+
+  it('imports merged sync state and aggregates question stat device counters', async () => {
+    const metadataBeforeImport = await getSyncMetadata()
+    const syncedAt = '2026-06-06T10:00:00.000Z'
+    const remoteState: RemoteSyncState = {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: syncedAt,
+      writerDeviceId: 'remote-device',
+      data: {
+        esami: [
+          {
+            id: 'exam-imported',
+            name: 'Imported exam',
+            createdAt: '2026-06-05T09:00:00.000Z',
+            files: {
+              quiz: {
+                name: 'quiz.json',
+                type: 'application/json',
+                dataBase64: 'aW1wb3J0ZWQtcXVpeg==',
+              },
+            },
+            updatedAt: '2026-06-05T10:00:00.000Z',
+            updatedByDeviceId: 'remote-device',
+          },
+        ],
+        quizSessions: [],
+        questionStats: [
+          {
+            id: 'exam-imported__q1',
+            examId: 'exam-imported',
+            questionId: 'q1',
+            deviceCounters: {
+              [metadataBeforeImport.deviceId]: {
+                timesShown: 2,
+                timesCorrect: 1,
+              },
+              'remote-device': {
+                timesShown: 3,
+                timesCorrect: 2,
+              },
+            },
+          },
+        ],
+        flashcardStats: [],
+      },
+      tombstones: [
+        {
+          id: 'deleted-exam',
+          kind: 'exam',
+          deletedAt: '2026-06-05T11:00:00.000Z',
+          deletedByDeviceId: 'remote-device',
+        },
+      ],
+    }
+
+    await importMergedSyncState(remoteState, 'remote-revision-7', syncedAt)
+
+    const importedExam = await getEsame('exam-imported')
+    const [importedQuestionStat] = await getQuestionStats('exam-imported')
+    const metadataAfterImport = await getSyncMetadata()
+    const exportedAfterImport = await exportLocalSyncState()
+
+    expect(importedExam).toEqual({
+      id: 'exam-imported',
+      name: 'Imported exam',
+      createdAt: '2026-06-05T09:00:00.000Z',
+      files: {
+        quiz: expect.objectContaining({
+          name: 'quiz.json',
+          type: 'application/json',
+        }),
+      },
+    })
+    expect(new TextDecoder().decode(importedExam?.files.quiz?.data)).toBe('imported-quiz')
+    expect(importedQuestionStat).toEqual({
+      id: 'exam-imported__q1',
+      examId: 'exam-imported',
+      questionId: 'q1',
+      timesShown: 5,
+      timesCorrect: 3,
+    })
+    expect(metadataAfterImport).toEqual({
+      ...metadataBeforeImport,
+      lastRemoteRevision: 'remote-revision-7',
+      lastSyncedAt: syncedAt,
+      pendingLocalChanges: false,
+    })
+    expect(exportedAfterImport.state.data.questionStats).toEqual([
+      {
+        id: 'exam-imported__q1',
+        examId: 'exam-imported',
+        questionId: 'q1',
+        deviceCounters: {
+          [metadataBeforeImport.deviceId]: {
+            timesShown: 2,
+            timesCorrect: 1,
+          },
+          'remote-device': {
+            timesShown: 3,
+            timesCorrect: 2,
+          },
+        },
+      },
+    ])
+    expect(exportedAfterImport.state.tombstones).toEqual(remoteState.tombstones)
+  })
+
+  it('preserves paused sessions while importing merged sync state', async () => {
+    const pausedQuiz = makePausedQuiz({ id: 'local-exam__quiz', examId: 'local-exam' })
+    const remoteState: RemoteSyncState = {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: '2026-06-06T10:00:00.000Z',
+      writerDeviceId: 'remote-device',
+      data: {
+        esami: [],
+        quizSessions: [],
+        questionStats: [],
+        flashcardStats: [],
+      },
+      tombstones: [],
+    }
+
+    await savePausedSession(pausedQuiz)
+    await importMergedSyncState(remoteState, 'remote-revision-empty', '2026-06-06T10:01:00.000Z')
+
+    await expect(getPausedSession(pausedQuiz.id)).resolves.toEqual(pausedQuiz)
   })
 })

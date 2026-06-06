@@ -8,12 +8,14 @@ import type {
   QuestionStats,
   QuizSession,
 } from '../types'
-import { encodeFileRecord } from './sync/serialization'
+import { decodeFileRecord, encodeFileRecord } from './sync/serialization'
 import {
   SYNC_SCHEMA_VERSION,
+  type EncodedFileRecord,
   type LocalSyncRecordMetadata,
   type RemoteSyncState,
   type SyncDirtyStore,
+  type SyncFileSlot,
   type SyncMetadata,
   type SyncTombstone,
 } from './sync/types'
@@ -626,4 +628,143 @@ export async function exportLocalSyncState(): Promise<{
     },
     revision: syncMetadata.lastRemoteRevision,
   }
+}
+
+export async function importMergedSyncState(
+  state: RemoteSyncState,
+  remoteRevision: string,
+  syncedAt: string,
+): Promise<void> {
+  const db = await getDB()
+  const currentMetadata = await getSyncMetadata()
+  const tx = db.transaction(
+    [
+      'syncMetadata',
+      'esami',
+      'quizSessions',
+      'questionStats',
+      'flashcardStats',
+      'syncRecordMetadata',
+      'syncTombstones',
+      'syncQuestionCounters',
+    ],
+    'readwrite',
+  )
+  const esami = tx.objectStore('esami')
+  const quizSessions = tx.objectStore('quizSessions')
+  const questionStats = tx.objectStore('questionStats')
+  const flashcardStats = tx.objectStore('flashcardStats')
+  const syncRecordMetadata = tx.objectStore('syncRecordMetadata')
+  const syncTombstones = tx.objectStore('syncTombstones')
+  const syncQuestionCounters = tx.objectStore('syncQuestionCounters')
+
+  await Promise.all([
+    esami.clear(),
+    quizSessions.clear(),
+    questionStats.clear(),
+    flashcardStats.clear(),
+    syncRecordMetadata.clear(),
+    syncTombstones.clear(),
+    syncQuestionCounters.clear(),
+  ])
+
+  const writes: Promise<unknown>[] = [
+    tx.objectStore('syncMetadata').put({
+      ...currentMetadata,
+      lastRemoteRevision: remoteRevision,
+      lastSyncedAt: syncedAt,
+      pendingLocalChanges: false,
+      syncSchemaVersion: currentMetadata.syncSchemaVersion,
+    }),
+  ]
+
+  for (const remoteExam of state.data.esami) {
+    const { updatedAt, updatedByDeviceId, files, ...exam } = remoteExam
+    const decodedFiles = Object.fromEntries(
+      Object.entries(files).map(([slot, file]) => [
+        slot,
+        decodeFileRecord(file as EncodedFileRecord),
+      ]),
+    ) as Partial<Record<SyncFileSlot, FileRecord>>
+
+    writes.push(
+      esami.put({
+        ...exam,
+        files: decodedFiles,
+      }),
+      syncRecordMetadata.put({
+        id: syncRecordMetadataId('esami', remoteExam.id),
+        store: 'esami',
+        recordId: remoteExam.id,
+        updatedAt,
+        updatedByDeviceId,
+      }),
+    )
+  }
+
+  for (const remoteSession of state.data.quizSessions) {
+    const { updatedByDeviceId, ...session } = remoteSession
+
+    writes.push(
+      quizSessions.put(session),
+      syncRecordMetadata.put({
+        id: syncRecordMetadataId('quizSessions', remoteSession.id),
+        store: 'quizSessions',
+        recordId: remoteSession.id,
+        updatedAt: remoteSession.date,
+        updatedByDeviceId,
+      }),
+    )
+  }
+
+  for (const remoteStat of state.data.questionStats) {
+    const aggregate = Object.values(remoteStat.deviceCounters).reduce(
+      (totals, counter) => ({
+        timesShown: totals.timesShown + counter.timesShown,
+        timesCorrect: totals.timesCorrect + counter.timesCorrect,
+      }),
+      { timesShown: 0, timesCorrect: 0 },
+    )
+
+    writes.push(
+      questionStats.put({
+        id: remoteStat.id,
+        examId: remoteStat.examId,
+        questionId: remoteStat.questionId,
+        ...aggregate,
+      }),
+    )
+
+    for (const [deviceId, counter] of Object.entries(remoteStat.deviceCounters)) {
+      writes.push(
+        syncQuestionCounters.put({
+          id: syncQuestionCounterId(remoteStat.id, deviceId),
+          questionStatId: remoteStat.id,
+          deviceId,
+          timesShown: counter.timesShown,
+          timesCorrect: counter.timesCorrect,
+        }),
+      )
+    }
+  }
+
+  for (const remoteStat of state.data.flashcardStats) {
+    const { updatedByDeviceId, ...stat } = remoteStat
+
+    writes.push(
+      flashcardStats.put(stat),
+      syncRecordMetadata.put({
+        id: syncRecordMetadataId('flashcardStats', remoteStat.id),
+        store: 'flashcardStats',
+        recordId: remoteStat.id,
+        updatedAt: remoteStat.lastSeen,
+        updatedByDeviceId,
+      }),
+    )
+  }
+
+  writes.push(...state.tombstones.map((tombstone) => syncTombstones.put(tombstone)))
+
+  await Promise.all(writes)
+  await tx.done
 }
