@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mergeSyncStates } from './merge'
-import type { RemoteSyncState, SyncExamRecord } from './types'
+import type { RemoteSyncState, SyncExamRecord, SyncQuizSessionRecord } from './types'
 
 function emptyState(writerDeviceId: string): RemoteSyncState {
   return {
@@ -29,40 +29,39 @@ function examRecord(overrides: Partial<SyncExamRecord> = {}): SyncExamRecord {
   }
 }
 
+function quizSession(overrides: Partial<SyncQuizSessionRecord> = {}): SyncQuizSessionRecord {
+  return {
+    id: 'session-1',
+    examId: 'exam-1',
+    date: '2026-06-01T10:00:00.000Z',
+    score: 1,
+    total: 2,
+    totalTime: 30,
+    timeLimitSeconds: null,
+    completedByTimeout: false,
+    macroargomenti: [],
+    errors: [],
+    unanswered: [],
+    isReview: false,
+    updatedByDeviceId: 'device-1',
+    ...overrides,
+  }
+}
+
 describe('mergeSyncStates', () => {
   it('unions quiz sessions by id', () => {
     const local = emptyState('local-device')
     const remote = emptyState('remote-device')
-    local.data.quizSessions.push({
-      id: 'session-local',
-      examId: 'exam-1',
-      date: '2026-06-01T10:00:00.000Z',
-      score: 1,
-      total: 2,
-      totalTime: 30,
-      timeLimitSeconds: null,
-      completedByTimeout: false,
-      macroargomenti: [],
-      errors: [],
-      unanswered: [],
-      isReview: false,
-      updatedByDeviceId: 'local-device',
-    })
-    remote.data.quizSessions.push({
-      id: 'session-remote',
-      examId: 'exam-1',
-      date: '2026-06-01T11:00:00.000Z',
-      score: 2,
-      total: 2,
-      totalTime: 25,
-      timeLimitSeconds: null,
-      completedByTimeout: false,
-      macroargomenti: [],
-      errors: [],
-      unanswered: [],
-      isReview: false,
-      updatedByDeviceId: 'remote-device',
-    })
+    local.data.quizSessions.push(quizSession({ id: 'session-local', updatedByDeviceId: 'local-device' }))
+    remote.data.quizSessions.push(
+      quizSession({
+        id: 'session-remote',
+        date: '2026-06-01T11:00:00.000Z',
+        score: 2,
+        totalTime: 25,
+        updatedByDeviceId: 'remote-device',
+      }),
+    )
 
     const result = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
 
@@ -71,6 +70,46 @@ describe('mergeSyncStates', () => {
       'session-remote',
     ])
     expect(result.conflicts).toEqual([])
+  })
+
+  it('detects duplicate unequal quiz session ids within one input', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.quizSessions.push(
+      quizSession({
+        id: 'session-1',
+        date: '2026-06-01T10:00:00.000Z',
+        score: 1,
+        updatedByDeviceId: 'local-device-a',
+      }),
+      quizSession({
+        id: 'session-1',
+        date: '2026-06-01T11:00:00.000Z',
+        score: 2,
+        updatedByDeviceId: 'local-device-b',
+      }),
+    )
+
+    const result = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(result.state.data.quizSessions).toEqual([
+      quizSession({
+        id: 'session-1',
+        date: '2026-06-01T11:00:00.000Z',
+        score: 2,
+        updatedByDeviceId: 'local-device-b',
+      }),
+    ])
+    expect(result.conflicts).toEqual([
+      {
+        kind: 'duplicate-quiz-session',
+        id: 'session-1',
+        localUpdatedAt: '2026-06-01T10:00:00.000Z',
+        remoteUpdatedAt: '2026-06-01T11:00:00.000Z',
+        localDeviceId: 'local-device-a',
+        remoteDeviceId: 'local-device-b',
+      },
+    ])
   })
 
   it('merges question stats by preserving per-device counters and aggregate totals', () => {
@@ -170,6 +209,38 @@ describe('mergeSyncStates', () => {
         id: 'exam-1',
         localUpdatedAt: '2026-06-01T10:00:00.000Z',
         remoteUpdatedAt: '2026-06-01T11:00:00.000Z',
+        localDeviceId: 'local-device',
+        remoteDeviceId: 'remote-device',
+      },
+    ])
+  })
+
+  it('marks local newer exam update versus remote delete with accurate conflict provenance', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        updatedAt: '2026-06-01T11:00:00.000Z',
+        updatedByDeviceId: 'local-device',
+      }),
+    )
+    remote.tombstones.push({
+      kind: 'exam',
+      id: 'exam-1',
+      deletedAt: '2026-06-01T10:00:00.000Z',
+      deletedByDeviceId: 'remote-device',
+    })
+
+    const result = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(result.state.data.esami.map((exam) => exam.id)).toEqual(['exam-1'])
+    expect(result.conflicts).toEqual([
+      {
+        kind: 'exam-delete-vs-update',
+        id: 'exam-1',
+        localUpdatedAt: '2026-06-01T11:00:00.000Z',
+        remoteUpdatedAt: '2026-06-01T10:00:00.000Z',
         localDeviceId: 'local-device',
         remoteDeviceId: 'remote-device',
       },
