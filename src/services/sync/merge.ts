@@ -78,14 +78,7 @@ function mergeQuizSession(
     return
   }
 
-  conflicts.push({
-    kind: 'duplicate-quiz-session',
-    id: session.id,
-    localUpdatedAt: existing.date,
-    remoteUpdatedAt: session.date,
-    localDeviceId: existing.updatedByDeviceId,
-    remoteDeviceId: session.updatedByDeviceId,
-  })
+  conflicts.push(duplicateQuizSessionConflict(existing, session))
   merged.set(
     session.id,
     newestByStableTieBreak(
@@ -95,6 +88,27 @@ function mergeQuizSession(
       (value) => value.updatedByDeviceId,
     ),
   )
+}
+
+function duplicateQuizSessionConflict(left: SyncQuizSessionRecord, right: SyncQuizSessionRecord): SyncConflict {
+  const [lower, higher] =
+    compareNewest(
+      left,
+      right,
+      (value) => value.date,
+      (value) => value.updatedByDeviceId,
+    ) <= 0
+      ? [left, right]
+      : [right, left]
+
+  return {
+    kind: 'duplicate-quiz-session',
+    id: higher.id,
+    localUpdatedAt: lower.date,
+    remoteUpdatedAt: higher.date,
+    localDeviceId: lower.updatedByDeviceId,
+    remoteDeviceId: higher.updatedByDeviceId,
+  }
 }
 
 function mergeQuestionStats(
@@ -416,16 +430,24 @@ function compareNewest<T>(
     return timestampComparison
   }
 
-  const ownerComparison = getOwnerId(left).localeCompare(getOwnerId(right))
+  const ownerComparison = compareStableText(getOwnerId(left), getOwnerId(right))
   if (ownerComparison !== 0) {
     return ownerComparison
   }
 
-  return canonicalSerialize(left).localeCompare(canonicalSerialize(right))
+  return compareStableText(canonicalSerialize(left), canonicalSerialize(right))
 }
 
 function compareIso(left: string, right: string): number {
-  return left.localeCompare(right)
+  return compareStableText(left, right)
+}
+
+function compareStableText(left: string, right: string): number {
+  if (left === right) {
+    return 0
+  }
+
+  return left < right ? -1 : 1
 }
 
 function canonicalSerialize(value: unknown): string {
@@ -440,7 +462,7 @@ function canonicalize(value: unknown): unknown {
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value)
-        .sort(([left], [right]) => left.localeCompare(right))
+        .sort(([left], [right]) => compareStableText(left, right))
         .map(([key, entryValue]) => [key, canonicalize(entryValue)]),
     )
   }
@@ -449,7 +471,7 @@ function canonicalize(value: unknown): unknown {
 }
 
 function sortById<T extends { id: string }>(values: T[]): T[] {
-  return [...values].sort((left, right) => left.id.localeCompare(right.id))
+  return [...values].sort((left, right) => compareStableText(left.id, right.id))
 }
 
 function isExamTombstone(tombstone: SyncTombstone): tombstone is ExamTombstone {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { mergeSyncStates } from './merge'
-import type { RemoteSyncState, SyncExamRecord, SyncQuizSessionRecord } from './types'
+import { SYNC_SCHEMA_VERSION, type RemoteSyncState, type SyncExamRecord, type SyncQuizSessionRecord } from './types'
 
 function emptyState(writerDeviceId: string): RemoteSyncState {
   return {
-    syncVersion: 1,
+    syncVersion: SYNC_SCHEMA_VERSION,
     updatedAt: '2026-06-01T09:00:00.000Z',
     writerDeviceId,
     data: {
@@ -116,6 +116,51 @@ describe('mergeSyncStates', () => {
         remoteUpdatedAt: '2026-06-01T11:00:00.000Z',
         localDeviceId: 'local-device-a',
         remoteDeviceId: 'local-device-b',
+      },
+    ])
+  })
+
+  it('converges duplicate quiz session winners by stable device id independent of merge order', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.quizSessions.push(
+      quizSession({
+        id: 'session-1',
+        date: '2026-06-01T10:00:00.000Z',
+        score: 1,
+        updatedByDeviceId: 'device-a',
+      }),
+    )
+    remote.data.quizSessions.push(
+      quizSession({
+        id: 'session-1',
+        date: '2026-06-01T10:00:00.000Z',
+        score: 2,
+        updatedByDeviceId: 'device-z',
+      }),
+    )
+
+    const localFirst = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+    const remoteFirst = mergeSyncStates(remote, local, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(localFirst.state.data.quizSessions).toEqual(remoteFirst.state.data.quizSessions)
+    expect(localFirst.conflicts).toEqual(remoteFirst.conflicts)
+    expect(localFirst.state.data.quizSessions).toEqual([
+      quizSession({
+        id: 'session-1',
+        date: '2026-06-01T10:00:00.000Z',
+        score: 2,
+        updatedByDeviceId: 'device-z',
+      }),
+    ])
+    expect(localFirst.conflicts).toEqual([
+      {
+        kind: 'duplicate-quiz-session',
+        id: 'session-1',
+        localUpdatedAt: '2026-06-01T10:00:00.000Z',
+        remoteUpdatedAt: '2026-06-01T10:00:00.000Z',
+        localDeviceId: 'device-a',
+        remoteDeviceId: 'device-z',
       },
     ])
   })
@@ -260,6 +305,8 @@ describe('mergeSyncStates', () => {
         updatedByDeviceId: 'device-z',
       },
     ])
+    expect(localFirst.conflicts).toEqual([])
+    expect(remoteFirst.conflicts).toEqual([])
   })
 
   it('marks delete versus newer exam update as a conflict', () => {
@@ -326,6 +373,40 @@ describe('mergeSyncStates', () => {
         updatedByDeviceId: 'device-z',
       }),
     ])
+    expect(localFirst.conflicts).toEqual([])
+    expect(remoteFirst.conflicts).toEqual([])
+  })
+
+  it('converges exam tombstone ties by stable device id independent of merge order', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.tombstones.push({
+      kind: 'exam',
+      id: 'exam-1',
+      deletedAt: '2026-06-01T10:00:00.000Z',
+      deletedByDeviceId: 'device-a',
+    })
+    remote.tombstones.push({
+      kind: 'exam',
+      id: 'exam-1',
+      deletedAt: '2026-06-01T10:00:00.000Z',
+      deletedByDeviceId: 'device-z',
+    })
+
+    const localFirst = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+    const remoteFirst = mergeSyncStates(remote, local, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(localFirst.state.tombstones).toEqual(remoteFirst.state.tombstones)
+    expect(localFirst.state.tombstones).toEqual([
+      {
+        kind: 'exam',
+        id: 'exam-1',
+        deletedAt: '2026-06-01T10:00:00.000Z',
+        deletedByDeviceId: 'device-z',
+      },
+    ])
+    expect(localFirst.conflicts).toEqual([])
+    expect(remoteFirst.conflicts).toEqual([])
   })
 
   it('marks local newer exam update versus remote delete with accurate conflict provenance', () => {
@@ -396,6 +477,56 @@ describe('mergeSyncStates', () => {
       }),
     ])
     expect(result.conflicts).toEqual([])
+  })
+
+  it('converges file tombstone ties by stable device id independent of merge order', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        files: {
+          quiz: encodedFileRecord('quiz.json'),
+        },
+        updatedAt: '2026-06-01T09:00:00.000Z',
+        updatedByDeviceId: 'local-device',
+      }),
+    )
+    local.tombstones.push({
+      kind: 'file',
+      id: 'exam-1__quiz',
+      examId: 'exam-1',
+      fileSlot: 'quiz',
+      deletedAt: '2026-06-01T10:00:00.000Z',
+      deletedByDeviceId: 'device-a',
+    })
+    remote.tombstones.push({
+      kind: 'file',
+      id: 'exam-1__quiz',
+      examId: 'exam-1',
+      fileSlot: 'quiz',
+      deletedAt: '2026-06-01T10:00:00.000Z',
+      deletedByDeviceId: 'device-z',
+    })
+
+    const localFirst = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+    const remoteFirst = mergeSyncStates(remote, local, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(localFirst.state.tombstones).toEqual(remoteFirst.state.tombstones)
+    expect(localFirst.state.data.esami).toEqual(remoteFirst.state.data.esami)
+    expect(localFirst.state.tombstones).toEqual([
+      {
+        kind: 'file',
+        id: 'exam-1__quiz',
+        examId: 'exam-1',
+        fileSlot: 'quiz',
+        deletedAt: '2026-06-01T10:00:00.000Z',
+        deletedByDeviceId: 'device-z',
+      },
+    ])
+    expect(localFirst.state.data.esami[0].files.quiz).toBeUndefined()
+    expect(localFirst.conflicts).toEqual([])
+    expect(remoteFirst.conflicts).toEqual([])
   })
 
   it('marks local newer file update versus remote file delete with accurate conflict provenance', () => {
