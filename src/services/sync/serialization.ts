@@ -1,15 +1,17 @@
 import type { FileRecord } from '../../types'
 import type { EncodedFileRecord } from './types'
 
+const BASE64_CHUNK_SIZE = 0x8000
+
 export function arrayBufferToBase64(data: ArrayBuffer): string {
   const bytes = new Uint8Array(data)
-  let binary = ''
+  const binaryChunks: string[] = []
 
-  for (let index = 0; index < bytes.length; index += 1) {
-    binary += String.fromCharCode(bytes[index])
+  for (let index = 0; index < bytes.length; index += BASE64_CHUNK_SIZE) {
+    binaryChunks.push(String.fromCharCode(...bytes.subarray(index, index + BASE64_CHUNK_SIZE)))
   }
 
-  return btoa(binary)
+  return btoa(binaryChunks.join(''))
 }
 
 export function base64ToArrayBuffer(dataBase64: string): ArrayBuffer {

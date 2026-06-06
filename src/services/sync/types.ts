@@ -37,14 +37,23 @@ export interface SyncQuizSessionRecord extends QuizSession {
   updatedByDeviceId: string
 }
 
-export interface SyncTombstone {
+interface SyncTombstoneBase {
   id: string
   deletedAt: string
   deletedByDeviceId: string
-  kind: 'exam' | 'file'
-  examId?: string
-  fileSlot?: SyncFileSlot
 }
+
+export interface SyncExamTombstone extends SyncTombstoneBase {
+  kind: 'exam'
+}
+
+export interface SyncFileTombstone extends SyncTombstoneBase {
+  kind: 'file'
+  examId: string
+  fileSlot: SyncFileSlot
+}
+
+export type SyncTombstone = SyncExamTombstone | SyncFileTombstone
 
 export interface RemoteSyncData {
   esami: SyncExamRecord[]
