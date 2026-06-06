@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
+import { v4 as uuidv4 } from 'uuid'
 import type {
   Esame,
   FileRecord,
@@ -7,9 +8,19 @@ import type {
   QuestionStats,
   QuizSession,
 } from '../types'
+import { encodeFileRecord } from './sync/serialization'
+import {
+  SYNC_SCHEMA_VERSION,
+  type LocalSyncRecordMetadata,
+  type RemoteSyncState,
+  type SyncDirtyStore,
+  type SyncMetadata,
+  type SyncTombstone,
+} from './sync/types'
 
 const DB_NAME = 'study-app-db'
-const DB_VERSION = 2
+const DB_VERSION = 3
+const SYNC_METADATA_ID = 'sync'
 
 interface StudyAppDB extends DBSchema {
   esami: {
@@ -36,6 +47,19 @@ interface StudyAppDB extends DBSchema {
     value: PausedSession
     indexes: { 'by-examId': string }
   }
+  syncMetadata: {
+    key: string
+    value: SyncMetadata
+  }
+  syncRecordMetadata: {
+    key: string
+    value: LocalSyncRecordMetadata
+    indexes: { 'by-store': SyncDirtyStore }
+  }
+  syncTombstones: {
+    key: string
+    value: SyncTombstone
+  }
 }
 
 type ExamScopedStoreName =
@@ -43,6 +67,17 @@ type ExamScopedStoreName =
   | 'questionStats'
   | 'flashcardStats'
   | 'pausedSessions'
+type SyncMetadataTransaction = {
+  objectStore(name: 'syncMetadata'): {
+    get(key: typeof SYNC_METADATA_ID): Promise<SyncMetadata | undefined>
+    put(value: SyncMetadata): Promise<unknown>
+  }
+}
+type SyncDirtyTransaction = SyncMetadataTransaction & {
+  objectStore(name: 'syncRecordMetadata'): {
+    put(value: LocalSyncRecordMetadata): Promise<unknown>
+  }
+}
 
 let dbPromise: Promise<IDBPDatabase<StudyAppDB>> | null = null
 
@@ -78,10 +113,92 @@ function getDB(): Promise<IDBPDatabase<StudyAppDB>> {
         const pausedSessions = db.createObjectStore('pausedSessions', { keyPath: 'id' })
         pausedSessions.createIndex('by-examId', 'examId')
       }
+
+      if (oldVersion < 3) {
+        db.createObjectStore('syncMetadata', { keyPath: 'id' })
+
+        const syncRecordMetadata = db.createObjectStore('syncRecordMetadata', { keyPath: 'id' })
+        syncRecordMetadata.createIndex('by-store', 'store')
+
+        db.createObjectStore('syncTombstones', { keyPath: 'id' })
+      }
     },
   })
 
   return dbPromise
+}
+
+function newSyncMetadata(): SyncMetadata {
+  return {
+    id: SYNC_METADATA_ID,
+    deviceId: uuidv4(),
+    lastSyncedAt: null,
+    lastRemoteRevision: null,
+    pendingLocalChanges: false,
+    syncSchemaVersion: SYNC_SCHEMA_VERSION,
+    account: null,
+  }
+}
+
+function syncRecordMetadataId(store: SyncDirtyStore, recordId: string): string {
+  return `${store}__${recordId}`
+}
+
+async function getOrCreateSyncMetadataInTransaction(
+  tx: SyncMetadataTransaction,
+): Promise<SyncMetadata> {
+  const metadataStore = tx.objectStore('syncMetadata')
+  const existing = await metadataStore.get(SYNC_METADATA_ID)
+
+  if (existing) {
+    return existing
+  }
+
+  const metadata = newSyncMetadata()
+  await metadataStore.put(metadata)
+  return metadata
+}
+
+async function markRecordDirtyInTransaction(
+  tx: SyncDirtyTransaction,
+  store: SyncDirtyStore,
+  recordId: string,
+  nowIso = new Date().toISOString(),
+): Promise<SyncMetadata> {
+  const metadata = await getOrCreateSyncMetadataInTransaction(tx)
+  const dirtyMetadata: SyncMetadata = {
+    ...metadata,
+    pendingLocalChanges: true,
+    syncSchemaVersion: SYNC_SCHEMA_VERSION,
+  }
+
+  await Promise.all([
+    tx.objectStore('syncMetadata').put(dirtyMetadata),
+    tx.objectStore('syncRecordMetadata').put({
+      id: syncRecordMetadataId(store, recordId),
+      store,
+      recordId,
+      updatedAt: nowIso,
+      updatedByDeviceId: metadata.deviceId,
+    }),
+  ])
+
+  return dirtyMetadata
+}
+
+async function markRecordDirty(store: SyncDirtyStore, recordId: string): Promise<void> {
+  const db = await getDB()
+  const tx = db.transaction(['syncMetadata', 'syncRecordMetadata'], 'readwrite')
+  await markRecordDirtyInTransaction(tx, store, recordId)
+  await tx.done
+}
+
+export async function getSyncMetadata(): Promise<SyncMetadata> {
+  const db = await getDB()
+  const tx = db.transaction('syncMetadata', 'readwrite')
+  const metadata = await getOrCreateSyncMetadataInTransaction(tx)
+  await tx.done
+  return metadata
 }
 
 async function deleteExamScopedRecordsFromStore(
@@ -113,12 +230,13 @@ export async function getEsame(id: string): Promise<Esame | undefined> {
 
 export async function saveEsame(esame: Esame): Promise<void> {
   await (await getDB()).put('esami', esame)
+  await markRecordDirty('esami', esame.id)
 }
 
 export async function replaceQuizFileForExam(examId: string, file: FileRecord): Promise<void> {
   const db = await getDB()
   const tx = db.transaction(
-    ['esami', 'quizSessions', 'questionStats', 'pausedSessions'],
+    ['esami', 'quizSessions', 'questionStats', 'pausedSessions', 'syncMetadata', 'syncRecordMetadata'],
     'readwrite',
   )
 
@@ -144,6 +262,7 @@ export async function replaceQuizFileForExam(examId: string, file: FileRecord): 
       quiz: file,
     },
   })
+  await markRecordDirtyInTransaction(tx, 'esami', examId)
   await Promise.all([
     ...quizRecords.map((record) => quizSessions.delete(record.id)),
     ...questionRecords.map((record) => questionStats.delete(record.id)),
@@ -157,7 +276,10 @@ export async function replaceFlashcardFileForExam(
   file: FileRecord,
 ): Promise<void> {
   const db = await getDB()
-  const tx = db.transaction(['esami', 'flashcardStats', 'pausedSessions'], 'readwrite')
+  const tx = db.transaction(
+    ['esami', 'flashcardStats', 'pausedSessions', 'syncMetadata', 'syncRecordMetadata'],
+    'readwrite',
+  )
 
   const examStore = tx.objectStore('esami')
   const flashcardStats = tx.objectStore('flashcardStats')
@@ -177,6 +299,7 @@ export async function replaceFlashcardFileForExam(
       flashcard: file,
     },
   })
+  await markRecordDirtyInTransaction(tx, 'esami', examId)
   await Promise.all([
     ...statsRecords.map((record) => flashcardStats.delete(record.id)),
     pausedSessions.delete(`${examId}__flashcard`),
@@ -187,7 +310,16 @@ export async function replaceFlashcardFileForExam(
 export async function deleteEsame(id: string): Promise<void> {
   const db = await getDB()
   const tx = db.transaction(
-    ['esami', 'quizSessions', 'questionStats', 'flashcardStats', 'pausedSessions'],
+    [
+      'esami',
+      'quizSessions',
+      'questionStats',
+      'flashcardStats',
+      'pausedSessions',
+      'syncMetadata',
+      'syncRecordMetadata',
+      'syncTombstones',
+    ],
     'readwrite',
   )
 
@@ -209,6 +341,13 @@ export async function deleteEsame(id: string): Promise<void> {
   ])
 
   await tx.objectStore('esami').delete(id)
+  const metadata = await markRecordDirtyInTransaction(tx, 'esami', id)
+  await tx.objectStore('syncTombstones').put({
+    id,
+    kind: 'exam',
+    deletedAt: new Date().toISOString(),
+    deletedByDeviceId: metadata.deviceId,
+  })
   await Promise.all([
     ...quizRecords.map((record) => quizSessions.delete(record.id)),
     ...questionRecords.map((record) => questionStats.delete(record.id)),
@@ -224,6 +363,7 @@ export async function getQuizSessions(examId: string): Promise<QuizSession[]> {
 
 export async function saveQuizSession(session: QuizSession): Promise<void> {
   await (await getDB()).put('quizSessions', session)
+  await markRecordDirty('quizSessions', session.id)
 }
 
 export async function deleteQuizSessionsForExam(examId: string): Promise<void> {
@@ -236,6 +376,7 @@ export async function getQuestionStats(examId: string): Promise<QuestionStats[]>
 
 export async function saveQuestionStat(stat: QuestionStats): Promise<void> {
   await (await getDB()).put('questionStats', stat)
+  await markRecordDirty('questionStats', stat.id)
 }
 
 export async function deleteQuestionStatsForExam(examId: string): Promise<void> {
@@ -248,6 +389,7 @@ export async function getFlashcardStats(examId: string): Promise<FlashcardStats[
 
 export async function saveFlashcardStat(stat: FlashcardStats): Promise<void> {
   await (await getDB()).put('flashcardStats', stat)
+  await markRecordDirty('flashcardStats', stat.id)
 }
 
 export async function deleteFlashcardStatsForExam(examId: string): Promise<void> {
@@ -268,4 +410,67 @@ export async function deletePausedSession(id: string): Promise<void> {
 
 export async function getPausedSessionsForExam(examId: string): Promise<PausedSession[]> {
   return (await getDB()).getAllFromIndex('pausedSessions', 'by-examId', examId)
+}
+
+export async function exportLocalSyncState(): Promise<{
+  state: RemoteSyncState
+  revision: string | null
+}> {
+  const db = await getDB()
+  const metadata = await getSyncMetadata()
+  const [esami, quizSessions, questionStats, flashcardStats, recordMetadata, tombstones] =
+    await Promise.all([
+      db.getAll('esami'),
+      db.getAll('quizSessions'),
+      db.getAll('questionStats'),
+      db.getAll('flashcardStats'),
+      db.getAll('syncRecordMetadata'),
+      db.getAll('syncTombstones'),
+    ])
+  const metadataByRecord = new Map(recordMetadata.map((entry) => [entry.id, entry]))
+  const getRecordMetadata = (store: SyncDirtyStore, recordId: string) =>
+    metadataByRecord.get(syncRecordMetadataId(store, recordId))
+
+  return {
+    state: {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: new Date().toISOString(),
+      writerDeviceId: metadata.deviceId,
+      data: {
+        esami: esami.map((esame) => {
+          const syncMetadata = getRecordMetadata('esami', esame.id)
+
+          return {
+            ...esame,
+            files: Object.fromEntries(
+              Object.entries(esame.files).map(([slot, file]) => [slot, encodeFileRecord(file)]),
+            ),
+            updatedAt: syncMetadata?.updatedAt ?? esame.createdAt,
+            updatedByDeviceId: syncMetadata?.updatedByDeviceId ?? metadata.deviceId,
+          }
+        }),
+        quizSessions: quizSessions.map((session) => ({
+          ...session,
+          updatedByDeviceId:
+            getRecordMetadata('quizSessions', session.id)?.updatedByDeviceId ?? metadata.deviceId,
+        })),
+        questionStats: questionStats.map(({ timesShown, timesCorrect, ...stat }) => ({
+          ...stat,
+          deviceCounters: {
+            [metadata.deviceId]: {
+              timesShown,
+              timesCorrect,
+            },
+          },
+        })),
+        flashcardStats: flashcardStats.map((stat) => ({
+          ...stat,
+          updatedByDeviceId:
+            getRecordMetadata('flashcardStats', stat.id)?.updatedByDeviceId ?? metadata.deviceId,
+        })),
+      },
+      tombstones,
+    },
+    revision: metadata.lastRemoteRevision,
+  }
 }

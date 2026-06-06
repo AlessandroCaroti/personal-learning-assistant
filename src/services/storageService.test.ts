@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { makeEsame, makePausedFlash, makePausedQuiz, makeQuizSession } from '../__tests__/factories'
 import { resetDb } from '../__tests__/resetDb'
 import type { FileRecord, FlashcardStats, QuestionStats } from '../types'
+import { SYNC_SCHEMA_VERSION } from './sync/types'
 import {
   deleteEsame,
   deleteFlashcardStatsForExam,
   deletePausedSession,
   deleteQuestionStatsForExam,
   deleteQuizSessionsForExam,
+  exportLocalSyncState,
   getAllEsami,
   getEsame,
   getFlashcardStats,
@@ -16,6 +18,7 @@ import {
   getPausedSessionsForExam,
   getQuestionStats,
   getQuizSessions,
+  getSyncMetadata,
   replaceFlashcardFileForExam,
   replaceQuizFileForExam,
   saveEsame,
@@ -329,5 +332,100 @@ describe('storageService', () => {
     await expect(replaceFlashcardFileForExam('missing', fileRecord('flashcard.json'))).rejects.toThrow(
       'Exam missing not found',
     )
+  })
+
+  it('creates stable sync metadata with a device id', async () => {
+    const metadata = await getSyncMetadata()
+    const reread = await getSyncMetadata()
+
+    expect(metadata).toEqual({
+      id: 'sync',
+      deviceId: expect.any(String),
+      lastSyncedAt: null,
+      lastRemoteRevision: null,
+      pendingLocalChanges: false,
+      syncSchemaVersion: SYNC_SCHEMA_VERSION,
+      account: null,
+    })
+    expect(metadata.deviceId).not.toHaveLength(0)
+    expect(reread.deviceId).toBe(metadata.deviceId)
+  })
+
+  it('marks syncable writes as pending local changes', async () => {
+    await expect(getSyncMetadata()).resolves.toMatchObject({
+      pendingLocalChanges: false,
+    })
+
+    await saveEsame(exam)
+
+    await expect(getSyncMetadata()).resolves.toMatchObject({
+      pendingLocalChanges: true,
+    })
+  })
+
+  it('exports syncable data and excludes paused sessions', async () => {
+    const examWithFiles = {
+      ...exam,
+      files: {
+        quiz: fileRecord('quiz.json'),
+      },
+    }
+    const quizSession = makeQuizSession({ id: 'quiz-1', examId: exam.id })
+    const question = questionStat({ id: 'exam-1__q1', examId: exam.id })
+    const flashcard = flashcardStat({ id: 'exam-1__f1', examId: exam.id })
+    const pausedQuiz = makePausedQuiz({ id: 'exam-1__quiz', examId: exam.id })
+
+    await saveEsame(examWithFiles)
+    await saveQuizSession(quizSession)
+    await saveQuestionStat(question)
+    await saveFlashcardStat(flashcard)
+    await savePausedSession(pausedQuiz)
+
+    const { state, revision } = await exportLocalSyncState()
+    const metadata = await getSyncMetadata()
+
+    expect(revision).toBeNull()
+    expect(state.syncVersion).toBe(SYNC_SCHEMA_VERSION)
+    expect(state.writerDeviceId).toBe(metadata.deviceId)
+    expect(state.data.esami).toEqual([
+      {
+        ...examWithFiles,
+        files: {
+          quiz: {
+            name: 'quiz.json',
+            type: 'application/json',
+            dataBase64: 'cXVpei5qc29u',
+          },
+        },
+        updatedAt: expect.any(String),
+        updatedByDeviceId: metadata.deviceId,
+      },
+    ])
+    expect(state.data.quizSessions).toEqual([
+      {
+        ...quizSession,
+        updatedByDeviceId: metadata.deviceId,
+      },
+    ])
+    expect(state.data.questionStats).toEqual([
+      {
+        id: question.id,
+        examId: question.examId,
+        questionId: question.questionId,
+        deviceCounters: {
+          [metadata.deviceId]: {
+            timesShown: question.timesShown,
+            timesCorrect: question.timesCorrect,
+          },
+        },
+      },
+    ])
+    expect(state.data.flashcardStats).toEqual([
+      {
+        ...flashcard,
+        updatedByDeviceId: metadata.deviceId,
+      },
+    ])
+    expect(state.tombstones).toEqual([])
   })
 })
