@@ -19,7 +19,7 @@ import {
 } from './sync/types'
 
 const DB_NAME = 'study-app-db'
-const DB_VERSION = 4
+const DB_VERSION = 3
 const SYNC_METADATA_ID = 'sync'
 
 interface LocalSyncQuestionCounter {
@@ -135,9 +135,7 @@ function getDB(): Promise<IDBPDatabase<StudyAppDB>> {
         syncRecordMetadata.createIndex('by-store', 'store')
 
         db.createObjectStore('syncTombstones', { keyPath: 'id' })
-      }
 
-      if (oldVersion < 4) {
         const syncQuestionCounters = db.createObjectStore('syncQuestionCounters', { keyPath: 'id' })
         syncQuestionCounters.createIndex('by-questionStatId', 'questionStatId')
       }
@@ -272,6 +270,7 @@ export async function replaceQuizFileForExam(examId: string, file: FileRecord): 
   const quizSessions = tx.objectStore('quizSessions')
   const questionStats = tx.objectStore('questionStats')
   const pausedSessions = tx.objectStore('pausedSessions')
+  const syncQuestionCounters = tx.objectStore('syncQuestionCounters')
   const existingExam = await examStore.get(examId)
 
   if (!existingExam) {
@@ -282,6 +281,13 @@ export async function replaceQuizFileForExam(examId: string, file: FileRecord): 
     quizSessions.index('by-examId').getAll(examId),
     questionStats.index('by-examId').getAll(examId),
   ])
+  const questionCounterKeys = (
+    await Promise.all(
+      questionRecords.map((record) =>
+        syncQuestionCounters.index('by-questionStatId').getAllKeys(record.id),
+      ),
+    )
+  ).flat()
 
   await examStore.put({
     ...existingExam,
@@ -294,6 +300,7 @@ export async function replaceQuizFileForExam(examId: string, file: FileRecord): 
   await Promise.all([
     ...quizRecords.map((record) => quizSessions.delete(record.id)),
     ...questionRecords.map((record) => questionStats.delete(record.id)),
+    ...questionCounterKeys.map((key) => syncQuestionCounters.delete(key)),
     pausedSessions.delete(`${examId}__quiz`),
   ])
   await tx.done
@@ -347,6 +354,7 @@ export async function deleteEsame(id: string): Promise<void> {
       'syncMetadata',
       'syncRecordMetadata',
       'syncTombstones',
+      'syncQuestionCounters',
     ],
     'readwrite',
   )
@@ -355,18 +363,21 @@ export async function deleteEsame(id: string): Promise<void> {
   const questionStats = tx.objectStore('questionStats')
   const flashcardStats = tx.objectStore('flashcardStats')
   const pausedSessions = tx.objectStore('pausedSessions')
+  const syncQuestionCounters = tx.objectStore('syncQuestionCounters')
 
-  const [
-    quizRecords,
-    questionRecords,
-    flashcardRecords,
-    pausedRecords,
-  ] = await Promise.all([
+  const [quizRecords, questionRecords, flashcardRecords, pausedRecords] = await Promise.all([
     quizSessions.index('by-examId').getAll(id),
     questionStats.index('by-examId').getAll(id),
     flashcardStats.index('by-examId').getAll(id),
     pausedSessions.index('by-examId').getAll(id),
   ])
+  const questionCounterKeys = (
+    await Promise.all(
+      questionRecords.map((record) =>
+        syncQuestionCounters.index('by-questionStatId').getAllKeys(record.id),
+      ),
+    )
+  ).flat()
 
   await tx.objectStore('esami').delete(id)
   const metadata = await markRecordDirtyInTransaction(tx, 'esami', id)
@@ -380,6 +391,7 @@ export async function deleteEsame(id: string): Promise<void> {
   await Promise.all([
     ...quizRecords.map((record) => quizSessions.delete(record.id)),
     ...questionRecords.map((record) => questionStats.delete(record.id)),
+    ...questionCounterKeys.map((key) => syncQuestionCounters.delete(key)),
     ...flashcardRecords.map((record) => flashcardStats.delete(record.id)),
     ...pausedRecords.map((record) => pausedSessions.delete(record.id)),
   ])

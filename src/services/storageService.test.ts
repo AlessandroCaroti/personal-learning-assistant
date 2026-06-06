@@ -517,6 +517,28 @@ describe('storageService', () => {
     expect(state.data.esami[0].updatedAt).not.toBe(beforeReplacement.state.data.esami[0].updatedAt)
   })
 
+  it('clears question sync counters when replacing a quiz file', async () => {
+    await saveEsame({
+      ...exam,
+      files: {
+        quiz: fileRecord('old-quiz.json'),
+      },
+    })
+    await saveQuestionStat(questionStat({ timesShown: 4, timesCorrect: 2 }))
+
+    await replaceQuizFileForExam(exam.id, fileRecord('new-quiz.json'))
+
+    const { state } = await exportLocalSyncState()
+    const rawCounters = await withRawDb(
+      ['syncQuestionCounters'],
+      'readonly',
+      async (_db, tx) =>
+        rawRequestResult(tx.objectStore('syncQuestionCounters').getAll()),
+    )
+    expect(state.data.questionStats).toEqual([])
+    expect(rawCounters).toEqual([])
+  })
+
   it('exports delete tombstones without stale live exam metadata', async () => {
     await saveEsame(exam)
 
@@ -540,6 +562,23 @@ describe('storageService', () => {
         deletedByDeviceId: metadata.deviceId,
       },
     ])
+  })
+
+  it('clears question sync counters when deleting an exam', async () => {
+    await saveEsame(exam)
+    await saveQuestionStat(questionStat({ timesShown: 6, timesCorrect: 5 }))
+
+    await deleteEsame(exam.id)
+
+    const { state } = await exportLocalSyncState()
+    const rawCounters = await withRawDb(
+      ['syncQuestionCounters'],
+      'readonly',
+      async (_db, tx) =>
+        rawRequestResult(tx.objectStore('syncQuestionCounters').getAll()),
+    )
+    expect(state.data.questionStats).toEqual([])
+    expect(rawCounters).toEqual([])
   })
 
   it('exports syncable data and excludes paused sessions', async () => {
