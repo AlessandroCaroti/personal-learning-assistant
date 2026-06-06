@@ -12,6 +12,10 @@ Offline study app for university exams. React + TypeScript + Vite, packaged as A
 | Tests (watch) | `npm run test` |
 | Android sync | `npm run cap:sync` (builds first) |
 | Open Android Studio | `npm run cap:android` |
+| Desktop dev shell | `npm run tauri:dev` |
+| Windows package | `npm run build:win` |
+
+Windows packaging uses Tauri and produces a Windows NSIS installer via `npm run build:win`.
 
 > Run `npm run test -- --run` after every code change — tests are the main safety net.
 
@@ -212,7 +216,8 @@ npm run test -- --run         # Single test run (use after changes)
 
 # Build & Deploy
 npm run build                  # TypeScript check + Vite build → dist/
-npm run build:win             # Build Windows EXE via Electron
+npm run tauri:dev             # Run the Tauri desktop shell against the Vite dev server
+npm run build:win             # Build Windows NSIS installer via Tauri
 npm run preview               # Serve dist/ locally (test production build)
 
 # Android
@@ -223,6 +228,11 @@ npm run cap:android           # In VS Code: run Gradle tasks (assembleDebug, etc
 # One-liner: full web build + test
 npm run build && npm run test -- --run
 ```
+
+Windows packaging:
+- Tauri is the supported Windows desktop target.
+- `npm run build:win` builds the NSIS installer.
+- `src-tauri/` holds the desktop wrapper and bundling configuration.
 
 ## Key Files by Task
 

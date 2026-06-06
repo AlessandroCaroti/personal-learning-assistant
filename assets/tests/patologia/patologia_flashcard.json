@@ -1,0 +1,527 @@
+{
+  "esame": "Patologia",
+  "carte": [
+    {
+      "id": "f1",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Qual è la differenza fondamentale tra radiazioni eccitanti e radiazioni ionizzanti?",
+      "retro": "Le radiazioni eccitanti trasferiscono energia agli elettroni senza rimuoverli dall'atomo (energia < 10 eV): l'atomo si eccita temporaneamente e poi torna allo stato normale. Le radiazioni ionizzanti hanno energia superiore a 10 eV e sono capaci di strappare elettroni dagli atomi, generando ioni. Questo causa danni biologici molto più gravi, tra cui rottura del DNA, formazione di radicali liberi, mutazioni, morte cellulare e tumori."
+    },
+    {
+      "id": "f2",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Cosa sono le radiazioni corpuscolate? Fai degli esempi.",
+      "retro": "Le radiazioni corpuscolate sono particelle subatomiche cariche elettricamente che possiedono massa (sono formate di materia). Non possono raggiungere la velocità della luce a causa dell'attrito prodotto dalla loro massa. Maggiore è la massa della particella, minore è la sua capacità penetrativa. Esempi: raggi beta (fasci di elettroni) e raggi alfa (derivanti da elementi radioattivi come radio e polonio)."
+    },
+    {
+      "id": "f3",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Cosa sono le radiazioni elettromagnetiche? Fai degli esempi.",
+      "retro": "Le radiazioni elettromagnetiche sono quanti di energia chiamati fotoni, privi di massa, che si muovono in modo ondulatorio alla velocità della luce. Sono cariche elettricamente ma senza massa. Esempi: onde radio, microonde, raggi luminosi (raggi solari), raggi ultravioletti, raggi X e raggi gamma. Più è alta la frequenza (e minore la lunghezza d'onda), maggiore è l'energia del fotone."
+    },
+    {
+      "id": "f4",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Cos'è l'effetto diretto delle radiazioni ionizzanti sul DNA?",
+      "retro": "L'effetto diretto si verifica quando la radiazione ionizzante colpisce direttamente il DNA della cellula. Le conseguenze sono: rottura dei filamenti di DNA (singolo o doppio filamento), alterazione delle basi azotate e mutazioni genetiche. Il danno è immediato e preciso, poiché avviene senza intermediari."
+    },
+    {
+      "id": "f5",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Cos'è l'effetto indiretto (o effetto solvente) delle radiazioni ionizzanti? Perché è il più frequente?",
+      "retro": "Nell'effetto indiretto la radiazione non colpisce direttamente il DNA, ma interagisce prima con l'acqua intracellulare (H₂O), producendo radicali liberi molto reattivi, che a loro volta danneggiano il DNA. È il meccanismo più frequente perché le cellule sono composte per circa il 70% di acqua, quindi è statisticamente molto più probabile che la radiazione colpisca prima l'acqua piuttosto che il DNA direttamente."
+    },
+    {
+      "id": "f6",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Cosa sono i radicali liberi e quali sono i loro bersagli biologici?",
+      "retro": "I radicali liberi sono molecole o atomi con un elettrone spaiato nella valenza esterna, rendendoli estremamente reattivi e instabili. Nell'organismo si formano soprattutto durante esposizione a radiazioni ionizzanti, fumo, inquinamento, infiammazione e stress. I loro bersagli biologici principali sono: acidi nucleici (DNA → mutazioni), proteine (denaturazione), lipidi di membrana (alterazione della permeabilità e integrità cellulare)."
+    },
+    {
+      "id": "f7",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Quali sono gli antiossidanti endogeni ed esogeni? Qual è il loro ruolo?",
+      "retro": "Gli antiossidanti neutralizzano i radicali liberi donando un elettrone senza diventare instabili, interrompendo le reazioni a catena. Antiossidanti endogeni (prodotti dall'organismo): enzimi come perossidasi e catalasi; molecole non enzimatiche come il glutatione. Antiossidanti esogeni (assunti con la dieta): vitamina C, vitamina E, vitamina A, polifenoli (frutta e verdura). Diventano fondamentali in condizioni di stress ossidativo aumentato (radiazioni, fumo, infiammazione)."
+    },
+    {
+      "id": "f8",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Qual è la sensibilità alle radiazioni delle cellule labili, stabili e perenni?",
+      "retro": "La sensibilità alle radiazioni dipende dalla capacità proliferativa della cellula. Cellule labili (più radiosensibili): sono in continua proliferazione, es. cellule epiteliali e cellule emopoietiche — vengono danneggiate più facilmente. Cellule stabili (meno sensibili): normalmente non si replicano ma possono farlo se stimolate, es. epatociti. Cellule perenni (meno sensibili): non si replicano mai, es. neuroni e cellule muscolari cardiache."
+    },
+    {
+      "id": "f9",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Descrivi i tre livelli di danno al DNA provocato dalle radiazioni ionizzanti.",
+      "retro": "1. Danno gravissimo: blocco completo della trascrizione con conseguente necrosi cellulare. 2. Danno grave non riparabile (senza blocco della trascrizione): la cellula sopravvive ma muore durante la fase di replicazione — si parla di 'morte mitotica'. 3. Danno con possibilità di riparo: se il riparo è completo si ha recupero morfo-funzionale; se il riparo è insufficiente la cellula va incontro ad apoptosi; se il riparo è errato la cellula può trasformarsi in cellula neoplastica."
+    },
+    {
+      "id": "f10",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Quali sono gli effetti delle radiazioni ionizzanti a livello degli organi?",
+      "retro": "Gli effetti dipendono dall'organo coinvolto: Organi emopoietici: blocco dell'attività riproduttiva con conseguente anemia e leucopenia. Organi linfatici: caduta dei poteri immunitari. Gonadi: sterilità. Cuore: pericardite e restrizione. Polmone: fibrosi interstiziale (cicatrici tra alveoli e vasi sanguigni). La quantità di radiazioni assorbita dall'organismo si misura in Gray (Gy)."
+    },
+    {
+      "id": "f11",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Perché la radioterapia viene impiegata nonostante le radiazioni siano cancerogene?",
+      "retro": "La radioterapia sfrutta il fatto che le cellule tumorali si dividono più rapidamente rispetto alle cellule sane. Poiché le cellule labili (quelle in continua proliferazione) sono le più radiosensibili, la probabilità di colpire una cellula tumorale è molto maggiore rispetto a una cellula sana. Tuttavia, la radioterapia non viene eseguita subito dopo un intervento chirurgico, poiché le cellule sane impegnate nella riparazione e rigenerazione potrebbero subire mutazioni, favorendo lo sviluppo di nuovi tumori."
+    },
+    {
+      "id": "f12",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Quali sono gli effetti acuti e cronici delle radiazioni eccitanti sulla cute?",
+      "retro": "Effetti acuti: Sun burn (scottatura solare): reazione infiammatoria locale. Tan (abbronzatura): risposta adattiva protettiva mediata dalla melanina, che assorbe le radiazioni. Sintesi di vitamina D: avviene grazie all'esposizione alla luce solare, fondamentale per il metabolismo osseo. Effetti cronici: Photoaging: accelerazione dei processi degenerativi dell'invecchiamento cutaneo. Cancerogenesi: le UV possono causare danni al DNA e dare origine a carcinoma basocellulare (basalioma) e carcinoma spinocellulare (spinalioma, altamente metastatico e maligno)."
+    },
+    {
+      "id": "f13",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Quali danni provocano le radiazioni eccitanti sull'occhio?",
+      "retro": "L'occhio è particolarmente vulnerabile alle radiazioni eccitanti per la sua trasparenza, che permette alle radiazioni di penetrare più in profondità rispetto agli altri tessuti. I principali danni sono: cheratocongiuntivite (infiammazione della cornea e della congiuntiva), cataratta (degenerazione del cristallino), lesioni retiniche (causate da luce visibile intensa, come nel caso di chi guarda direttamente il sole)."
+    },
+    {
+      "id": "f14",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Cos'è l'effetto indiretto delle radiazioni eccitanti (effetto fotodinamico)?",
+      "retro": "L'effetto fotodinamico è mediato da sostanze fotosensibili (endogene come ormoni steroidei e porfirine precursori dell'eme; esogene come alcuni farmaci) che assorbono i fotoni delle radiazioni eccitanti, si eccitano e trasferiscono la loro energia a molecole di ossigeno. L'ossigeno viene portato allo stato di 'singoletto' (O₁), che si comporta come un radicale libero e va a danneggiare macromolecole biologiche come proteine, lipidi di membrana e DNA."
+    },
+    {
+      "id": "f15",
+      "macroargomenti": ["Radiazioni eccitanti e ionizzanti"],
+      "fronte": "Cosa produce l'enzima mieloperossidasi e perché l'acqua ossigenata prodotta endogenamente non provoca allergie?",
+      "retro": "La mieloperossidasi è un enzima presente nelle cellule fagocitarie (granulociti neutrofili e macrofagi). Catalizza la produzione di acqua ossigenata (H₂O₂), la quale genera radicali liberi che vengono utilizzati per uccidere i batteri fagocitati (burst ossidativo). L'acqua ossigenata autoprodotta non provoca allergie perché l'organismo la riconosce come propria (self): è il sistema immunitario stesso a sintetizzarla come meccanismo difensivo fisiologico."
+    },
+    {
+      "id": "f16",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Attraverso quali meccanismi fisici avviene la dispersione di calore nell'organismo?",
+      "retro": "La dispersione di calore nell'organismo avviene attraverso quattro meccanismi fisici: 1. Conduzione: perdita di calore per contatto con materiale più freddo circostante. 2. Convezione: trasporto di calore ad opera di movimenti di fluidi (aria o acqua) in cui siamo immersi. 3. Evaporazione: l'acqua evapora dalle superfici corporee (sudore) trasportando via calore — richiede però bassa umidità ambientale. 4. Irraggiamento: il corpo funziona come sorgente di radiazioni termiche. Il centro termoregolatore è a livello dell'ipotalamo."
+    },
+    {
+      "id": "f17",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Descrivi i quattro gradi delle ustioni.",
+      "retro": "I gradi delle ustioni in base alla gravità: 1° grado: eritema (arrossamento) da vasodilatazione del microcircolo, senza essudato, guarisce con restitutio ad integrum. Può lasciare lieve iperpigmentazione. 2° grado: formazione di flitteni (bolle) ricche di plasma e albumina. La perdita di liquidi può causare shock cardiocircolatorio. Guarisce con ipercheratosi e rischio infettivo. 3° grado: necrosi (escara) con formazione di cicatrici deturpanti e discromiche. 4° grado: carbonizzazione del tessuto (combustione completa del materiale organico)."
+    },
+    {
+      "id": "f18",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cos'è l'emorragia bianca nelle ustioni e come porta allo shock?",
+      "retro": "L'emorragia bianca è la perdita massiccia della componente liquida del sangue (plasma) attraverso le bolle e l'infiammazione tissutale, senza perdita di globuli rossi. Questo determina: riduzione del volume ematico circolante (ipovolemia), aumento della viscosità del sangue, vasodilatazione periferica estesa, aumento dello sforzo cardiaco con possibile insufficiente perfusione degli organi (in particolare il rene), che può evolvere in shock cardiocircolatorio e insufficienza renale irreversibile."
+    },
+    {
+      "id": "f19",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cosa sono la tossiemia, l'anemia e l'ipoproteinemia post-ustione?",
+      "retro": "Sono complicanze tardive delle ustioni gravi: Tossiemia: compare circa due giorni dopo l'ustione. Sostanze tossiche dai tessuti lesi (es. emoglobina da emolisi) circolano nel sangue danneggiando organi come il rene, con rischio di insufficienza renale. Anemia: causata da emolisi indotta dal calore e da ipogenerazione midollare per carenza di eritropoietina. Ipoproteinemia: perdita di albumina e altre proteine attraverso la lesione e la lesione renale; aumenta la perdita di liquidi e la formazione di edemi."
+    },
+    {
+      "id": "f20",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Qual è la differenza tra colpo di calore e colpo di calore tropicale?",
+      "retro": "Colpo di calore (insolazione): causato dall'esposizione diretta del capo ai raggi solari. Caratterizzato da innalzamento della temperatura corporea, ansia, nausea, vomito, delirio, ipotensione, shock e coma. Può avere esito fatale. Colpo di calore tropicale: causato da elevata temperatura ambientale associata ad alta umidità. L'impossibilità di sudare efficacemente porta a perdita di acqua e sali (ipovolemia), ispessimento del sangue e calo della pressione, con rischio di shock cardiocircolatorio e coma. In entrambi i casi il meccanismo principale è l'incapacità dell'organismo di compensare l'aumento di temperatura."
+    },
+    {
+      "id": "f21",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Descrivi i gradi del congelamento e l'assideramento.",
+      "retro": "Gradi del congelamento (esposizione localizzata al freddo): 1° grado: vasocostrizione locale seguita da arrossamento. 2° grado: formazione di flitteni (come nel 2° grado delle ustioni). 3° grado: necrosi dei tessuti nelle zone distali (mani, piedi); può evolvere in gangrena coagulativa. Assideramento (Total body): fase 1: l'organismo mantiene la temperatura con tremore e aumento della produzione di calore. Fase 2: si supera la capacità termoregolativa, la temperatura corporea scende. Fase 3: a 32°C sopravviene il sonno e narcosi da freddo; a 28°C paralisi vasomotoria; a 27°C fibrillazione ventricolare e morte. Il meccanismo è detto ipotermia."
+    },
+    {
+      "id": "f22",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cosa succede al sangue in fase di congelamento?",
+      "retro": "In fase di congelamento, l'acqua presente nel plasma forma cristalli di ghiaccio. Questo provoca: Danno cellulare (emolisi): i cristalli di ghiaccio, taglienti, perforano le membrane dei globuli rossi rendendoli non funzionali. Disidratazione cellulare: la formazione di ghiaccio extracellulare aumenta la concentrazione di soluti nella parte ancora liquida, estraendo acqua dalle cellule per osmosi e causandone il collasso. Blocco della circolazione: il sangue diventa più viscoso e solido, interrompendo il flusso nelle periferie. La stasi sanguigna favorisce la formazione di coaguli (trombi), aggravando l'ischemia e portando a necrosi e amputazione."
+    },
+    {
+      "id": "f23",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Quali sono gli effetti dell'elettricità sul corpo in base all'umidità cutanea?",
+      "retro": "La resistenza dei tessuti dipende dal loro contenuto idrico: Cute secca: la resistenza è elevata, la corrente viene dispersa in superficie causando un'ustione superficiale. Cute umida: la resistenza è minima, la corrente penetra più in profondità raggiungendo organi vitali e alterando la trasmissione degli impulsi nervosi regolatori del cuore, potendo causare arresto cardiaco. La regola è: maggiore è la resistenza del tessuto, maggiore è il calore generato localmente; minore è la resistenza, più la corrente penetra in profondità."
+    },
+    {
+      "id": "f24",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cos'è la malattia da decompressione e come porta alla morte?",
+      "retro": "La malattia da decompressione si verifica quando una persona esposta ad alta pressione (es. durante immersioni subacquee) risale troppo rapidamente. Secondo la legge di Henry, la capacità di un gas di sciogliersi nel sangue aumenta con la pressione. Il 75% dell'aria è composto da azoto: durante l'immersione, l'azoto si solubilizza nel sangue e nei tessuti. Una decompressione rapida causa la formazione di bolle di azoto nel sangue (embolia gassosa). Le bolle gassose arrivano al cuore: nel ventricolo destro si forma una 'schiuma ematica' che non può essere pompata verso i polmoni, determinando arresto del circolo e morte."
+    },
+    {
+      "id": "f25",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Quali sono i tipi di ipossia? Definisci ciascuno.",
+      "retro": "L'ipossia è una carenza di ossigeno a livello tissutale. Si distinguono quattro tipi: 1. Ipossia ipossica: bassa tensione di ossigeno nel sangue arterioso (es. alta quota, patologie polmonari). 2. Ipossia anemica: carenza di emoglobina; il sangue non riesce a trasportare abbastanza ossigeno ai tessuti (es. anemie). 3. Ipossia circolatoria: difetto dei vasi o ridotto flusso sanguigno per insufficienza cardiaca o collasso vascolare. 4. Ipossia istotossica: le cellule sono danneggiate e non sono in grado di utilizzare l'ossigeno anche se disponibile (es. avvelenamento da cianuro)."
+    },
+    {
+      "id": "f26",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Qual è la differenza tra ecchimosi, escoriazione e ferita lacera?",
+      "retro": "Queste sono lesioni da violenza contusiva: Ecchimosi (livido): rottura di vasi sanguigni senza fuoriuscita di sangue all'esterno. Se molto estesa si chiama ematoma. Può comparire anche a distanza dal punto colpito. Escoriazione: sollevamento e distacco degli strati superficiali della cute, con eventuale fuoriuscita di sangue o liquido sierico. Ferita lacera: strappo a tutto spessore della cute, con margini irregolari ed emorragia. Ferita lacero-contusa: combinazione di ferita lacera e segni ecchiomotici (vasodilatazione e iperemia)."
+    },
+    {
+      "id": "f27",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cos'è la commozione cerebrale e come si distingue dalla contusione?",
+      "retro": "Commozione cerebrale: trauma a carico dell'encefalo che determina uno spostamento o scuotimento senza lesioni anatomiche evidenti. Si manifesta con perdita di coscienza temporanea, stato soporoso, coma, perdita di memoria, alterazioni della frequenza cardiaca e respiratoria, perdita di riflessi. Contusione (con danno anatomico): lesione anatomica limitata a una zona dell'organo (es. contusione encefalica, epatica). La differenza fondamentale è che la commozione non produce danni anatomici strutturali, mentre la contusione sì."
+    },
+    {
+      "id": "f28",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Descrivi i tre tipi di pneumotorace.",
+      "retro": "Il pneumotorace è la presenza di aria nel cavo pleurico. Si distinguono tre tipi: Pneumotorace chiuso: l'aria entra attraverso una lesione che si chiude subito; l'aria resta intrappolata ma il danno è stabile. Pneumotorace aperto: la lesione rimane aperta; l'aria entra ed esce ad ogni atto respiratorio con alto rischio di infezione. Pneumotorace a valvola (il più grave): la lesione si apre durante l'inspirazione (aria entra nel cavo pleurico) e si chiude durante l'espirazione (aria intrappolata). Ad ogni respiro aumenta la quantità d'aria nel cavo pleurico, schiacciando progressivamente il polmone e impedendone l'espansione — emergenza medica."
+    },
+    {
+      "id": "f29",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Quali sono i tipi di frattura ossea? Definisci la frattura comminuta e quella esposta.",
+      "retro": "Le fratture possono essere: Incompleta: la linea di frattura non attraversa tutto lo spessore dell'osso (osso incrinato). Completa: l'osso è discontinuato per tutto lo spessore generando frammenti (monconi). Si divide in composta (monconi allineati) e scomposta (monconi disallineati, richiede riduzione manuale o chirurgica). Comminuta: la frattura genera un numero elevato di frammenti ossei — molto pericolosa perché i frammenti possono entrare nel circolo ematico causando emboli. Esposta: un frammento osseo fuoriesce dalla cute, con alto rischio di infezioni e complicata guarigione."
+    },
+    {
+      "id": "f30",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Qual è la differenza tra distorsione e lussazione?",
+      "retro": "Entrambe riguardano danni alle articolazioni: Distorsione: dislocazione temporanea dei capi articolari con eventuale rottura di legamenti. I capi articolari tornano spontaneamente nei loro rapporti anatomici corretti senza necessità di riduzione manuale. Lussazione: dislocazione permanente dei capi articolari, di solito accompagnata dalla rottura dei legamenti. I capi articolari non tornano spontaneamente nella sede corretta: è necessaria la 'riduzione' (riposizionamento manuale o chirurgico)."
+    },
+    {
+      "id": "f31",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cosa si intende per alterazione del pH e quali sono le sue conseguenze?",
+      "retro": "L'alterazione del pH indica una variazione dei normali livelli di acidità o basicità di un liquido o tessuto biologico al di fuori del suo intervallo di equilibrio fisiologico. Può essere: Locale (ustione chimica): su cute o mucose per contatto con acidi o basi forti. Sistemica: alcalosi (ipoventilazione) o acidosi (iperventilazione, diabete con corpi chetonici — acidosi chetoacidotica). Le cause sistemiche includono: patologie metaboliche, renali, endocrine e polmonari. Le conseguenze includono danno cellulare, disfunzione enzimatica e alterazione del trasporto degli elettroliti."
+    },
+    {
+      "id": "f32",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cos'è l'effetto solvente nelle cause chimiche? Quali solventi sono biologicamente rilevanti?",
+      "retro": "L'effetto solvente è la capacità di una sostanza di sciogliersi nei liquidi biologici, facilitando la sua diffusione nei tessuti e l'ingresso nelle cellule, amplificando il potenziale danno. I principali solventi biologicamente rilevanti sono: Acqua: causa lisi osmotica dei globuli rossi (soluzione ipertonica → raggrinzimento; soluzione ipotonica → scoppio). Lipidi: sciolgono le membrane lipidiche. Es. acetone: non causa ustioni a contatto con la cheratina dell'unghia, ma se ingerito provoca ustioni gravi a livello delle mucose orali e gastrointestinali."
+    },
+    {
+      "id": "f33",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cos'è la denaturazione delle proteine? Quali agenti chimici la causano?",
+      "retro": "La denaturazione proteica è la rottura delle strutture secondarie, terziarie e quaternarie delle proteine, con perdita della loro funzione biologica (senza rottura dei legami peptidici primari). Agenti chimici denaturanti con cui l'organismo può entrare in contatto: Ioni metallici: ferro e nichel. Sostanze organiche: urea. Sostanze tensioattive (saponi): molecole prive di carica elettrica definita in acqua che alterano le strutture proteiche. Anche calore estremo, acidi e basi forti causano denaturazione."
+    },
+    {
+      "id": "f34",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Quali sono le principali sindromi da avvelenamento da funghi e i funghi responsabili?",
+      "retro": "Le sindromi tossiche da funghi sono: Sindrome muscarinica: iperattività del sistema parasimpatico. Sintomi: lacrimazione, nausea, vomito, diarrea, broncospasmo, bradicardia, ipotensione. Funghi: Inocybe e Clitocibe. Sindrome atropinica (anticolinergica): ipoattività del sistema parasimpatico (opposto della muscarinica). Fungo: Amanita muscaria. Sindrome fallinica: necrosi delle cellule epatiche, spesso letale. Fungo: Amanita phalloides (la più pericolosa). Le falloidi contengono fallotossine e amatossine che bloccano la sintesi proteica."
+    },
+    {
+      "id": "f35",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cosa sono le reazioni di biotrasformazione degli xenobiotici? Descrivi la fase 1 e la fase 2.",
+      "retro": "Le reazioni di biotrasformazione sono sistemi enzimatici prevalentemente epatici che trasformano le sostanze tossiche (xenobiotici) rendendole più facilmente eliminabili. Fase 1 (ossido-riduzione): modificano la sostanza inserendo o modificando un gruppo chimico, rendendola più polare. L'enzima principale è la monoossigenasi citocromo P450-dipendente. Il sistema è inducibile da substrato: l'esposizione ripetuta aumenta la produzione dell'enzima (fenomeno di assuefazione/tolleranza). Fase 2 (coniugazione): la sostanza modificata dalla fase 1 viene coniugata con un'altra molecola (es. glucuronide), producendo composti più idrosolubili e meno tossici — richiede dispendio energetico."
+    },
+    {
+      "id": "f36",
+      "macroargomenti": ["Cause fisiche, chimiche e meccaniche"],
+      "fronte": "Cos'è la steatosi epatica da etanolo e come si sviluppa?",
+      "retro": "La steatosi epatica (fegato grasso) è un accumulo di lipidi negli epatociti causato dall'abuso di alcol. Il meccanismo è il seguente: chi abusa di etanolo spesso non assume proteine in quantità adeguata. I lipidi accumulati nel fegato non possono essere esportati per formare lipoproteine (il cui componente proteico — le apolipoproteine — manca per carenza di aminoacidi). Di conseguenza i trigliceridi si accumulano negli epatociti, portando a steatosi. Nel lungo periodo può evolvere in epatite alcolica e cirrosi epatica."
+    },
+    {
+      "id": "f37",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Descrivi le tre fasi della cancerogenesi.",
+      "retro": "La cancerogenesi è un processo multifasico: 1. Iniziazione: spesso irreversibile. Si verifica una mutazione genetica del DNA di una cellula sana causata da agenti mutageni (radiazioni, sostanze chimiche) o errori casuali durante la replicazione. 2. Promozione: fase reversibile in cui le cellule iniziate proliferano, favorita da agenti promotori (ormoni, infiammazioni croniche, fumo di sigaretta) che stimolano la crescita della massa tumorale senza necessariamente causare nuove mutazioni. 3. Progressione: fase finale irreversibile in cui la massa tumorale acquisisce instabilità genetica diventando sempre più aggressiva, invasiva e capace di metastatizzare."
+    },
+    {
+      "id": "f38",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Cosa sono i proto-oncogeni e come diventano oncogeni?",
+      "retro": "I proto-oncogeni sono geni normali che codificano per proteine coinvolte nella stimolazione della crescita e della divisione cellulare (fattori di crescita, recettori, proteine di segnalazione). Quando subiscono una mutazione attivante (per agenti mutageni, radiazioni, inserzione virale o amplificazione genica), si trasformano in oncogeni: geni che stimolano la crescita cellulare in modo eccessivo e incontrollato anche in assenza di segnali fisiologici. È sufficiente che una sola delle due copie del gene sia mutata (effetto dominante), come se si trattasse di un acceleratore bloccato."
+    },
+    {
+      "id": "f39",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Cosa sono i geni oncosoppressori? Descrivi P53, BRCA1 e BRCA2.",
+      "retro": "I geni oncosoppressori (o antioncogeni) codificano per proteine che bloccano la crescita cellulare incontrollata, riparano il DNA o inducono l'apoptosi se il danno non è riparabile. Funzionano come freni del ciclo cellulare — entrambe le copie devono essere inattivate per perdere la funzione (effetto recessivo). P53: rileva mutazioni nel genoma, attiva il sistema di riparazione del DNA; se il riparo non avviene, innesca l'apoptosi. Mutato in molti tumori sporadici. BRCA1 e BRCA2: coinvolti nella riparazione del DNA per ricombinazione omologa. Le loro mutazioni germinali (ereditabili al 50%) aumentano significativamente il rischio di tumore alla mammella, all'ovaio, al pancreas, alla prostata e allo stomaco."
+    },
+    {
+      "id": "f40",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Qual è la differenza tra displasia e anaplasia?",
+      "retro": "Displasia: lesione preneoplastica in cui la cellula ha subito un parziale differenziamento anomalo. Presenta variazioni di grandezza e forma, perdita dell'architettura tissutale e tendenza delle cellule a staccarsi. Non ha ancora acquisito tutte le caratteristiche neoplastiche — è potenzialmente reversibile. Si rileva ad esempio con il pap test. Anaplasia: lesione tumorale vera e propria. La cellula ha subito un completo sdifferenziamento ed ha acquisito caratteristiche aberranti che la rendono completamente diversa dalla cellula d'origine. Maggiore è il grado di anaplasia, maggiore è la malignità del tumore."
+    },
+    {
+      "id": "f41",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Cos'è l'effetto Warburg e qual è la sua rilevanza clinica?",
+      "retro": "L'effetto Warburg è un'atipia biochimica delle cellule tumorali: anche in presenza di ossigeno, preferiscono produrre energia tramite glicolisi anaerobica (glicolisi aerobica) invece della respirazione mitocondriale. Questo è meno efficiente energeticamente ma offre vantaggi al tumore: velocità di produzione di ATP, disponibilità di precursori per la sintesi di lipidi, proteine e DNA necessari alla crescita; produzione di acido lattico che acidifica il microambiente tumorale favorendo l'invasione. Produce poco ATP e molto lattato. Rilevanza clinica: è la base della PET (tomografia a emissione di positroni), che usa glucosio marcato radioattivamente per identificare zone con consumo anomalmente alto di zucchero (massa tumorale)."
+    },
+    {
+      "id": "f42",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Cosa sono gli antigeni oncofetali e i principali marcatori tumorali?",
+      "retro": "Gli antigeni oncofetali sono proteine tipiche del feto che ricompaiono nelle cellule tumorali dell'adulto: Alfa-fetoproteina (AFP): marcatore per epatocarcinoma e tumori germinali. CEA (antigene carcinoembrionario): può aumentare in tumori del colon-retto e in soggetti fumatori. Principali marcatori tumorali: CA-125: tumore ovarico (attenzione: può aumentare anche durante il ciclo mestruale). PSA (antigene prostatico specifico): tumore alla prostata (può aumentare dopo rapporti sessuali o visita urologica). Sono rilevabili nel sangue e servono per monitorare l'andamento della malattia, non per la diagnosi definitiva."
+    },
+    {
+      "id": "f43",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Cosa sono le metalloproteasi e qual è il loro ruolo nella progressione tumorale?",
+      "retro": "Le metalloproteasi (MMP) sono enzimi litici secreti dalle cellule tumorali che degradano i componenti della matrice extracellulare (collagene, laminina, fibronectina). Permettono alle cellule tumorali di aprirsi letteralmente la strada attraverso il tessuto connettivo verso i vasi sanguigni e linfatici, facilitando l'invasione locale e la formazione di metastasi. La loro produzione è una delle principali atipie di comportamento dei tumori maligni ed è associata ad alta aggressività e prognosi sfavorevole."
+    },
+    {
+      "id": "f44",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Elenca le principali atipie di comportamento delle cellule tumorali.",
+      "retro": "Le atipie di comportamento indicano come la cellula tumorale si comporta in modo abnorme rispetto a una cellula sana: 1. Proliferazione incontrollata: si divide troppo e senza rispettare i normali segnali di stop. 2. Perdita dell'apoptosi: le cellule danneggiate non muoiono quando dovrebbero. 3. Perdita della differenziazione: la cellula diventa più immatura e meno specializzata (anaplasia). 4. Invasività: capacità di invadere i tessuti vicini. 5. Perdita dell'inibizione da contatto: le cellule normali smettono di crescere quando toccano altre cellule; quelle tumorali no. 6. Capacità di metastasi: le cellule entrano nel sangue o nella linfa e colonizzano organi distanti."
+    },
+    {
+      "id": "f45",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Qual è la differenza tra tumori benigni e tumori maligni?",
+      "retro": "Tumori benigni: crescita lenta e circoscritta, non invadono i tessuti vicini, non formano metastasi, le cellule sono relativamente simili a quelle normali. Non mettono in pericolo la vita (salvo compressione di strutture vitali). Tumori maligni: crescita rapida, invasione dei tessuti circostanti, possono formare metastasi in organi lontani, le cellule sono anomale (atipiche). Entrambi hanno capacità illimitata di replicazione, sfuggono all'apoptosi e stimolano l'angiogenesi (formazione di nuovi vasi sanguigni per nutrirsi). I tumori maligni, però, hanno in più la capacità di metastatizzare."
+    },
+    {
+      "id": "f46",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Come si classificano i tumori in base all'origine istologica?",
+      "retro": "La classificazione istologica dei tumori si basa sulla cellula di origine: Carcinomi: derivano dai tessuti epiteliali (pelle, mucose, ghiandole). Sono i tumori più frequenti nell'adulto. Sarcomi: derivano dai tessuti connettivi (ossa, muscoli, grasso, vasi). Leucemie e Linfomi: derivano dalle cellule del sangue e dal sistema linfatico. Le leucemie coinvolgono le cellule ematiche circolanti; i linfomi i linfonodi e gli organi linfoidi. La classificazione determina anche il tipo di metastasi e la risposta alla terapia."
+    },
+    {
+      "id": "f47",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Cos'è il grado istologico (G) e il sistema TNM?",
+      "retro": "Grado istologico (G): indica quanto le cellule tumorali somiglino a quelle normali (differenziazione). G1 (basso grado, ben differenziato): cellule simili alle sane, crescita lenta. G3-G4 (alto grado, indifferenziato): cellule molto anomale, crescita rapida e aggressiva. Sistema TNM (stadiazione — estensione della malattia): T (Tumor): dimensione del tumore primario (T1-T4). N (Node): coinvolgimento dei linfonodi regionali (N0 = assente; N1-N3 = gravità crescente). M (Metastasi): presenza di metastasi a distanza (M0 = assente; M1 = presenti). Il grado e la stadiazione guidano le decisioni terapeutiche."
+    },
+    {
+      "id": "f48",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Descrivi le fasi di formazione delle metastasi.",
+      "retro": "La formazione di metastasi avviene in fasi sequenziali: 1. Invasione locale: le cellule tumorali perdono l'adesione reciproca e invadono i tessuti vicini grazie alle metalloproteasi. 2. Intravasazione: le cellule entrano nei vasi sanguigni o linfatici. 3. Trasporto: viaggiano nel circolo sanguigno o linfatico. 4. Sopravvivenza nel torrente circolatorio: molte cellule muoiono; quelle che sopravvivono possono formare emboli tumorali. 5. Extravasazione: escono dai vasi in un sito distante. 6. Colonizzazione: crescono nel nuovo organo formando una metastasi. Le metastasi mantengono le stesse caratteristiche del tumore primitivo."
+    },
+    {
+      "id": "f49",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Quali sono le vie di diffusione delle metastasi e dove si formano più frequentemente?",
+      "retro": "Le due vie principali di diffusione sono: Via linfatica: tipica soprattutto dei carcinomi. Le cellule entrano nei vasi linfatici, transitano per i linfonodi (spesso primo segno è linfonodo ingrossato) e possono diffondersi oltre. Via ematica (sanguigna): tipica dei sarcomi e tumori più aggressivi. Attraverso i vasi sanguigni raggiungono organi lontani (fegato tramite il circolo portale, polmoni tramite le vene cave). Sedi più frequenti: polmoni, fegato, ossa, cervello. Esempi: tumore del colon → fegato e polmone; tumore del polmone → ogni distretto compreso l'encefalo; mammella e prostata → ossa; ovaio → peritoneo e diaframma."
+    },
+    {
+      "id": "f50",
+      "macroargomenti": ["Cancerogenesi e neoplasie"],
+      "fronte": "Cos'è la cachessia tumorale e come si sviluppa?",
+      "retro": "La cachessia tumorale è una sindrome caratterizzata da perdita progressiva della massa muscolare (sarcopenia), scarsa alimentazione e dimagrimento grave nei pazienti oncologici. Si sviluppa perché: Il tumore è una 'trappola per l'azoto': utilizza gli aminoacidi per la propria proliferazione. Quando le riserve alimentari si esauriscono, le cellule tumorali distruggono le proteine muscolari del paziente per ricavare aminoacidi. I lipidi immagazzinati vengono anch'essi mobilitati. Il risultato è una progressiva perdita di massa muscolare e di peso, con diminuzione della forza e della risposta alle terapie. È associata a prognosi peggiore."
+    },
+    {
+      "id": "f51",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Definisci l'infiammazione e descrivi i suoi cinque segni cardinali.",
+      "retro": "L'infiammazione (o flogosi) è una risposta difensiva dei tessuti vascolarizzati a stimoli dannosi (infezioni, traumi, agenti chimici, radiazioni), finalizzata all'eliminazione della causa del danno, alla rimozione delle cellule morte e all'avvio della riparazione tissutale. I cinque segni cardinali (Cornelio Celso e Galeno): 1. Rubor (rossore): da vasodilatazione. 2. Calor (calore): da aumento del flusso sanguigno. 3. Tumor (gonfiore): da edema. 4. Dolor (dolore): da mediatori chimici che stimolano i nocicettori. 5. Functio laesa (perdita di funzione): conseguenza degli altri segni."
+    },
+    {
+      "id": "f52",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Cos'è la vasocostrizione iniziale nell'infiammazione acuta e perché dura poco?",
+      "retro": "La vasocostrizione è la prima risposta vascolare al danno: riduzione del diametro delle arteriole nella zona lesa per pochi secondi o minuti. È mediata da: stimoli nervosi con rilascio di catecolammine (adrenalina e noradrenalina) che agiscono sulla muscolatura liscia delle arteriole; rilascio locale di endoteline. Ha funzione protettiva iniziale: riduce momentaneamente la perdita di sangue e limita la diffusione dell'agente lesivo. Dura poco perché le monoamminossidasi (MAO) degradano rapidamente le catecolammine, permettendo la transizione alla vasodilatazione."
+    },
+    {
+      "id": "f53",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Quali mediatori causano la vasodilatazione nell'infiammazione acuta e quali segni produce?",
+      "retro": "La vasodilatazione è mediata principalmente da: Istamina (rilasciata dai mastociti). Prostaglandine (sintetizzate dall'acido arachidonico tramite COX). Ossido nitrico (NO). Bradichinina. La vasodilatazione provoca: Aumento del diametro dei vasi (soprattutto arteriole e capillari). Aumento del flusso sanguigno nella zona danneggiata. Rossore (rubor) e calore (calor): i due segni classici da vasodilatazione. La vasodilatazione è seguita dall'aumento della permeabilità vascolare, che causa fuoriuscita di liquidi → gonfiore (edema)."
+    },
+    {
+      "id": "f54",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Cos'è la triade di Lewis e cosa dimostra?",
+      "retro": "La triade di Lewis descrive la risposta cutanea locale a uno stimolo meccanico (es. sfregamento con una punta) e rappresenta un modello in piccolo dell'infiammazione. Si compone di tre segni in ordine: 1. Linea rossa (red line): compare subito al punto di stimolazione, dovuta alla vasodilatazione diretta dei capillari locali. 2. Alone rosso (flare): si espande attorno alla linea, causato dalla vasodilatazione riflessa mediata dai nervi locali. 3. Pomfo (wheal): rigonfiamento circoscritto della pelle causato dall'aumento della permeabilità vascolare con fuoriuscita di liquido (edema). Dimostra la sequenza vasodilatazione → aumento permeabilità → edema."
+    },
+    {
+      "id": "f55",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Qual è il ruolo dei mastociti nell'infiammazione acuta?",
+      "retro": "I mastociti (mast cellule) sono cellule sentinella presenti nei tessuti (sotto la pelle, nelle mucose, vicino ai vasi) fondamentali per l'avvio dell'infiammazione acuta. Contengono granuli preformati ricchi di istamina ed eparina. Quando attivati da traumi, infezioni o allergeni, fanno degranulazione: rilasciano rapidamente istamina e altri mediatori. L'istamina causa vasodilatazione e aumento della permeabilità vascolare, facilitando l'arrivo dei leucociti. Rilasciano anche serotonina e 5-idrossitriptamina, responsabili della sensazione dolorosa associata alla flogosi. L'istamina può essere rilasciata anche dai granulociti basofili circolanti."
+    },
+    {
+      "id": "f56",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Descrivi le tre fasi della vasodilatazione nell'infiammazione acuta.",
+      "retro": "Fase precoce: risposta immediata all'insulto lesivo, mediata da istamina (dai mastociti) e ossido nitrico. Causa rilassamento della muscolatura liscia vasale e aumento del flusso sanguigno → rossore e calore. Fase intermedia: mediata da istamina e leucotrieni. Caratterizzata da aumento della permeabilità vascolare con fuoriuscita di liquidi e proteine (essudato), formazione di edema e progressivo rallentamento del flusso sanguigno. Fase tardiva: marcata perdita di liquidi dai vasi, aumento della viscosità ematica e rallentamento del flusso fino alla stasi. Favorisce la marginazione e l'adesione dei leucociti, preparando la fase cellulare. Le proteasi plasmatiche (plasmina, callicreina) e il complemento amplificano la permeabilità in questa fase."
+    },
+    {
+      "id": "f57",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Cos'è il sistema del complemento e quali sono le sue tre vie di attivazione?",
+      "retro": "Il sistema del complemento è un insieme di circa 20 proteine plasmatiche prodotte dal fegato che circolano inattive e si attivano a cascata in presenza di infezioni, potenziando l'infiammazione e la difesa immunitaria. Le tre vie di attivazione: 1. Via classica: attivata dagli anticorpi legati all'antigene del microbo. 2. Via alternativa: attivata direttamente dalle superfici dei microrganismi (anche in assenza di anticorpi). 3. Via lectinica: attivata da proteine (lectine) che riconoscono zuccheri specifici sulla superficie dei batteri. Tutte e tre convergono alla formazione del Complesso di Attacco alla Membrana (MAC), che perfora la membrana del microrganismo distruggendolo."
+    },
+    {
+      "id": "f58",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Quali sono le funzioni principali del sistema del complemento nell'infiammazione?",
+      "retro": "Il sistema del complemento svolge tre funzioni principali: 1. Opsonizzazione (C3b): 'marca' i microrganismi facilitandone la fagocitosi. Le cellule fagocitarie riconoscono C3b legato al microbo e lo inglobano più efficacemente. 2. Amplificazione dell'infiammazione (C3a, C5a — anafilotossine): stimolano la degranulazione dei mastociti (rilascio di istamina), causano vasodilatazione e aumento della permeabilità vascolare, esercitano azione chemiotattica richiamando i leucociti (stimolano la diapedesi). 3. Lisi cellulare (MAC): il complesso di attacco alla membrana buca e distrugge il microrganismo. Il complemento rappresenta l'anello di congiunzione tra la risposta infiammatoria aspecifica e quella adattiva."
+    },
+    {
+      "id": "f59",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Cos'è la marginazione dei leucociti e perché si verifica?",
+      "retro": "La marginazione è il primo passaggio della fase cellulare dell'infiammazione acuta. È il processo per cui i leucociti si spostano dal centro del vaso verso la sua parete (endotelio). Si verifica perché: durante la fase vascolare i vasi si dilatano e il flusso sanguigno rallenta (stasi). I globuli rossi, più pesanti e numerosi, tendono a restare al centro del vaso. I leucociti, meno densi, vengono spinti verso i margini (parete vasale). La marginazione è il prerequisito indispensabile per le fasi successive di adesione e diapedesi."
+    },
+    {
+      "id": "f60",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Qual è la differenza tra il ruolo delle selectine e delle integrine nell'adesione dei leucociti?",
+      "retro": "L'adesione dei leucociti all'endotelio avviene in due momenti: Selectine (legame debole — rolling): molecole presenti sulle cellule endoteliali e sui leucociti. Creano legami deboli e temporanei: il leucocita non si ferma ma rotola lungo la parete del vaso (rolling). Sono le prime a entrare in azione. Integrine (adesione forte — adesione stabile): molecole sui leucociti che vengono attivate dalle citochine e chemochine rilasciate durante il rolling. Una volta attivate cambiano forma diventando molto adesive; si legano saldamente all'endotelio e il leucocita si ferma completamente, pronto per la diapedesi."
+    },
+    {
+      "id": "f61",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Cos'è la diapedesi e dove avviene prevalentemente?",
+      "retro": "La diapedesi è il processo mediante il quale i leucociti, dopo l'adesione all'endotelio, attraversano la parete dei vasi sanguigni per raggiungere il sito infiammatorio. Avviene principalmente nelle venule post-capillari, dove il flusso è lento e l'endotelio è più permeabile. Il leucocita si deforma, si inserisce tra le giunzioni delle cellule endoteliali (che si separano leggermente) e attraversa tutta la parete del vaso. La molecola PECAM-1 (CD31) facilita il passaggio tra le cellule endoteliali. Una volta nel tessuto, il leucocita segue il gradiente chemiotattico verso il sito del danno."
+    },
+    {
+      "id": "f62",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Cos'è la chemiotassi e quali sostanze guidano i leucociti verso il danno?",
+      "retro": "La chemiotassi è il movimento direzionale dei leucociti verso il sito di infiammazione, guidato da un gradiente di sostanze chimiche (chemoattraenti): più ci si avvicina al danno, maggiore è la concentrazione della sostanza. Il leucocita percepisce il gradiente tramite recettori di membrana e si muove strisciando nella direzione giusta. Sostanze chemiotattiche: Componenti del sistema del complemento (C5a). Citochine e chemochine (es. IL-8, CXCL1). Prodotti batterici (es. peptidi formilati fMLP). Leucotrieni (LTB4). La chemiotassi garantisce che i leucociti raggiungano esattamente il punto del danno."
+    },
+    {
+      "id": "f63",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Quali sono le citochine principali nell'infiammazione? Descrivi IL-1, IL-6, TNF e gli interferoni.",
+      "retro": "Le citochine sono piccole proteine che fungono da 'messaggi chimici' tra cellule immunitarie. IL-1: pirogeno endogeno per eccellenza; stimola l'ipotalamo ad alzare la febbre; a livello del fegato stimola la produzione di proteine della fase acuta (per i peptidi vasoattivi); aumenta l'adesione dei leucociti all'endotelio. IL-6: stimola il midollo osseo ad aumentare la produzione di leucociti come riserva. TNF-α (Tumor Necrosis Factor): stimola la febbre (insieme a IL-1), a livello epatico stimola le proteine per i vasoattivi, a livello midollare aumenta la produzione di leucociti; nei casi gravi può causare shock settico. Interferoni: citochine ad azione antivirale; bloccano la replicazione virale e 'avvisano' le cellule vicine della presenza di virus."
+    },
+    {
+      "id": "f64",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Descrivi le fasi della fagocitosi.",
+      "retro": "La fagocitosi è il processo con cui neutrofili e macrofagi inglobano e distruggono microrganismi e detriti. Fasi: 1. Riconoscimento e adesione: il fagocita riconosce il microrganismo, facilitato dall'opsonizzazione (anticorpi e C3b 'marcano' il microbo rendendolo più facilmente riconoscibile). 2. Ingestione: il fagocita circonda il microrganismo con la membrana e lo ingloba formando una vescicola chiamata fagosoma. 3. Digestione (uccisione): il fagosoma si fonde con i lisosomi formando il fagolisosoma; enzimi digestivi e specie reattive dell'ossigeno (burst ossidativo) distruggono il microrganismo. 4. Segregazione: si formano corpi residui (frammenti di ciò che è stato fagocitato). 5. Eliminazione: i residui vengono espulsi o riutilizzati."
+    },
+    {
+      "id": "f65",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Qual è la differenza tra essudato e trasudato?",
+      "retro": "Essudato: liquido di derivazione infiammatoria che fuoriesce dai vasi per aumento della permeabilità vascolare. È ricco di proteine (albumina, fibrinogeno), leucociti (soprattutto neutrofili) e mediatori dell'infiammazione. È tipico dei processi infiammatori. Trasudato: liquido che fuoriesce dai vasi per squilibrio delle pressioni idrostatiche e oncotica (teoria di Starling), senza infiammazione. È povero di proteine e cellule. È tipico di insufficienza cardiaca, cirrosi o sindrome nefrosica. La differenza fondamentale è il contenuto proteico e la causa: infiammazione (essudato) vs squilibrio pressorio (trasudato)."
+    },
+    {
+      "id": "f66",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Come la teoria di Starling spiega la formazione dell'essudato?",
+      "retro": "La teoria di Starling spiega il movimento dei liquidi attraverso la parete capillare in base all'equilibrio tra due forze opposte: Pressione idrostatica: spinge il liquido fuori dal vaso. Pressione oncotica (colloidosmotica): prodotta dalle proteine plasmatiche, richiama il liquido dentro il vaso. In condizioni normali c'è un equilibrio: il liquido esce all'inizio del capillare e rientra alla fine. Nell'infiammazione: l'aumento della permeabilità vascolare permette alle proteine di uscire dal vaso → diminuisce la pressione oncotica intravascolare e aumenta quella interstiziale → il liquido non rientra → si forma l'essudato con gonfiore (edema infiammatorio)."
+    },
+    {
+      "id": "f67",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Descrivi i principali tipi morfologici di infiammazione acuta.",
+      "retro": "1. Infiammazione sierosa: essudato liquido chiaro, povero di cellule, simile al plasma (es. vesciche da ustione lieve). 2. Infiammazione fibrinosa: essudato ricco di fibrina con aspetto denso e filamentoso che si deposita sui tessuti (es. pleura, pericardio, polmonite pneumococcica). 3. Infiammazione purulenta (suppurativa): essudato ricco di pus (neutrofili + batteri + detriti). Si distingue in: empiema (pus in cavità preesistente), flemone (diffuso nei tessuti senza confini), ascesso (raccolta circoscritta con capsula), ascessi metastatici (in sedi lontane via batteriemia). 4. Infiammazione emorragica: fuoriuscita di globuli rossi, essudato ematico (es. glomerulonefrite acuta). 5. Infiammazione necrotico-emorragica: emorragia + necrosi dei tessuti (es. tifo con ulcere alle placche del Peyer). 6. Infiammazione allergica: mediata da mast cellule, eosinofili e istamina (es. rinite, asma, orticaria)."
+    },
+    {
+      "id": "f68",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Descrivi i quattro stadi della polmonite pneumococcica.",
+      "retro": "La polmonite pneumococcica è un'infezione degli alveoli polmonari che attraversa 4 stadi: 1. Congestione (prime 24h): vasodilatazione, aumento del flusso sanguigno, edema alveolare, pochi neutrofili. Il polmone appare rosso e pesante. 2. Epatizzazione rossa (2-3 giorni): massiccia infiltrazione di neutrofili, fuoriuscita di globuli rossi, fibrina ed essudato che riempiono gli alveoli. Il polmone diventa rosso e duro come il fegato (da cui 'epatizzazione'). 3. Epatizzazione grigia (4-6 giorni): i globuli rossi si degradano, rimangono neutrofili, fibrina e meno sangue. Il polmone diventa grigio, ancora compatto. 4. Risoluzione: l'essudato viene degradato dai macrofagi, il tessuto torna normale, il polmone recupera la funzione. Può esitare in cicatrici."
+    },
+    {
+      "id": "f69",
+      "macroargomenti": ["Infiammazione acuta"],
+      "fronte": "Cos'è la stasi nell'infiammazione acuta e perché è importante?",
+      "retro": "La stasi è il rallentamento del flusso sanguigno nei microvasi durante la fase vascolare dell'infiammazione acuta. Si forma perché: l'aumento della permeabilità vascolare fa fuoriuscire liquidi dai vasi, il sangue si concentra (emoconcentrazione) aumentando la viscosità, e il flusso rallenta progressivamente fino quasi a fermarsi. Nella stasi i globuli rossi si accumulano al centro del vaso e i leucociti vengono spinti verso la parete (marginazione). La condizione di iperemia passiva (accumulo di sangue nei microvasi) che ne deriva ha un colore rosso-violaceo. La stasi è fondamentale perché crea le condizioni necessarie per la marginazione, l'adesione e la diapedesi dei leucociti."
+    },
+    {
+      "id": "f70",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Quali sono le differenze principali tra infiammazione acuta e cronica?",
+      "retro": "Infiammazione acuta (angio-flogosi): risposta rapida (minuti/ore-giorni), prevalenza di fenomeni vascolari (vasodilatazione, essudazione), cellule predominanti: neutrofili, risoluzione rapida o possibile cronicizzazione. Infiammazione cronica (isto-flogosi): risposta prolungata (mesi-anni), prevalenza di fenomeni cellulari, cellule predominanti: macrofagi, linfociti, plasmacellule. Caratterizzata da danno tissutale e tentativi di riparazione (fibrosi, angiogenesi) contemporanei. Si verifica quando lo stimolo dannoso non viene eliminato (infezioni persistenti, agenti tossici, malattie autoimmuni, corpi estranei). Non sempre deriva da un'infiammazione acuta — può insorgere direttamente."
+    },
+    {
+      "id": "f71",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Qual è il ruolo dei macrofagi nell'infiammazione cronica?",
+      "retro": "I macrofagi sono le cellule chiave dell'infiammazione cronica. Derivano dai monociti prodotti dal midollo osseo. Svolgono diverse funzioni: fagocitosi di microrganismi, cellule morte e detriti; presentazione dell'antigene ai linfociti T; produzione di citochine che regolano la risposta immunitaria; riparazione tissutale. Possono polarizzarsi in due fenotipi: M1 (classicamente attivati): stimolati da interferone-γ e LPS batterici; pro-infiammatori; producono IL-1, IL-6, TNF-α, specie reattive dell'ossigeno; alta capacità microbicida e tumoricida. M2 (alternativamente attivati): stimolati da IL-4 e IL-13; anti-infiammatori; producono IL-10 e TGF-β; promuovono la riparazione tissutale e la fibrosi."
+    },
+    {
+      "id": "f72",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Qual è il ruolo dei linfociti T nell'infiammazione cronica? Descrivi i sottotipi.",
+      "retro": "I linfociti T (soprattutto T helper CD4+) orchestrano la risposta cronica: i macrofagi presentano l'antigene tramite MHC, i T si attivano e rilasciano citochine che mantengono l'infiammazione nel tempo. Sottotipi: Th1: attivano i macrofagi M1 (pro-infiammatori), fondamentali nelle infezioni intracellulari. Th2: favoriscono la polarizzazione M2 (riparazione/fibrosi), coinvolti nelle allergie. Th17: coinvolti nell'infiammazione cronica e nelle malattie autoimmuni. Treg (T regolatori): tentano di spegnere la risposta — spesso insufficienti nell'infiammazione cronica. I linfociti T e i macrofagi si attivano reciprocamente creando un circolo vizioso che mantiene l'infiammazione."
+    },
+    {
+      "id": "f73",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Qual è il ruolo delle plasmacellule e degli eosinofili nell'infiammazione cronica?",
+      "retro": "Plasmacellule: sono linfociti B differenziati specializzati nella produzione continua di anticorpi contro antigeni persistenti. Gli anticorpi possono formare immunocomplessi (antigene + anticorpo) che si depositano nei tessuti, attivano il complemento e causano danno tissutale cronico. Rilevanti nelle malattie autoimmuni (es. Lupus eritematoso sistemico). Eosinofili: granulociti coinvolti nella difesa contro parassiti e nelle allergie croniche. Rilasciano proteine basiche maggiori ed enzimi tossici che causano danno diretto ai tessuti; producono mediatori infiammatori (citochine, leucotrieni). Importanti nelle infezioni parassitarie persistenti, nell'asma e in alcune malattie immunitarie. Sono associati alla risposta Th2."
+    },
+    {
+      "id": "f74",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Quali sono i due tipi principali di infiammazione cronica?",
+      "retro": "1. Infiammazione cronica non specifica (interstiziale): è la forma più comune. Infiltrato diffuso di macrofagi, linfociti e plasmacellule nel tessuto, con danno tissutale e tentativi di riparazione per fibrosi e angiogenesi. Il connettivo neoformato si insinua tra le cellule parenchimali. Esempi: epatite cronica (connettivo tra i lobuli epatici), bronchite cronica, nefrite cronica (connettivo tra i tubuli renali). 2. Infiammazione granulomatosa: forma specializzata con formazione di granulomi (aggregati organizzati di macrofagi attivati, cellule epitelioidi, cellule giganti multinucleate e linfociti). Si verifica quando l'organismo non riesce a eliminare l'agente lesivo e cerca di 'isolarlo'."
+    },
+    {
+      "id": "f75",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Cos'è un granuloma e qual è la sua struttura?",
+      "retro": "Il granuloma è una struttura organizzata che l'organismo forma per 'isolare' un agente che non riesce a eliminare (batteri resistenti, corpi estranei, alcuni parassiti). Struttura dal centro verso la periferia: Centro: agente infettivo o materiale estraneo + eventuale necrosi caseosa. Strato intermedio: macrofagi attivati trasformati in cellule epitelioidi (macrofagi con morfologia simile alle cellule epiteliali, con scarsa capacità fagocitaria ma alta attività secretoria). Cellule giganti multinucleate (fusione di più macrofagi: cellule di Langhans con nuclei a corona). Strato esterno: linfociti (soprattutto T). Periferia: tessuto fibroso nei casi cronici. Si forma tramite: attivazione dei macrofagi → attivazione dei linfociti T → secrezione di citochine (interferone-γ) → trasformazione dei macrofagi in cellule epitelioidi."
+    },
+    {
+      "id": "f76",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Elenca le principali cause di infiammazione granulomatosa.",
+      "retro": "Le cause di infiammazione granulomatosa si classificano per origine: Da corpo estraneo: silicosi (polvere di silicio), asbestosi (amianto). Batterica: tubercolosi (Mycobacterium tuberculosis), salmonellosi, sifilide (Treponema pallidum). Micotica: istoplasmosi, coccidioidomicosi. Protozoaria: Leishmaniosi cutanea. Da infestazioni parassitarie: Filariosi. Origine ignota o immunologica: Febbre reumatica, Morbo di Crohn, Sarcoidosi. La sarcoidosi presenta granulomi non caseosi (senza necrosi centrale). La tubercolosi presenta granulomi caseosi (con necrosi centrale ad aspetto di formaggio)."
+    },
+    {
+      "id": "f77",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Descrivi la patogenesi della tubercolosi polmonare e la formazione del granuloma tubercolare.",
+      "retro": "La tubercolosi è causata da Mycobacterium tuberculosis, un batterio particolare perché sopravvive all'interno dei macrofagi resistendo alla distruzione. Patogenesi: 1. Il batterio entra nei polmoni ed è fagocitato dai macrofagi, ma non viene distrutto. 2. I macrofagi presentano l'antigene e attivano i linfociti T, che producono interferone-γ. 3. L'interferone-γ attiva ulteriormente i macrofagi che si trasformano in cellule epitelioidi e cellule giganti di Langhans. 4. Si forma il granuloma tubercolare (tubercolo): batteri al centro → cellule epitelioidi → cellule di Langhans → linfociti → fibrosi periferica. 5. Il centro va incontro a necrosi caseosa (aspetto 'formaggio') per morte delle cellule."
+    },
+    {
+      "id": "f78",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Quali sono i possibili esiti del tubercolo nella tubercolosi?",
+      "retro": "Il tubercolo può evolvere in quattro modi diversi: 1. Guarigione con fibrosi e calcificazione: il granuloma si stabilizza, si forma tessuto fibroso e può calcificare — infezione controllata. 2. Tubercolosi latente: il batterio resta vivo ma inattivo all'interno del granuloma; nessun sintomo, ma possibile riattivazione se le difese immunitarie calano. 3. Progressione con necrosi e cavitazione: il centro necrotico si liquefa e viene espulso attraverso i bronchi con la tosse formando una cavità (caverna tubercolare). Il materiale espettorato contiene molti batteri (alta contagiosità). 4. Disseminazione: i batteri entrano nel sangue e si diffondono in altri organi (tubercolosi miliare o disseminata)."
+    },
+    {
+      "id": "f79",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Cosa contiene il materiale della caverna tubercolare e quali sono le conseguenze del suo svuotamento?",
+      "retro": "La caverna tubercolare è una cavità polmonare che si forma quando il granuloma va incontro a necrosi caseosa e il materiale centrale si liquefa drenando nei bronchi. Il materiale caseoso espulso con la tosse è composto da: cellule morte (necrosi), macrofagi e leucociti degenerati, detriti cellulari, fibrina e Mycobacterium tuberculosis in grande quantità. Ha aspetto biancastro-giallastro, molle, simile al formaggio. Conseguenze: alta trasmissibilità per via aerea (bacilli nell'espettorato); formazione di una cavità con pareti infiammate nel polmone; distruzione del tessuto con riduzione della funzione respiratoria."
+    },
+    {
+      "id": "f80",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Perché l'esposizione ad amianto o silicio predispone allo sviluppo di tumori?",
+      "retro": "L'esposizione ad amianto o silicio predispone ai tumori per due meccanismi sinergici: 1. Stimolo proliferativo: i macrofagi tentano di fagocitare le fibre (silicio, amianto) senza riuscire a eliminarle. Questo causa infiammazione cronica con continua proliferazione sia di cellule immunitarie che di cellule per la riparazione tissutale. La proliferazione cronica è una condizione necessaria per lo sviluppo del tumore (ambiente ideale). 2. Danno al DNA: le fibre di amianto rilasciano ioni ferro che, in presenza di ossigeno (ossidazione), generano radicali liberi. Questi danneggiano il DNA delle cellule proliferanti, aumentando la probabilità di mutazioni oncogeniche e quindi di sviluppo del tumore."
+    },
+    {
+      "id": "f81",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Qual è la differenza tra rigenerazione e riparazione con cicatrice nella guarigione tissutale?",
+      "retro": "Rigenerazione: il tessuto danneggiato viene sostituito da cellule identiche a quelle originali. Avviene quando il danno è lieve, le cellule sono capaci di dividersi (cellule labili o stabili) e l'architettura del tessuto è preservata. Non lascia cicatrice e ripristina completamente la funzione (restitutio ad integrum). Es. pelle superficiale, fegato. Riparazione con cicatrice (fibrosi): il tessuto danneggiato viene sostituito da tessuto connettivo fibroso. Avviene quando il danno è profondo e l'architettura tissutale è distrutta. Porta alla formazione di una cicatrice, con perdita della struttura originale e riduzione funzionale. Es. danno miocardico dopo infarto, ferite profonde."
+    },
+    {
+      "id": "f82",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Descrivi le quattro fasi della guarigione di una ferita.",
+      "retro": "La guarigione di una ferita avviene in quattro fasi sequenziali: 1. Emostasi (subito): vasocostrizione riflessa e formazione del coagulo per bloccare il sanguinamento. Il coagulo di fibrina funge anche da impalcatura provvisoria per le cellule riparatrici. 2. Infiammazione (ore-giorni): neutrofili e macrofagi arrivano per eliminare batteri e detriti, pulendo la ferita. 3. Proliferazione (giorni-settimane): formazione del tessuto di granulazione (nuovi vasi sanguigni tramite angiogenesi + fibroblasti che producono collagene + riepitelizzazione con nuova pelle). 4. Rimodellamento/maturazione (settimane-mesi): il collagene si riorganizza, la cicatrice si rafforza e si contrae, la vascolarizzazione diminuisce."
+    },
+    {
+      "id": "f83",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Qual è la differenza tra guarigione per prima, seconda e terza intenzione?",
+      "retro": "Prima intenzione: ferita pulita con bordi affiancati e suturati (es. incisione chirurgica). Minima formazione di tessuto di granulazione, cicatrice piccola e poco appariscente. Seconda intenzione: ferita ampia, aperta o infetta con margini lontani (es. ulcera, ascesso drenato). Richiede molta più formazione di tessuto di granulazione per 'riempire' la cavità dal basso verso l'alto. Cicatrice più grande e tempi più lunghi. Terza intenzione (guarigione ritardata): chiusura ritardata della ferita, usata in ferite contaminate o infette per permettere prima il trattamento dell'infezione, poi la sutura. Combina aspetti della prima e seconda intenzione."
+    },
+    {
+      "id": "f84",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Quali fattori locali influenzano la guarigione della ferita?",
+      "retro": "I fattori locali che influenzano la guarigione dipendono direttamente dalla ferita: 1. Infezione: è il fattore negativo più importante; i batteri rallentano la guarigione, aumentano l'infiammazione e distruggono il tessuto. 2. Apporto di sangue (vascolarizzazione): più sangue = più ossigeno e nutrienti per la riparazione. 3. Presenza di tessuto necrotico: il tessuto morto ostacola la guarigione e favorisce le infezioni. 4. Dimensione e tipo di ferita: ferite piccole guariscono più rapidamente; ferite profonde lasciano cicatrici più evidenti. 5. Corpi estranei: sporco, schegge o fili impediscono la corretta chiusura. 6. Radiazioni ionizzanti: rendono il tessuto di granulazione instabile e causano modifiche vascolari obliterative portando alla deiscenza della ferita."
+    },
+    {
+      "id": "f85",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Quali fattori sistemici influenzano la guarigione della ferita?",
+      "retro": "I fattori sistemici dipendono dallo stato generale dell'organismo: 1. Età: i giovani guariscono più rapidamente; gli anziani più lentamente (riduzione della risposta cellulare e vascolare). 2. Nutrizione: proteine, vitamina C (fondamentale per la sintesi di collagene) e zinco sono essenziali. La malnutrizione rallenta la guarigione. 3. Ossigenazione: l'ossigeno è necessario per la produzione di collagene; l'ipossia rallenta la riparazione. 4. Malattie: il diabete rallenta la guarigione (alterazione vascolare e neuropatica); le malattie vascolari riducono l'apporto di sangue; le immunodeficienze favoriscono le infezioni. 5. Farmaci: i cortisonici riducono l'infiammazione ma rallentano la riparazione; la chemioterapia riduce la proliferazione cellulare. 6. Stress cronico/cortisolo elevato: effetto negativo sulla guarigione."
+    },
+    {
+      "id": "f86",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Cos'è il cheloide e come si distingue dalla cicatrice ipertrofica?",
+      "retro": "Entrambe sono complicanze della guarigione per eccessiva formazione di tessuto cicatriziale: Cheloide: cicatrice esuberante che cresce oltre i bordi originali della ferita, invadendo il tessuto sano circostante. Non regredisce spontaneamente ed è più comune in persone con pelle scura. Può causare prurito e dolore. Cicatrice ipertrofica: cicatrice spessa e rilevata, ma che rimane nei limiti originali della ferita. Può regredire nel tempo. La differenza fondamentale è che il cheloide supera i bordi della ferita, la cicatrice ipertrofica no. Entrambe implicano un'eccessiva sintesi di collagene da parte dei fibroblasti durante la fase di rimodellamento."
+    },
+    {
+      "id": "f87",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "fronte": "Cos'è la deiscenza della ferita e quali sono le sue cause?",
+      "retro": "La deiscenza è la riapertura di una ferita già suturata, con separazione spontanea dei bordi cutanei o dei piani più profondi. Cause principali: tensione eccessiva sui tessuti (es. sforzi fisici precoci, tosse intensa), infezione della ferita (i batteri degradano il tessuto cicatriziale), cattiva cicatrizzazione (malnutrizione, diabete, immunodepressione, corticosteroidi), ematomi o sieromi sottostanti che impediscono l'adesione, esposizione a radiazioni ionizzanti (che rendono instabile il tessuto di granulazione e causano modifiche vascolari obliterative). La deiscenza aumenta il rischio di infezione e richiede un nuovo approccio terapeutico."
+    }
+  ]
+}

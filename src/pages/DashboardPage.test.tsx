@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import smokeFlashcardText from '../../assets/tests/patologia/patologia_flashcard.json?raw'
+import smokeQuizText from '../../assets/tests/patologia/patologia_quiz.json?raw'
+import smokeSummaryText from '../../assets/tests/patologia/patologia-summary.html?raw'
 import type { Esame, PausedSession } from '../types'
 
 const getEsame = vi.fn()
@@ -25,6 +28,15 @@ vi.mock('../services/fileService', () => ({
 }))
 
 const { DashboardPage } = await import('./DashboardPage')
+
+function encodeText(value: string): ArrayBuffer {
+  const bytes = new TextEncoder().encode(value)
+  return Uint8Array.from(bytes).buffer
+}
+
+const smokeQuizData = encodeText(smokeQuizText)
+const smokeFlashcardData = encodeText(smokeFlashcardText)
+const smokeSummaryData = encodeText(smokeSummaryText)
 
 const validQuiz = {
   esame: 'Analisi',
@@ -54,8 +66,7 @@ const validFlashcards = {
 }
 
 function encodeJson(value: unknown): ArrayBuffer {
-  const bytes = new TextEncoder().encode(JSON.stringify(value))
-  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  return encodeText(JSON.stringify(value))
 }
 
 function LocationStateView() {
@@ -284,5 +295,92 @@ describe('DashboardPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Riprendi quiz' }))
     expect(await screen.findByText('{"resume":true}')).not.toBeNull()
+  })
+
+  it('smoke-tests importing the real patologia quiz, flashcard, and summary fixtures', async () => {
+    const current = makeExam()
+    getEsame.mockResolvedValue(current)
+    saveEsame.mockImplementation(async (updated: Esame) => {
+      getEsame.mockResolvedValue(updated)
+    })
+    pickFile
+      .mockResolvedValueOnce({
+        name: 'patologia-summary.html',
+        type: 'text/html',
+        data: smokeSummaryData,
+      })
+      .mockResolvedValueOnce({
+        name: 'patologia_quiz.json',
+        type: 'application/json',
+        data: smokeQuizData,
+      })
+      .mockResolvedValueOnce({
+        name: 'patologia_flashcard.json',
+        type: 'application/json',
+        data: smokeFlashcardData,
+      })
+
+    renderDashboard()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Importa riassunto' }))
+    await waitFor(() => {
+      expect(saveEsame).toHaveBeenNthCalledWith(1, {
+        ...current,
+        files: {
+          riassunto: {
+            name: 'patologia-summary.html',
+            type: 'text/html',
+            data: smokeSummaryData,
+          },
+        },
+      })
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Importa quiz.json' }))
+    await waitFor(() => {
+      expect(saveEsame).toHaveBeenNthCalledWith(2, {
+        ...current,
+        files: {
+          riassunto: {
+            name: 'patologia-summary.html',
+            type: 'text/html',
+            data: smokeSummaryData,
+          },
+          quiz: {
+            name: 'patologia_quiz.json',
+            type: 'application/json',
+            data: smokeQuizData,
+          },
+        },
+      })
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Importa flashcard.json' }))
+    await waitFor(() => {
+      expect(saveEsame).toHaveBeenNthCalledWith(3, {
+        ...current,
+        files: {
+          riassunto: {
+            name: 'patologia-summary.html',
+            type: 'text/html',
+            data: smokeSummaryData,
+          },
+          quiz: {
+            name: 'patologia_quiz.json',
+            type: 'application/json',
+            data: smokeQuizData,
+          },
+          flashcard: {
+            name: 'patologia_flashcard.json',
+            type: 'application/json',
+            data: smokeFlashcardData,
+          },
+        },
+      })
+    })
+
+    expect(await screen.findByText('patologia-summary.html')).not.toBeNull()
+    expect(screen.getByText('patologia_quiz.json')).not.toBeNull()
+    expect(screen.getByText('patologia_flashcard.json')).not.toBeNull()
   })
 })

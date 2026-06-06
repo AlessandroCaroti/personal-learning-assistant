@@ -12,12 +12,11 @@
       "isBackground": true,
       "problemMatcher": {
         "owner": "vite",
-        "pattern": [
-          {
-            "regexp": "^(.*)$",
-            "message": 1
-          }
-        ],
+        "pattern": {
+          "regexp": "^__codex_never_match__([\\s\\S]*)$",
+          "file": 1,
+          "message": 1
+        },
         "background": {
           "activeOnStart": true,
           "beginsPattern": "^\\s*VITE\\s",
@@ -36,12 +35,11 @@
       "isBackground": true,
       "problemMatcher": {
         "owner": "vite-preview",
-        "pattern": [
-          {
-            "regexp": "^(.*)$",
-            "message": 1
-          }
-        ],
+        "pattern": {
+          "regexp": "^__codex_never_match__([\\s\\S]*)$",
+          "file": 1,
+          "message": 1
+        },
         "background": {
           "activeOnStart": true,
           "beginsPattern": "^\\s*VITE\\s",

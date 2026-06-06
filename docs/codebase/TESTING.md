@@ -38,7 +38,7 @@ npm run test -- --run
 
 - Coverage tool + threshold: `[TODO]` no coverage reporter or threshold config found.
 - Current reported coverage: `[TODO]` not found in inspected files.
-- Known gaps/flaky areas: no CI pipeline enforces tests; no E2E coverage exists; Windows/Electron packaging has no runtime tests in the current tree.
+- Known gaps/flaky areas: no CI pipeline enforces tests; no E2E coverage exists; Windows/Tauri packaging has no automated runtime tests in the current tree.
 
 ### 6) Evidence
 

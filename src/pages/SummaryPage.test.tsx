@@ -1,6 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import patologiaSummaryHtml from '../../assets/tests/patologia/patologia-summary.html?raw'
 import type { Esame, FileRecord } from '../types'
 
 const getEsame = vi.fn()
@@ -20,6 +21,8 @@ function encodeText(value: string): ArrayBuffer {
   const bytes = new TextEncoder().encode(value)
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
 }
+
+const patologiaSummaryData = encodeText(patologiaSummaryHtml)
 
 function makeFile(name: string, type: string, data = encodeText('content')): FileRecord {
   return { name, type, data }
@@ -175,5 +178,24 @@ describe('SummaryPage', () => {
     renderSummary()
 
     expect((await screen.findByRole('alert')).textContent).toMatch(/conversion failed/i)
+  })
+
+  it('smoke-tests rendering the real patologia HTML summary fixture', async () => {
+    getEsame.mockResolvedValue(
+      makeExam(makeFile('patologia-summary.html', 'text/html', patologiaSummaryData)),
+    )
+
+    renderSummary()
+
+    const iframe = await screen.findByTitle('Riassunto')
+    expect(iframe.getAttribute('srcdoc')).toContain('<base href="about:srcdoc">')
+    expect(iframe.getAttribute('srcdoc')).toContain('<title>Patologia Generale – Riassunto</title>')
+    expect(iframe.getAttribute('srcdoc')).toContain('<h1>Patologia Generale – Riassunto Completo</h1>')
+    expect(iframe.getAttribute('srcdoc')).toContain('href="#radiazioni"')
+    expect(iframe.getAttribute('srcdoc')).toContain('Radiazioni')
+    expect(iframe.getAttribute('srcdoc')).toContain(
+      'Riassunto generato da materiale di studio – Patologia Generale',
+    )
+    expect(patologiaSummaryHtml).toContain('Patologia Generale – Riassunto')
   })
 })

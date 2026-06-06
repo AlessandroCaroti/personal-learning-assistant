@@ -9,7 +9,7 @@ This page is a quick technical reference for the repository structure and the ma
 | `src/` | Application source code |
 | `docs/` | Product and repository documentation |
 | `android/` | Capacitor-generated Android project |
-| `electron/` | Windows packaging entry point area |
+| `src-tauri/` | Tauri desktop wrapper and Windows bundling config |
 | `.github/instructions/` | Repository-specific engineering guidance |
 | `.vscode/` | Local debug and task definitions |
 
@@ -34,6 +34,8 @@ This page is a quick technical reference for the repository structure and the ma
 | `npm run test -- --run` | Run tests once |
 | `npm run cap:sync` | Build and sync to Android |
 | `npm run cap:android` | Sync and open Android Studio |
+| `npm run tauri:dev` | Start the Tauri desktop shell against the Vite dev server |
+| `npm run build:win` | Build the Windows NSIS installer |
 | `npm run preview` | Preview the production web build |
 
 ## Local persistence stores
@@ -55,4 +57,3 @@ This page is a quick technical reference for the repository structure and the ma
 | `.html` | Summary content |
 | `.pdf` | Summary content |
 | `.docx` | Summary content |
-

@@ -40,7 +40,7 @@ List only high-impact production dependencies (frameworks, data, transport, auth
 | React Testing Library | Component and hook testing utilities | `package.json`, `src/App.test.tsx`, `src/hooks/useQuiz.test.ts` |
 | `fake-indexeddb` | IndexedDB isolation in tests | `package.json`, `src/services/storageService.test.ts` |
 | Capacitor CLI | Android sync/open commands | `package.json`, `capacitor.config.ts` |
-| Electron + `electron-builder` | Intended Windows packaging toolchain | `package.json`, `docs/2026-06-03-windows-packaging-design.md` |
+| Tauri 2 + Cargo | Windows desktop packaging and installer bundling | `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` |
 
 ### 4) Key Commands
 
@@ -55,7 +55,7 @@ npm run test -- --run
 
 - Config sources: `package.json`, `vite.config.ts`, `tsconfig.json`, `tsconfig.app.json`, `capacitor.config.ts`, `.vscode/launch.json`, `.vscode/tasks.json`
 - Required env vars: `[TODO]` No `.env.example` or code-level `process.env` / `import.meta.env` usage was found in the inspected files or scan output.
-- Deployment/runtime constraints: local-only app, no backend, browser/Capacitor runtime for product code; Android sync depends on `dist/`; Windows packaging is configured in `package.json` but the referenced Electron entry file is currently missing.
+- Deployment/runtime constraints: local-only app, no backend, browser/Capacitor runtime for product code; Android sync depends on `dist/`; Windows packaging uses the Tauri wrapper in `src-tauri/` and depends on a working Rust/MSVC toolchain.
 
 ### 6) Evidence
 

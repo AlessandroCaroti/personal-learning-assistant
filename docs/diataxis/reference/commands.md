@@ -24,16 +24,18 @@ This page records the repository's documented commands and what they do.
 |---|---|
 | `npm run cap:sync` | Build the web app and sync it into Android |
 | `npm run cap:android` | Sync and open Android Studio |
+| `gradlew.bat assembleDebug` | Build a debug APK from the `android/` folder on Windows |
+| `gradlew.bat assembleRelease` | Build a signed release APK from the `android/` folder on Windows after release signing is configured |
 
 ## Windows packaging
 
 | Command | Description |
 |---|---|
-| `npm run build:win` | Build the Windows package through Electron |
+| `npm run tauri:dev` | Run the app through the Tauri desktop shell |
+| `npm run build:win` | Build the Windows NSIS installer through Tauri |
 
 ## Notes
 
 - Run `npm run test -- --run` after code changes.
 - Build before Android sync.
 - Do not edit generated Android files manually.
-

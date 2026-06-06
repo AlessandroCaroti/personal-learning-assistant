@@ -1,0 +1,701 @@
+{
+  "esame": "Patologia",
+  "domande": [
+    {
+      "id": "q1",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "multipla",
+      "testo": "Qual è la principale differenza tra radiazioni eccitanti e radiazioni ionizzanti?",
+      "opzioni": [
+        "Le eccitanti hanno energia superiore a 10 eV, le ionizzanti inferiore",
+        "Le ionizzanti strappano elettroni dagli atomi, le eccitanti no",
+        "Le eccitanti causano sempre mutazioni al DNA, le ionizzanti no",
+        "Le ionizzanti non producono radicali liberi, le eccitanti sì"
+      ],
+      "risposta_corretta": "Le ionizzanti strappano elettroni dagli atomi, le eccitanti no",
+      "spiegazione": "Le radiazioni ionizzanti possiedono energia superiore a 10 eV sufficiente a rimuovere elettroni dagli atomi (ionizzazione), causando danni biologici gravi come rottura del DNA e formazione di radicali liberi. Le eccitanti invece portano l'elettrone a un livello energetico superiore senza strapparlo, producendo effetti generalmente reversibili."
+    },
+    {
+      "id": "q2",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "vero_falso",
+      "testo": "L'effetto indiretto delle radiazioni ionizzanti sulle cellule è più frequente dell'effetto diretto perché la cellula è composta per circa il 70% di acqua.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "L'elevato contenuto idrico della cellula (~70%) fa sì che le radiazioni ionizzanti colpiscano prevalentemente le molecole d'acqua, producendo radicali liberi che a loro volta danneggiano il DNA (effetto indiretto o solvente). L'effetto diretto sul DNA è meno frequente proprio perché la probabilità statistica di colpire direttamente il DNA è inferiore."
+    },
+    {
+      "id": "q3",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "multipla",
+      "testo": "Le cellule più radiosensibili sono:",
+      "opzioni": [
+        "Neuroni e cellule muscolari cardiache",
+        "Epatociti e cellule renali",
+        "Cellule epiteliali e cellule emopoietiche",
+        "Condrociti e osteociti"
+      ],
+      "risposta_corretta": "Cellule epiteliali e cellule emopoietiche",
+      "spiegazione": "Le cellule labili (in continua proliferazione), come le cellule epiteliali e emopoietiche, sono le più radiosensibili perché le radiazioni agiscono soprattutto durante la replicazione cellulare. Le cellule perenni (neuroni, cellule muscolari) non si replicano mai e sono le meno sensibili; le cellule stabili (epatociti) hanno una sensibilità intermedia."
+    },
+    {
+      "id": "q4",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "vero_falso",
+      "testo": "Le radiazioni corpuscolate hanno maggiore capacità penetrativa rispetto alle radiazioni elettromagnetiche perché possiedono una massa.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "È vero il contrario: maggiore è la massa della particella, minore è la sua capacità penetrativa. Le particelle alfa (masse elevate) hanno bassissimo potere penetrante, mentre le radiazioni elettromagnetiche come i raggi gamma, prive di massa, sono estremamente penetranti."
+    },
+    {
+      "id": "q5",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "multipla",
+      "testo": "Quale tra i seguenti è un effetto cronico delle radiazioni eccitanti (UV) sulla cute?",
+      "opzioni": [
+        "Sunburn",
+        "Abbronzatura",
+        "Sintesi della vitamina D",
+        "Photoaging"
+      ],
+      "risposta_corretta": "Photoaging",
+      "spiegazione": "Il photoaging (invecchiamento cutaneo accelerato) è un effetto cronico delle radiazioni eccitanti, dovuto al danno cumulativo al collagene e alle fibre elastiche. Il sunburn, l'abbronzatura e la sintesi di vitamina D sono invece effetti acuti o adattativi. La cancerogenesi (carcinoma basocellulare e spinocellulare) è un altro effetto cronico."
+    },
+    {
+      "id": "q6",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "vero_falso",
+      "testo": "Gli antiossidanti endogeni comprendono enzimi come perossidasi e catalasi, oltre a molecole non enzimatiche come il glutatione.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "Gli antiossidanti endogeni si dividono in enzimatici (perossidasi, catalasi, superossido dismutasi) e non enzimatici (glutatione). Quelli esogeni provengono invece dalla dieta e comprendono vitamina C, vitamina E, vitamina A e polifenoli. Entrambe le categorie concorrono alla neutralizzazione dei radicali liberi."
+    },
+    {
+      "id": "q7",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "multipla",
+      "testo": "Perché la radioterapia è efficace nonostante le radiazioni siano cancerogene?",
+      "opzioni": [
+        "Perché le radiazioni uccidono solo le cellule tumorali senza danneggiare quelle sane",
+        "Perché le cellule tumorali si dividono più rapidamente e sono quindi più radiosensibili",
+        "Perché le cellule tumorali non possiedono DNA e non possono essere danneggiate",
+        "Perché la dose di radiazioni usata in terapia è troppo bassa per essere cancerogena"
+      ],
+      "risposta_corretta": "Perché le cellule tumorali si dividono più rapidamente e sono quindi più radiosensibili",
+      "spiegazione": "La radioterapia sfrutta il principio per cui le cellule in rapida proliferazione sono più vulnerabili alle radiazioni. Poiché le cellule tumorali si dividono molto più spesso rispetto alla maggior parte delle cellule sane, la probabilità di colpire una cellula tumorale durante la replicazione è statisticamente più alta, pur con i rischi collaterali sulle cellule sane adiacenti."
+    },
+    {
+      "id": "q8",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "multipla",
+      "testo": "Quali sono i principali danni delle radiazioni eccitanti all'occhio?",
+      "opzioni": [
+        "Retinite pigmentosa e degenerazione maculare",
+        "Cheratocongiuntivite, cataratta e lesioni retiniche",
+        "Glaucoma e neurite ottica",
+        "Astigmatismo e presbiopia"
+      ],
+      "risposta_corretta": "Cheratocongiuntivite, cataratta e lesioni retiniche",
+      "spiegazione": "L'occhio è particolarmente vulnerabile alle radiazioni eccitanti per la sua trasparenza. I danni principali sono: cheratocongiuntivite (infiammazione della cornea), cataratta (degenerazione del cristallino) e lesioni retiniche (causate da luce visibile intensa, come guardare direttamente il sole). Il glaucoma e le altre patologie elencate non sono correlate alle radiazioni eccitanti."
+    },
+    {
+      "id": "q9",
+      "macroargomenti": ["Cause fisiche (termiche, elettricità, pressione)"],
+      "tipo": "multipla",
+      "testo": "Qual è la caratteristica distintiva dell'ustione di secondo grado rispetto a quella di primo grado?",
+      "opzioni": [
+        "Presenza di necrosi tissutale (escara)",
+        "Formazione di bolle (flitteni) ripiene di liquido ematico",
+        "Semplice arrossamento cutaneo (eritema)",
+        "Carbonizzazione del tessuto"
+      ],
+      "risposta_corretta": "Formazione di bolle (flitteni) ripiene di liquido ematico",
+      "spiegazione": "Il secondo grado è caratterizzato dalla formazione di flitteni (bolle) che contengono liquido di derivazione ematica ricco di proteine (soprattutto albumina). Questo comporta perdita di plasma e rischio di shock cardiocircolatorio. Il primo grado presenta solo eritema, il terzo grado necrosi (escara) e il quarto grado carbonizzazione."
+    },
+    {
+      "id": "q10",
+      "macroargomenti": ["Cause fisiche (termiche, elettricità, pressione)"],
+      "tipo": "vero_falso",
+      "testo": "La tossiemia nelle ustioni si manifesta immediatamente dopo il trauma ed è causata dalla fuoriuscita di proteine plasmatiche dalle bolle.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "La tossiemia si manifesta circa due giorni dopo l'ustione e ha durata variabile. È causata dalla presenza in circolo di sostanze tossiche derivate dai tessuti danneggiati (es. emoglobina liberata dall'emolisi dei globuli rossi), non dalla fuoriuscita immediata di proteine plasmatiche che è tipica delle flitteni del secondo grado."
+    },
+    {
+      "id": "q11",
+      "macroargomenti": ["Cause fisiche (termiche, elettricità, pressione)"],
+      "tipo": "multipla",
+      "testo": "Perché la sudorazione è inefficace nell'abbassare la temperatura corporea in ambienti con alta umidità?",
+      "opzioni": [
+        "Perché l'umidità aumenta la produzione di sudore",
+        "Perché il sudore non evapora e non trasporta via calore",
+        "Perché l'umidità riduce la vasodilatazione periferica",
+        "Perché l'umidità blocca la conduzione del calore"
+      ],
+      "risposta_corretta": "Perché il sudore non evapora e non trasporta via calore",
+      "spiegazione": "La dispersione di calore per evaporazione richiede che il sudore vaporizzI sulla superficie cutanea. In ambienti con alta umidità, l'aria è già satura di vapore acqueo e non riesce ad accettare altro vapore: il sudore non evapora e rimane sulla pelle liquido, rendendo inefficace questo meccanismo di termoregolazione."
+    },
+    {
+      "id": "q12",
+      "macroargomenti": ["Cause fisiche (termiche, elettricità, pressione)"],
+      "tipo": "vero_falso",
+      "testo": "Nell'assideramento, a 28°C di temperatura corporea si verifica fibrillazione ventricolare con conseguente morte.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "Le fasi dell'assideramento seguono una progressione precisa: a 32°C sopravviene il sonno e la narcosi da freddo; a 28°C si ha la paralisi vasomotoria; a 27°C si verifica la fibrillazione ventricolare che porta alla morte. Questo meccanismo di progressivo abbassamento della temperatura corporea si chiama ipotermia."
+    },
+    {
+      "id": "q13",
+      "macroargomenti": ["Cause fisiche (termiche, elettricità, pressione)"],
+      "tipo": "multipla",
+      "testo": "La malattia da decompressione è causata da:",
+      "opzioni": [
+        "Formazione di bolle di ossigeno nel sangue per decompressione rapida",
+        "Formazione di bolle di azoto nel sangue e nei tessuti per decompressione rapida",
+        "Aumento della pressione parziale di CO2 durante la risalita",
+        "Embolia da azoto che si forma lentamente durante la discesa"
+      ],
+      "risposta_corretta": "Formazione di bolle di azoto nel sangue e nei tessuti per decompressione rapida",
+      "spiegazione": "Il 75% dell'aria è azoto: secondo la legge di Henry, la capacità di un gas di sciogliersi nel sangue aumenta con la pressione (in profondità) e diminuisce quando questa si riduce (in superficie). Una decompressione rapida provoca la formazione di bolle di azoto nel sangue e nei tessuti che possono causare embolia gassosa e, a livello cardiaco, la formazione di 'schiuma ematica' nel ventricolo destro con arresto del circolo."
+    },
+    {
+      "id": "q14",
+      "macroargomenti": ["Cause fisiche (termiche, elettricità, pressione)"],
+      "tipo": "multipla",
+      "testo": "Nei traumi da elettricità, perché una cute umida è più pericolosa di una cute secca?",
+      "opzioni": [
+        "Perché aumenta la resistenza del tessuto, generando più calore superficiale",
+        "Perché riduce la resistenza, permettendo all'energia di giungere più in profondità e alterare gli impulsi nervosi",
+        "Perché l'acqua blocca completamente il passaggio della corrente",
+        "Perché la cute umida assorbe più energia termica ma non conduce l'elettricità"
+      ],
+      "risposta_corretta": "Perché riduce la resistenza, permettendo all'energia di giungere più in profondità e alterare gli impulsi nervosi",
+      "spiegazione": "La cute umida ha resistenza minima: l'energia elettrica riesce a penetrare in profondità, raggiungendo il sistema nervoso e cardiaco. Ciò può alterare la trasmissione degli impulsi nervosi regolatori provocando arresto cardiaco. Con la cute secca la resistenza è elevata e il danno rimane principalmente superficiale (ustione cutanea)."
+    },
+    {
+      "id": "q15",
+      "macroargomenti": ["Cause fisiche (termiche, elettricità, pressione)"],
+      "tipo": "vero_falso",
+      "testo": "L'ipossia istotossica è causata da un ridotto flusso sanguigno per insufficienza cardiaca.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "L'ipossia circolatoria è quella causata da ridotto flusso sanguigno per insufficienza cardiaca o collasso. L'ipossia istotossica riguarda invece cellule danneggiate che non sono in grado di utilizzare l'ossigeno, pur essendone disponibile a sufficienza. Le altre forme sono: ipossica (bassa tensione di O2 nel sangue arterioso) e anemica (carenza di emoglobina)."
+    },
+    {
+      "id": "q16",
+      "macroargomenti": ["Cause meccaniche e chimiche"],
+      "tipo": "multipla",
+      "testo": "Quale tipo di ferita è caratterizzata da una profondità maggiore rispetto alla lunghezza?",
+      "opzioni": [
+        "Lesione da taglio",
+        "Lesione da punta",
+        "Ferita lacero-contusa",
+        "Lesione da fendente"
+      ],
+      "risposta_corretta": "Lesione da punta",
+      "spiegazione": "Le lesioni da punta (es. chiodo) sono caratterizzate da una profondità maggiore rispetto alla lunghezza. Al contrario, le lesioni da taglio (es. rasoio) hanno la lunghezza maggiore rispetto alla profondità. Le lesioni da fendente combinano recisione e penetrazione profonda, mentre le lacero-contuse uniscono strappo e contusione."
+    },
+    {
+      "id": "q17",
+      "macroargomenti": ["Cause meccaniche e chimiche"],
+      "tipo": "vero_falso",
+      "testo": "Il pneumotorace a valvola è il tipo più grave perché ad ogni atto respiratorio l'aria aumenta progressivamente nel cavo pleurico.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "Nel pneumotorace a valvola la lesione pleurica si apre durante l'inspirazione (permettendo all'aria di entrare nel cavo pleurico) ma si chiude durante l'espirazione (intrappolando l'aria). Ad ogni respiro la quantità di aria aumenta, comprimendo progressivamente il polmone e impedendogli la corretta espansione. Questo lo rende il tipo più pericoloso rispetto al pneumotorace chiuso e a quello aperto."
+    },
+    {
+      "id": "q18",
+      "macroargomenti": ["Cause meccaniche e chimiche"],
+      "tipo": "multipla",
+      "testo": "La frattura comminuta si distingue per:",
+      "opzioni": [
+        "La presenza di una sola linea di frattura che non attraversa l'osso completamente",
+        "La formazione di numerosi frammenti ossei da più linee di frattura",
+        "Lo spostamento dei monconi dall'asse originario per torsione",
+        "L'asse della frattura obliquo rispetto all'osso"
+      ],
+      "risposta_corretta": "La formazione di numerosi frammenti ossei da più linee di frattura",
+      "spiegazione": "La frattura comminuta si verifica quando il trauma produce un numero elevato di linee di frattura generando molti frammenti ossei. È molto pericolosa perché i frammenti possono entrare nel circolo ematico e causare emboli. La frattura con spostamento dell'asse è quella con dislocazione/torsione, mentre quella con asse obliquo è trasversale/obliqua."
+    },
+    {
+      "id": "q19",
+      "macroargomenti": ["Cause meccaniche e chimiche"],
+      "tipo": "vero_falso",
+      "testo": "La lussazione si differenzia dalla distorsione perché nella lussazione i capi articolari ritornano spontaneamente nella loro posizione anatomica corretta.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "È vero il contrario: nella distorsione i capi articolari tornano spontaneamente ai rapporti anatomici corretti (con eventuale rottura di legamenti). Nella lussazione invece si ha una dislocazione permanente dei capi articolari che non rientrano spontaneamente, richiedendo una riduzione manuale o chirurgica."
+    },
+    {
+      "id": "q20",
+      "macroargomenti": ["Cause meccaniche e chimiche"],
+      "tipo": "multipla",
+      "testo": "Quale delle seguenti è una difesa enzimatica acquisita dell'organismo contro le sostanze tossiche?",
+      "opzioni": [
+        "Il vomito e la diarrea",
+        "Il deposito nel tessuto adiposo",
+        "Il legame alle proteine plasmatiche",
+        "Le reazioni di biotrasformazione degli xenobiotici a livello epatico"
+      ],
+      "risposta_corretta": "Le reazioni di biotrasformazione degli xenobiotici a livello epatico",
+      "spiegazione": "Le difese enzimatiche sono il sistema di biotrasformazione degli xenobiotici a livello epatico, che comprende reazioni di Fase 1 (ossido-riduzione, catalizzate principalmente dal citocromo P450) e Fase 2 (coniugazione). Il vomito, la diarrea, il deposito adiposo e il legame alle proteine plasmatiche sono invece difese congenite."
+    },
+    {
+      "id": "q21",
+      "macroargomenti": ["Cause meccaniche e chimiche"],
+      "tipo": "multipla",
+      "testo": "L'effetto di inducibilità da substrato del citocromo P450 spiega il fenomeno di:",
+      "opzioni": [
+        "Allergia ai farmaci",
+        "Assuefazione, per cui si necessitano dosi maggiori per ottenere lo stesso effetto",
+        "Intossicazione acuta da sovradosaggio",
+        "Resistenza batterica agli antibiotici"
+      ],
+      "risposta_corretta": "Assuefazione, per cui si necessitano dosi maggiori per ottenere lo stesso effetto",
+      "spiegazione": "L'esposizione ripetuta a una sostanza aumenta i livelli dell'enzima (citocromo P450) che la metabolizza: gli epatociti producono più enzima che degrada più velocemente la sostanza. Questo fenomeno (inducibilità da substrato) è alla base dell'assuefazione: per ottenere lo stesso effetto terapeutico o tossico si devono aumentare progressivamente le dosi."
+    },
+    {
+      "id": "q22",
+      "macroargomenti": ["Cause meccaniche e chimiche"],
+      "tipo": "vero_falso",
+      "testo": "La sindrome fallinica causata dall'Amanita phalloides determina iperattività del sistema parasimpatico con lacrimazione, nausea e bradicardia.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "La sindrome fallinica (da Amanita phalloides) è caratterizzata da necrosi delle cellule epatiche, non da iperattività parasimpatica. La sindrome muscarinica (iperattività parasimpatica con lacrimazione, nausea, vomito, broncospasmi e bradicardia) è tipica dei funghi Inocibe e Clitocybe. La sindrome atropinica (ipoattività parasimpatica) è invece tipica dell'Amanita muscaria."
+    },
+    {
+      "id": "q23",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "multipla",
+      "testo": "Quale delle seguenti sequenze descrive correttamente le fasi della cancerogenesi?",
+      "opzioni": [
+        "Progressione → Promozione → Iniziazione",
+        "Iniziazione → Progressione → Promozione",
+        "Iniziazione → Promozione → Progressione",
+        "Promozione → Iniziazione → Progressione"
+      ],
+      "risposta_corretta": "Iniziazione → Promozione → Progressione",
+      "spiegazione": "La cancerogenesi è un processo multifasico: l'iniziazione è la prima fase (spesso reversibile) con mutazione genetica del DNA causata da agenti mutageni; la promozione è la fase (reversibile) di proliferazione delle cellule iniziate favorita da agenti promotori; la progressione è la fase finale in cui la massa tumorale acquisisce instabilità genetica diventando invasiva e capace di metastatizzare."
+    },
+    {
+      "id": "q24",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "vero_falso",
+      "testo": "I proto-oncogeni sono geni normali che stimolano la crescita cellulare: quando mutano diventano oncogeni e causano crescita cellulare incontrollata.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "I proto-oncogeni svolgono normalmente funzioni regolatorie fondamentali nella crescita cellulare. Quando subiscono mutazioni si trasformano in oncogeni che funzionano come un 'acceleratore bloccato', stimolando la proliferazione in modo eccessivo e incontrollato. Questo è uno dei meccanismi principali della trasformazione neoplastica."
+    },
+    {
+      "id": "q25",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "multipla",
+      "testo": "La proteina p53 è un oncosoppressore. Cosa succede quando è mutata nelle cellule tumorali?",
+      "opzioni": [
+        "Blocca la crescita tumorale attivando l'apoptosi in maniera eccessiva",
+        "Invece di proteggere il genoma, ne favorisce l'instabilità",
+        "Diventa un promotore della differenziazione cellulare",
+        "Si lega al DNA impedendo la replicazione"
+      ],
+      "risposta_corretta": "Invece di proteggere il genoma, ne favorisce l'instabilità",
+      "spiegazione": "In condizioni normali p53 individua le mutazioni nel genoma, attiva l'apparato riparatore e, se questo fallisce, innesca l'apoptosi. Quando p53 è mutato nelle cellule tumorali, perde questa funzione protettiva e può addirittura contribuire all'instabilità genomica, permettendo l'accumulo di ulteriori mutazioni. È molto meno efficace anche nei tumori sporadici."
+    },
+    {
+      "id": "q26",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "vero_falso",
+      "testo": "Le mutazioni di BRCA1 e BRCA2 aumentano principalmente il rischio di tumori al seno e all'ovaio e possono essere trasmesse con probabilità del 50% ad ogni gravidanza.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "BRCA1 e BRCA2 sono geni oncosoppressori coinvolti nella riparazione del DNA. Quando mutati non riescono a correggere gli errori genetici: il loro accumulo predispone significativamente a tumore della mammella, dell'ovaio, del pancreas, della prostata e dello stomaco. Essendo mutazioni genetiche ereditarie, la probabilità di trasmissione ai figli è del 50% per ogni gravidanza."
+    },
+    {
+      "id": "q27",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "multipla",
+      "testo": "L'effetto Warburg nelle cellule tumorali consiste in:",
+      "opzioni": [
+        "La produzione di energia esclusivamente attraverso la respirazione mitocondriale",
+        "L'utilizzo della glicolisi aerobica anche in presenza di ossigeno",
+        "La completa dipendenza dal metabolismo lipidico per la produzione di ATP",
+        "L'incapacità delle cellule tumorali di consumare glucosio"
+      ],
+      "risposta_corretta": "L'utilizzo della glicolisi aerobica anche in presenza di ossigeno",
+      "spiegazione": "L'effetto Warburg è la più nota atipia biochimica delle cellule tumorali: anche in presenza di ossigeno preferiscono produrre energia tramite glicolisi anziché respirazione mitocondriale. Questo produce poco ATP ma molto lattato (ambiente acido favorevole al tumore) e materiale da costruzione per la crescita. È alla base della PET, che usa glucosio radioattivo per rilevare le zone ad alto consumo di zucchero."
+    },
+    {
+      "id": "q28",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "multipla",
+      "testo": "Il sistema TNM per la stadiazione dei tumori considera:",
+      "opzioni": [
+        "Tipo istologico, Necrosi, Margini di resezione",
+        "Dimensione del tumore, coinvolgimento dei linfonodi, presenza di metastasi",
+        "Tipo di terapia, Neoplasia primitiva, Mortalità associata",
+        "Tempo di insorgenza, Natura della mutazione, Metaplasia"
+      ],
+      "risposta_corretta": "Dimensione del tumore, coinvolgimento dei linfonodi, presenza di metastasi",
+      "spiegazione": "Il sistema TNM valuta: T (Tumor) = dimensione del tumore primario (scala 1-4); N (Node) = coinvolgimento dei linfonodi vicini (da 0 a 3 in base alla gravità); M (Metastasi) = presenza di metastasi a distanza (0 = assenti, 1 = presenti). Questo sistema permette di classificare l'estensione della malattia e guidare le scelte terapeutiche."
+    },
+    {
+      "id": "q29",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "vero_falso",
+      "testo": "La displasia è una lesione tumorale vera e propria perché ha acquisito caratteristiche aberranti complete della cellula cancerosa.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "La displasia è una lesione preneoplastica che ha subito un parziale differenziamento: la cellula può diventare neoplastica ma non ne ha ancora le caratteristiche complete. Presenta variazioni di grandezza e forma e perdita dell'ordine architettonico. L'anaplasia è invece la lesione tumorale vera, con sdifferenziamento completo e acquisizione di caratteristiche aberranti. Maggiore è il grado di anaplasia, maggiore è la malignità."
+    },
+    {
+      "id": "q30",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "multipla",
+      "testo": "Le metastasi si formano in organi distanti seguendo principalmente due vie. Quale associazione è corretta?",
+      "opzioni": [
+        "Sarcomi → via linfatica; Carcinomi → via ematica",
+        "Carcinomi → via linfatica; Sarcomi → via ematica",
+        "Tutti i tumori si diffondono esclusivamente per via linfatica",
+        "Le metastasi raggiungono solo i linfonodi regionali e non gli organi distanti"
+      ],
+      "risposta_corretta": "Carcinomi → via linfatica; Sarcomi → via ematica",
+      "spiegazione": "I carcinomi (tumori di origine epiteliale) tendono a metastatizzare prevalentemente per via linfatica, producendo spesso come primo segno linfonodi ingrossati. I sarcomi (tumori di origine connettivale) e i tumori più aggressivi prediligono la via ematica, raggiungendo organi distanti come fegato (via portale) e polmoni (via cavale)."
+    },
+    {
+      "id": "q31",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "vero_falso",
+      "testo": "La cachessia tumorale è causata dall'utilizzo da parte delle cellule tumorali delle riserve proteiche dell'organismo quando vengono a mancare gli aminoacidi disponibili.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "Il tumore determina un bilancio azotato negativo: quando non ha più aminoacidi disponibili, va a distruggere le riserve muscolari dell'organismo. La conseguenza è la cachessia del paziente, caratterizzata da grave riduzione della massa muscolare, scarsa alimentazione e dimagrimento progressivo. Le cellule tumorali 'rubano' le risorse proteiche per la propria sopravvivenza e proliferazione."
+    },
+    {
+      "id": "q32",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "multipla",
+      "testo": "Quali sono i cinque segni classici dell'infiammazione?",
+      "opzioni": [
+        "Febbre, leucocitosi, aumento VES, proteina C reattiva, dolore",
+        "Rossore, calore, gonfiore, dolore, perdita di funzione",
+        "Essudato, edema, necrosi, iperemia, fibrosi",
+        "Vasodilatazione, marginazione, diapedesi, chemiotassi, fagocitosi"
+      ],
+      "risposta_corretta": "Rossore, calore, gonfiore, dolore, perdita di funzione",
+      "spiegazione": "I cinque segni classici dell'infiammazione (descritti da Cornelio Celso e Galeno) sono: rubor (rossore), calor (calore), tumor (gonfiore), dolor (dolore) e functio laesa (perdita di funzione). Questi segni derivano dalle alterazioni vascolari (vasodilatazione e aumento permeabilità) e dall'azione dei mediatori chimici dell'infiammazione."
+    },
+    {
+      "id": "q33",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "vero_falso",
+      "testo": "Nella fase vascolare dell'infiammazione acuta, la vasocostrizione precede la vasodilatazione e dura pochi secondi o minuti.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "La vasocostrizione è la prima risposta immediata al danno, mediata da stimoli nervosi (catecolammine: adrenalina e noradrenalina) e sostanze locali (endoteline). Dura brevissimamente perché le monoamminossidasi (MAO) distruggono rapidamente le catecolammine. Viene poi seguita dalla vasodilatazione, fase più importante e più lunga dell'infiammazione acuta."
+    },
+    {
+      "id": "q34",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "multipla",
+      "testo": "Nella fase di adesione dell'infiammazione acuta, quale molecola media il contatto debole e il 'rolling' dei leucociti lungo l'endotelio?",
+      "opzioni": [
+        "Integrine",
+        "Selectine",
+        "PECAM-1 (CD31)",
+        "Interleuchine"
+      ],
+      "risposta_corretta": "Selectine",
+      "spiegazione": "Le selectine mediano legami deboli e temporanei tra leucociti ed endotelio, causando il 'rolling' (rotolamento) del leucocita lungo la parete del vaso. Successivamente, le citochine e chemochine prodotte durante il rolling attivano le integrine sui leucociti, che cambiano conformazione diventando molto adesive e permettendo l'adesione stabile (arresto del leucocita). PECAM-1 è invece coinvolto nella diapedesi."
+    },
+    {
+      "id": "q35",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "vero_falso",
+      "testo": "I mastociti (mast cell) sono la principale fonte di istamina nell'infiammazione e rilasciano anche serotonina, responsabile della sensazione dolorosa.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "I mastociti sono cellule 'sentinelle' presenti nei tessuti (sotto la pelle, nelle mucose, vicino ai vasi) che contengono granuli con istamina, eparina e altri mediatori. Quando si attivano per degranulazione, rilasciano istamina (che causa vasodilatazione e aumento della permeabilità) e serotonina/5-idrossitriptamina (responsabile della sensazione dolorosa). L'istamina può essere rilasciata anche dai granulociti basofili."
+    },
+    {
+      "id": "q36",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "multipla",
+      "testo": "La triade di Lewis descrive la risposta della pelle a uno stimolo (es. sfregamento). Qual è il corretto ordine dei tre segni?",
+      "opzioni": [
+        "Pomfo → Linea rossa → Alone rosso",
+        "Alone rosso → Pomfo → Linea rossa",
+        "Linea rossa → Alone rosso → Pomfo",
+        "Linea rossa → Pomfo → Alone rosso"
+      ],
+      "risposta_corretta": "Linea rossa → Alone rosso → Pomfo",
+      "spiegazione": "La triade di Lewis si manifesta in sequenza: prima compare la linea rossa (vasodilatazione capillare locale), poi l'alone rosso o 'flare' (vasodilatazione riflessa mediata da nervi che si espande attorno), infine il pomfo o 'wheal' (rigonfiamento cutaneo dovuto all'aumento della permeabilità vascolare con formazione di edema). Questi tre segni riflettono in piccolo i fenomeni dell'infiammazione acuta."
+    },
+    {
+      "id": "q37",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "multipla",
+      "testo": "La cascata del complemento può essere attivata da tre vie diverse. Quale via viene attivata direttamente dai microrganismi senza necessità di anticorpi?",
+      "opzioni": [
+        "Via classica",
+        "Via lectinica",
+        "Via alternativa",
+        "Via intrinseca"
+      ],
+      "risposta_corretta": "Via alternativa",
+      "spiegazione": "Le tre vie di attivazione del complemento sono: via classica (attivata da anticorpi legati al microbo), via alternativa (attivata direttamente dai microrganismi, senza necessità di anticorpi, facendo parte dell'immunità innata), via lectinica (attivata da proteine che riconoscono zuccheri batterici). Tutte e tre convergono in una via comune che porta alla lisi del microrganismo e all'amplificazione dell'infiammazione."
+    },
+    {
+      "id": "q38",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "vero_falso",
+      "testo": "L'essudato si differenzia dal trasudato per il suo contenuto ricco di proteine e cellule, tipico dell'infiammazione.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "La teoria di Starling spiega questa differenza: in condizioni normali c'è equilibrio tra pressione idrostatica e oncotica. Nell'infiammazione l'aumento della permeabilità vascolare permette alle proteine di uscire dai vasi, riducendo la pressione oncotica intravasale e aumentando quella nei tessuti: il liquido non rientra e forma l'essudato (ricco di proteine, leucociti e mediatori). Il trasudato è invece povero di proteine e non è di origine infiammatoria."
+    },
+    {
+      "id": "q39",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "multipla",
+      "testo": "Nella fagocitosi, l'opsonizzazione indica:",
+      "opzioni": [
+        "Il processo con cui il fagocita distrugge il microrganismo nei lisosomi",
+        "La formazione del fagolisosoma dopo la fusione con i lisosomi",
+        "La 'marcatura' del microrganismo da parte di anticorpi e complemento per facilitarne la fagocitosi",
+        "L'espulsione dei residui dopo la digestione intracellulare"
+      ],
+      "risposta_corretta": "La 'marcatura' del microrganismo da parte di anticorpi e complemento per facilitarne la fagocitosi",
+      "spiegazione": "L'opsonizzazione è il processo per cui anticorpi e proteine del complemento (in particolare C3b) si legano alla superficie del microrganismo 'marcandolo'. Questo rende il microrganismo molto più riconoscibile e appetibile per i fagociti, aumentando notevolmente l'efficienza della fagocitosi. Senza opsonizzazione, la fagocitosi è possibile ma meno efficace."
+    },
+    {
+      "id": "q40",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "multipla",
+      "testo": "La polmonite pneumococcica evolve attraverso quattro stadi. In quale stadio il polmone appare grigio e compatto per degradazione dei globuli rossi?",
+      "opzioni": [
+        "Congestione",
+        "Epatizzazione rossa",
+        "Epatizzazione grigia",
+        "Risoluzione"
+      ],
+      "risposta_corretta": "Epatizzazione grigia",
+      "spiegazione": "I quattro stadi sono: 1) Congestione (prime 24h: polmone rosso e pesante con edema); 2) Epatizzazione rossa (2-3 giorni: polmone rosso e duro per neutrofili, globuli rossi e fibrina); 3) Epatizzazione grigia (4-6 giorni: i globuli rossi si degradano, rimangono neutrofili e fibrina, il polmone diventa grigio e ancora compatto); 4) Risoluzione (fase finale: l'essudato viene degradato e il tessuto torna normale)."
+    },
+    {
+      "id": "q41",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "vero_falso",
+      "testo": "L'ascesso si differenzia dall'empiema perché l'ascesso è una raccolta di pus in una cavità già preesistente nel corpo.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "È vero il contrario: l'empiema è un accumulo di pus in una cavità già esistente (pleurica, cistifellea, seni paranasali, articolazioni), mentre l'ascesso è una raccolta di pus in una cavità nuova creata dall'infezione stessa e delimitata da una capsula. Il flemone è invece un'infiammazione purulenta diffusa non delimitata che si espande nei tessuti senza confini."
+    },
+    {
+      "id": "q42",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "multipla",
+      "testo": "L'interleuchina IL-1 esercita i suoi effetti su diversi organi bersaglio. Quale tra i seguenti effetti è corretto?",
+      "opzioni": [
+        "Inibisce la produzione di leucociti a livello midollare",
+        "Stimola l'ipotalamo per alzare la febbre e aumenta l'aderenza dei leucociti all'endotelio",
+        "Blocca la produzione di proteina C reattiva a livello epatico",
+        "Riduce la permeabilità vascolare per limitare il danno tissutale"
+      ],
+      "risposta_corretta": "Stimola l'ipotalamo per alzare la febbre e aumenta l'aderenza dei leucociti all'endotelio",
+      "spiegazione": "IL-1 è un pirogeno d'eccellenza e agisce su più livelli: stimola l'ipotalamo per produrre febbre (risposta difensiva), a livello epatico stimola la produzione di proteine che producono peptidi vasoattivi, e a livello vascolare aumenta l'aderenza dei leucociti all'endotelio facilitando la loro migrazione nel tessuto infiammato. IL-6 invece stimola la produzione midollare di leucociti di riserva."
+    },
+    {
+      "id": "q43",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "vero_falso",
+      "testo": "La stasi vascolare durante l'infiammazione acuta favorisce la marginazione e l'adesione dei leucociti perché il rallentamento del flusso sanguigno li spinge verso la periferia del vaso.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "La stasi si forma perché i liquidi escono dai vasi, il sangue diventa più viscoso e il flusso rallenta. Questo rallentamento ha un effetto cruciale: i globuli rossi, più pesanti, tendono a restare al centro, mentre i leucociti vengono fisicamente spinti verso la periferia (marginazione). La stasi è quindi un prerequisito fondamentale per la fase cellulare dell'infiammazione."
+    },
+    {
+      "id": "q44",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "multipla",
+      "testo": "Quale citochina è principalmente responsabile dell'attivazione dei macrofagi M1 nell'infiammazione cronica?",
+      "opzioni": [
+        "IL-4 e IL-13",
+        "IL-10 e TGF-β",
+        "Interferone-γ (IFN-γ)",
+        "IL-2"
+      ],
+      "risposta_corretta": "Interferone-γ (IFN-γ)",
+      "spiegazione": "I macrofagi M1 (classicamente attivati) sono stimolati da interferone-γ e prodotti microbici (es. LPS). Producono citochine pro-infiammatorie (IL-1, IL-6, TNF-α), specie reattive dell'ossigeno (ROS) e ossido nitrico (NO), con elevata capacità microbicida e tumoricida. I macrofagi M2 sono invece attivati da IL-4 e IL-13, producono IL-10 e TGF-β e promuovono la riparazione tissutale."
+    },
+    {
+      "id": "q45",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "vero_falso",
+      "testo": "L'infiammazione cronica (istoflogosi) si differenzia da quella acuta perché ha prevalenza di fenomeni cellulari e può comportare contemporaneamente danno tissutale e tentativi di riparazione.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "L'infiammazione acuta (angioflogosi) è rapida, transitoria e ha prevalenza di fenomeni vascolari. L'infiammazione cronica (istoflogosi) può durare mesi o anni, ha prevalenza di fenomeni cellulari (macrofagi, linfociti, plasmacellule) e si caratterizza per la coesistenza di danno tissutale progressivo e tentativi di riparazione con fibrosi e angiogenesi."
+    },
+    {
+      "id": "q46",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "multipla",
+      "testo": "Quale delle seguenti malattie è un esempio di infiammazione granulomatosa da corpo estraneo?",
+      "opzioni": [
+        "Tubercolosi",
+        "Silicosi",
+        "Sarcoidosi",
+        "Morbo di Crohn"
+      ],
+      "risposta_corretta": "Silicosi",
+      "spiegazione": "La silicosi (da polvere di silicio) e l'asbestosi (da amianto) sono esempi di infiammazione granulomatosa da corpo estraneo. La tubercolosi è di origine batterica (Mycobacterium tuberculosis). La sarcoidosi e il morbo di Crohn sono invece esempi di infiammazione granulomatosa di origine ignota (infiammazione di causa sconosciuta o autoimmune)."
+    },
+    {
+      "id": "q47",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "multipla",
+      "testo": "Il granuloma caseoso, tipico della tubercolosi, è caratterizzato da:",
+      "opzioni": [
+        "Assenza di necrosi con abbondante fibrosi periferica",
+        "Una necrosi centrale con aspetto simile al formaggio",
+        "Presenza di eosinofili e plasmacellule come cellule predominanti",
+        "Diffusione senza confini nei tessuti circostanti"
+      ],
+      "risposta_corretta": "Una necrosi centrale con aspetto simile al formaggio",
+      "spiegazione": "Il granuloma tubercolare (caseoso) è caratterizzato da: agente infettivo al centro, attorno macrofagi attivati (cellule epitelioidi) e cellule giganti di Langhans, più esternamente linfociti, con periferia fibrosa. La necrosi centrale 'caseosa' (con aspetto biancastro-giallastro simile al formaggio) è il segno caratteristico. Il granuloma non caseoso (es. sarcoidosi) è invece privo di questa necrosi centrale."
+    },
+    {
+      "id": "q48",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "vero_falso",
+      "testo": "Nella cavitazione tubercolare, il materiale caseoso viene eliminato attraverso i bronchi con la tosse e contiene micobatteri, aumentando il rischio di contagio.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "Quando il granuloma tubercolare evolve verso la progressione, il centro necrotico si liquefa (necrosi caseosa) e forma una cavità nel polmone. Il materiale caseoso (biancastro-giallastro, composto da cellule morte, macrofagi degenerati, fibrina e micobatteri) viene drenato nei bronchi ed espulso con la tosse. Poiché contiene molti batteri vitali, aumenta significativamente il rischio di trasmissione della malattia."
+    },
+    {
+      "id": "q49",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "multipla",
+      "testo": "Perché i lavoratori esposti all'amianto hanno maggiore probabilità di sviluppare tumori?",
+      "opzioni": [
+        "Perché l'amianto è radioattivo e causa direttamente mutazioni",
+        "Perché l'infiammazione cronica crea uno stimolo proliferativo e le fibre rilasciano ioni ferro che generano radicali liberi danneggiando il DNA",
+        "Perché l'amianto inibisce il sistema immunitario impedendo l'eliminazione delle cellule anomale",
+        "Perché l'amianto si deposita nel tessuto adiposo e libera sostanze cancerogene nel tempo"
+      ],
+      "risposta_corretta": "Perché l'infiammazione cronica crea uno stimolo proliferativo e le fibre rilasciano ioni ferro che generano radicali liberi danneggiando il DNA",
+      "spiegazione": "L'amianto causa tumore attraverso due meccanismi: 1) l'infiammazione cronica induce proliferazione cellulare (i macrofagi non riescono ad eliminarlo), creando l'ambiente ideale per la trasformazione neoplastica; 2) le fibre di amianto rilasciano ioni ferro che, in presenza di ossigeno, generano radicali liberi capaci di danneggiare il DNA delle cellule, aumentando la probabilità di mutazioni cancerogene."
+    },
+    {
+      "id": "q50",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "multipla",
+      "testo": "Quali sono le quattro fasi della guarigione di una ferita nell'ordine corretto?",
+      "opzioni": [
+        "Infiammazione → Emostasi → Proliferazione → Rimodellamento",
+        "Emostasi → Infiammazione → Proliferazione → Rimodellamento",
+        "Proliferazione → Emostasi → Infiammazione → Rimodellamento",
+        "Emostasi → Proliferazione → Infiammazione → Rimodellamento"
+      ],
+      "risposta_corretta": "Emostasi → Infiammazione → Proliferazione → Rimodellamento",
+      "spiegazione": "La guarigione di una ferita segue fasi precise: 1) Emostasi (vasocostrizione e formazione del coagulo per bloccare il sanguinamento); 2) Infiammazione (neutrofili e macrofagi eliminano batteri e detriti); 3) Proliferazione (tessuto di granulazione, angiogenesi, produzione di collagene da fibroblasti, riepitelizzazione); 4) Rimodellamento/maturazione (organizzazione del collagene, rafforzamento della cicatrice, riduzione della vascolarizzazione)."
+    },
+    {
+      "id": "q51",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "vero_falso",
+      "testo": "I corticosteroidi accelerano la guarigione delle ferite riducendo l'infiammazione eccessiva.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "I corticosteroidi (cortisonici) riducono sì l'infiammazione, ma questo effetto rallenta la guarigione perché l'infiammazione è una fase necessaria per la pulizia della ferita e il reclutamento delle cellule riparative. Anche la chemioterapia riduce la proliferazione cellulare rallentando la riparazione. Tra i fattori sistemici negativi per la guarigione ci sono anche diabete, malnutrizione, ipossia, immunodeficienze e stress cronico."
+    },
+    {
+      "id": "q52",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "multipla",
+      "testo": "Qual è la differenza tra una cicatrice cheloide e una cicatrice ipertrofica?",
+      "opzioni": [
+        "Il cheloide è più piccolo e resta entro i bordi della ferita; l'ipertrofica cresce oltre",
+        "Il cheloide cresce oltre i bordi della ferita; l'ipertrofica è spessa ma resta entro i margini",
+        "Sono la stessa cosa con nomi diversi",
+        "L'ipertrofica è tipica dei soggetti anziani; il cheloide dei soggetti giovani"
+      ],
+      "risposta_corretta": "Il cheloide cresce oltre i bordi della ferita; l'ipertrofica è spessa ma resta entro i margini",
+      "spiegazione": "Entrambe sono forme di cicatrizzazione eccessiva, ma si differenziano per l'estensione: il cheloide è una cicatrice esagerata che supera i confini originali della ferita e può continuare a crescere; la cicatrice ipertrofica è invece spessa e in rilievo ma rimane entro i bordi della ferita. La deiscenza è invece la riapertura della ferita già suturata."
+    },
+    {
+      "id": "q53",
+      "macroargomenti": ["Radiazioni (eccitanti e ionizzanti)"],
+      "tipo": "multipla",
+      "testo": "Quale danno da radiazioni ionizzanti al DNA porta alla 'morte mitotica' della cellula?",
+      "opzioni": [
+        "Il danno gravissimo con blocco della trascrizione e necrosi immediata",
+        "Il danno grave non riparabile ma senza blocco della trascrizione: la cellula muore in fase di replicazione",
+        "Il danno lieve riparabile che porta a recupero morfo-funzionale completo",
+        "Il danno intermedio che trasforma sempre la cellula in cellula neoplastica"
+      ],
+      "risposta_corretta": "Il danno grave non riparabile ma senza blocco della trascrizione: la cellula muore in fase di replicazione",
+      "spiegazione": "Le radiazioni ionizzanti provocano tre tipi di danno al DNA: 1) danno gravissimo con blocco della trascrizione → necrosi immediata; 2) danno grave non riparabile senza blocco della trascrizione → la cellula sopravvive ma muore quando tenta di replicarsi ('morte mitotica'); 3) danno con possibilità di riparo → se il riparo è incompleto si può avere apoptosi o trasformazione neoplastica, se completo si ha recupero morfo-funzionale."
+    },
+    {
+      "id": "q54",
+      "macroargomenti": ["Cause fisiche (termiche, elettricità, pressione)"],
+      "tipo": "vero_falso",
+      "testo": "Nella bassa pressione atmosferica (alta quota), la riduzione della pressione parziale di ossigeno può determinare ipossia ipossica.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "L'ipossia ipossica è caratterizzata da bassa tensione di ossigeno nel sangue arterioso ed è tipica delle situazioni di bassa pressione atmosferica (alta quota) dove la pressione parziale di O2 diminuisce. L'organismo risponde inizialmente con aumento della ventilazione e della frequenza cardiaca, ma nei casi gravi si sviluppano patologie da alta quota e danno cellulare per insufficiente ossigenazione dei tessuti."
+    },
+    {
+      "id": "q55",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "multipla",
+      "testo": "I marcatori tumorali CA-125 e PSA sono utili per il monitoraggio rispettivamente di:",
+      "opzioni": [
+        "Tumore del colon e tumore del pancreas",
+        "Tumore dell'ovaio e tumore della prostata",
+        "Tumore della mammella e tumore del polmone",
+        "Tumore del fegato e tumore del rene"
+      ],
+      "risposta_corretta": "Tumore dell'ovaio e tumore della prostata",
+      "spiegazione": "CA-125 è il marcatore utilizzato per monitorare il tumore ovarico (attenzione: può aumentare anche durante il ciclo mestruale, dando falsi positivi). PSA (antigene prostatico specifico) è il marcatore per il tumore alla prostata (può aumentare dopo rapporti sessuali o visita urologica). L'alfa-fetoproteina e il CEA (aumentato anche nei fumatori) sono altri marcatori tumorali importanti."
+  },
+    {
+      "id": "q56",
+      "macroargomenti": ["Infiammazione acuta"],
+      "tipo": "vero_falso",
+      "testo": "La diapedesi avviene principalmente nelle arterie, dove il flusso sanguigno è più lento e l'endotelio è più permeabile.",
+      "risposta_corretta": "Falso",
+      "spiegazione": "La diapedesi avviene principalmente nelle venule post-capillari, non nelle arterie. Questo perché nelle venule post-capillari il flusso è più lento, la pressione è minore e l'endotelio è fisiologicamente più permeabile, facilitando il passaggio dei leucociti tra le cellule endoteliali. La molecola PECAM-1 (CD31) facilita questo processo di attraversamento della parete vascolare."
+    },
+    {
+      "id": "q57",
+      "macroargomenti": ["Cancerogenesi e tumori"],
+      "tipo": "multipla",
+      "testo": "Quale delle seguenti risposte adattive cellulari rappresenta un cambiamento del differenziamento cellulare che può evolvere in lesione neoplastica?",
+      "opzioni": [
+        "Ipertrofia",
+        "Iperplasia",
+        "Metaplasia",
+        "Atrofia"
+      ],
+      "risposta_corretta": "Metaplasia",
+      "spiegazione": "La metaplasia è un cambiamento del differenziamento cellulare (alterazione della morfologia) che può evolvere verso una lesione neoplastica. L'ipertrofia è l'aumento del volume cellulare, l'iperplasia è l'aumento del numero di cellule (entrambi risposte all'aumento dell'attività), mentre l'atrofia è una riduzione dell'attività generale. La metaplasia è la risposta adattiva più pericolosa in senso oncologico."
+    },
+    {
+      "id": "q58",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "vero_falso",
+      "testo": "Nella guarigione per seconda intenzione si forma più tessuto di granulazione e la cicatrice risultante è più grande rispetto alla guarigione per prima intenzione.",
+      "risposta_corretta": "Vero",
+      "spiegazione": "La guarigione per prima intenzione riguarda ferite pulite e chiuse (es. suturate): produce cicatrice minima. La guarigione per seconda intenzione riguarda ferite ampie o aperte che non possono essere suturate: richiede molto più tessuto di granulazione per colmare il difetto e produce una cicatrice più grande ed evidente. La terza intenzione (ritardata) è usata per ferite contaminate che vengono chiuse tardivamente."
+    },
+    {
+      "id": "q59",
+      "macroargomenti": ["Infiammazione cronica e guarigione"],
+      "tipo": "multipla",
+      "testo": "L'infiammazione cronica non specifica (interstiziale) si differenzia da quella granulomatosa perché:",
+      "opzioni": [
+        "La forma non specifica presenta granulomi organizzati, quella granulomatosa no",
+        "La forma non specifica è una risposta diffusa senza struttura organizzata; quella granulomatosa forma aggregati cellulari ordinati (granulomi)",
+        "La forma granulomatosa non causa mai fibrosi, quella non specifica sempre",
+        "Sono la stessa cosa con nomi diversi"
+      ],
+      "risposta_corretta": "La forma non specifica è una risposta diffusa senza struttura organizzata; quella granulomatosa forma aggregati cellulari ordinati (granulomi)",
+      "spiegazione": "L'infiammazione cronica non specifica (interstiziale) è la più comune: ha un infiltrato diffuso di macrofagi, linfociti e plasmacellule con danno tissutale e fibrosi (es. epatite cronica, bronchite cronica). Quella granulomatosa è specializzata e forma granulomi, aggregati organizzati di macrofagi attivati (cellule epitelioidi), cellule giganti multinucleate e linfociti, tipicamente attorno a agenti che resistono alla fagocitosi."
+    },
+    {
+      "id": "q60",
+      "macroargomenti": ["Cause meccaniche e chimiche"],
+      "tipo": "multipla",
+      "testo": "La commozione cerebrale si distingue dalla contusione cerebrale perché:",
+      "opzioni": [
+        "La commozione causa lesioni anatomiche evidenti, la contusione no",
+        "La commozione provoca perdita di coscienza permanente, la contusione è temporanea",
+        "La commozione non causa apparenti lesioni anatomiche ma può dare perdita di coscienza temporanea; la contusione causa lesioni anatomiche circoscritte",
+        "Sono la stessa cosa con diversa intensità"
+      ],
+      "risposta_corretta": "La commozione non causa apparenti lesioni anatomiche ma può dare perdita di coscienza temporanea; la contusione causa lesioni anatomiche circoscritte",
+      "spiegazione": "La commozione cerebrale è uno scuotimento dell'encefalo senza apparenti lesioni anatomiche, ma con perdita di coscienza temporanea, stato soporoso, perdita della memoria e alterazioni vegetative. La contusione è invece una lesione anatomica limitata ad una zona dell'organo (es. area emorragica nel tessuto cerebrale). Le lesioni con danno anatomico più grave sono la frattura (incompleta) e lo spappolamento (completo)."
+    }
+  ]
+}

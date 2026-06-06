@@ -14,7 +14,8 @@ List only meaningful top-level directories and files.
 | `.github/instructions/` | Repository-specific coding/testing/accessibility/performance guidance | `docs/codebase/.codebase-scan.txt` |
 | `.vscode/` | Local debug and task automation definitions | `.vscode/launch.json`, `.vscode/tasks.json` |
 | `.codex/skills/` | Local Codex skill definitions; not part of the runtime product | `docs/codebase/.codebase-scan.txt` |
-| `package.json` | Manifest for scripts, dependencies, Electron builder config, and module mode | `package.json` |
+| `package.json` | Manifest for scripts, dependencies, Tauri CLI wiring, and module mode | `package.json` |
+| `src-tauri/` | Tauri desktop wrapper, Rust entrypoint, icons, and Windows bundling config | `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` |
 | `capacitor.config.ts` | Capacitor app identity and Android web asset config | `capacitor.config.ts` |
 | `vite.config.ts` | Build and test configuration | `vite.config.ts` |
 | `AGENTS.md` | Project constraints and workflow rules | `AGENTS.md` |
@@ -22,8 +23,8 @@ List only meaningful top-level directories and files.
 ### 2) Entry Points
 
 - Main runtime entry: `src/main.tsx`
-- Secondary entry points (worker/cli/jobs): route shell in `src/App.tsx`; Android wrapper configured by `capacitor.config.ts`; intended Electron entry `electron/main.mjs` is referenced by `package.json` but not present in the current tree.
-- How entry is selected (script/config): `npm run dev`, `npm run build`, and `npm run preview` use Vite from `package.json`; Android loads the built `dist/` directory via Capacitor `webDir`; Electron packaging is selected via `package.json` `main` and `build` fields.
+- Secondary entry points (worker/cli/jobs): route shell in `src/App.tsx`; Android wrapper configured by `capacitor.config.ts`; Windows desktop wrapper configured by `src-tauri/src/main.rs`.
+- How entry is selected (script/config): `npm run dev`, `npm run build`, and `npm run preview` use Vite from `package.json`; Android loads the built `dist/` directory via Capacitor `webDir`; Tauri loads the same built assets via `src-tauri/tauri.conf.json`.
 
 ### 3) Module Boundaries
 

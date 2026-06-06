@@ -1,8 +1,8 @@
 # Personal Learning Assistant
 
-Local study app for university exams, built with React, TypeScript, Vite, and Capacitor.
+Local study app for university exams, built with React, TypeScript, Vite, Capacitor, and Tauri.
 
-It runs as a web app on desktop and as an Android APK, with all study data stored locally on the device.
+It runs as a web app on desktop, as an Android APK via Capacitor, and as a Windows installer via Tauri, with all study data stored locally on the device.
 
 ## What It Does
 
@@ -32,7 +32,8 @@ npm run preview     # Preview the production build locally
 npm run test -- --run  # Run the test suite once
 npm run cap:sync    # Build and sync the web app into Android
 npm run cap:android # Sync and open the Android project in Android Studio
-npm run build:win   # Build a portable Windows EXE via Electron
+npm run tauri:dev   # Run the desktop app through the Tauri dev shell
+npm run build:win   # Build the Windows NSIS installer via Tauri
 ```
 
 ## Project Structure
@@ -40,7 +41,7 @@ npm run build:win   # Build a portable Windows EXE via Electron
 - `src/` - app source: pages, components, hooks, services, store, types, and utilities
 - `docs/` - product and codebase documentation
 - `android/` - Capacitor-generated Android project
-- `electron/` - Electron entry point for Windows packaging
+- `src-tauri/` - Tauri desktop wrapper and Windows bundling config
 - `.github/instructions/` - repository-specific engineering guidance
 - `.vscode/` - reusable VS Code tasks and debug configs
 
