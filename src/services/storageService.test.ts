@@ -109,6 +109,17 @@ function rawRequestResult<T>(request: IDBRequest<T>): Promise<T> {
   })
 }
 
+async function markSyncMetadataCleanForTest(): Promise<void> {
+  const metadata = await getSyncMetadata()
+
+  await withRawDb(['syncMetadata'], 'readwrite', async (_db, tx) => {
+    tx.objectStore('syncMetadata').put({
+      ...metadata,
+      pendingLocalChanges: false,
+    })
+  })
+}
+
 describe('storageService', () => {
   beforeEach(async () => {
     await resetDb()
@@ -412,6 +423,27 @@ describe('storageService', () => {
     ])
   })
 
+  it('marks quiz session delete helpers dirty and clears stale sync metadata', async () => {
+    const session = makeQuizSession({ id: 'quiz-delete', examId: exam.id })
+
+    await saveQuizSession(session)
+    await markSyncMetadataCleanForTest()
+
+    await deleteQuizSessionsForExam(exam.id)
+
+    const { state } = await exportLocalSyncState()
+    const metadata = await getSyncMetadata()
+    const staleRecordMetadata = await withRawDb(
+      ['syncRecordMetadata'],
+      'readonly',
+      async (_db, tx) =>
+        rawRequestResult(tx.objectStore('syncRecordMetadata').get(`quizSessions__${session.id}`)),
+    )
+    expect(metadata.pendingLocalChanges).toBe(true)
+    expect(state.data.quizSessions).toEqual([])
+    expect(staleRecordMetadata).toBeUndefined()
+  })
+
   it('marks question stat writes as dirty sync records and preserves local device counters', async () => {
     const original = questionStat({ timesShown: 5, timesCorrect: 3 })
     const updated = questionStat({ timesShown: 7, timesCorrect: 4 })
@@ -482,6 +514,50 @@ describe('storageService', () => {
     ])
   })
 
+  it('marks question stat delete helpers dirty and clears stale counters', async () => {
+    const stat = questionStat({ timesShown: 9, timesCorrect: 7 })
+
+    await saveQuestionStat(stat)
+    await markSyncMetadataCleanForTest()
+
+    await deleteQuestionStatsForExam(exam.id)
+
+    const metadataAfterDelete = await getSyncMetadata()
+    const rawAfterDelete = await withRawDb(
+      ['syncRecordMetadata', 'syncQuestionCounters'],
+      'readonly',
+      async (_db, tx) => {
+        const staleRecordMetadata = await rawRequestResult(
+          tx.objectStore('syncRecordMetadata').get(`questionStats__${stat.id}`),
+        )
+        const staleCounters = await rawRequestResult(tx.objectStore('syncQuestionCounters').getAll())
+
+        return { staleRecordMetadata, staleCounters }
+      },
+    )
+    expect(metadataAfterDelete.pendingLocalChanges).toBe(true)
+    expect(rawAfterDelete.staleRecordMetadata).toBeUndefined()
+    expect(rawAfterDelete.staleCounters).toEqual([])
+
+    await saveQuestionStat(questionStat({ timesShown: 1, timesCorrect: 1 }))
+
+    const { state } = await exportLocalSyncState()
+    const metadataAfterResave = await getSyncMetadata()
+    expect(state.data.questionStats).toEqual([
+      {
+        id: stat.id,
+        examId: stat.examId,
+        questionId: stat.questionId,
+        deviceCounters: {
+          [metadataAfterResave.deviceId]: {
+            timesShown: 1,
+            timesCorrect: 1,
+          },
+        },
+      },
+    ])
+  })
+
   it('marks flashcard stat writes as dirty sync records', async () => {
     const stat = flashcardStat({ id: 'exam-1__f-dirty' })
 
@@ -496,6 +572,27 @@ describe('storageService', () => {
         updatedByDeviceId: metadata.deviceId,
       },
     ])
+  })
+
+  it('marks flashcard stat delete helpers dirty and clears stale sync metadata', async () => {
+    const stat = flashcardStat({ id: 'exam-1__f-delete' })
+
+    await saveFlashcardStat(stat)
+    await markSyncMetadataCleanForTest()
+
+    await deleteFlashcardStatsForExam(exam.id)
+
+    const { state } = await exportLocalSyncState()
+    const metadata = await getSyncMetadata()
+    const staleRecordMetadata = await withRawDb(
+      ['syncRecordMetadata'],
+      'readonly',
+      async (_db, tx) =>
+        rawRequestResult(tx.objectStore('syncRecordMetadata').get(`flashcardStats__${stat.id}`)),
+    )
+    expect(metadata.pendingLocalChanges).toBe(true)
+    expect(state.data.flashcardStats).toEqual([])
+    expect(staleRecordMetadata).toBeUndefined()
   })
 
   it('marks replacement writes as dirty exam sync records', async () => {

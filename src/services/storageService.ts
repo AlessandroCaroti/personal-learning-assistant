@@ -75,11 +75,6 @@ interface StudyAppDB extends DBSchema {
   }
 }
 
-type ExamScopedStoreName =
-  | 'quizSessions'
-  | 'questionStats'
-  | 'flashcardStats'
-  | 'pausedSessions'
 type SyncMetadataTransaction = {
   objectStore(name: 'syncMetadata'): {
     get(key: typeof SYNC_METADATA_ID): Promise<SyncMetadata | undefined>
@@ -207,31 +202,26 @@ async function markRecordDirtyInTransaction(
   return dirtyMetadata
 }
 
+async function markPendingLocalChangesInTransaction(
+  tx: SyncMetadataTransaction,
+): Promise<SyncMetadata> {
+  const metadata = await getOrCreateSyncMetadataInTransaction(tx)
+  const dirtyMetadata: SyncMetadata = {
+    ...metadata,
+    pendingLocalChanges: true,
+    syncSchemaVersion: SYNC_SCHEMA_VERSION,
+  }
+
+  await tx.objectStore('syncMetadata').put(dirtyMetadata)
+  return dirtyMetadata
+}
+
 export async function getSyncMetadata(): Promise<SyncMetadata> {
   const db = await getDB()
   const tx = db.transaction('syncMetadata', 'readwrite')
   const metadata = await getOrCreateSyncMetadataInTransaction(tx)
   await tx.done
   return metadata
-}
-
-async function deleteExamScopedRecordsFromStore(
-  db: IDBPDatabase<StudyAppDB>,
-  storeName: ExamScopedStoreName,
-  examId: string,
-): Promise<void> {
-  const tx = db.transaction(storeName, 'readwrite')
-  const records = await tx.store.index('by-examId').getAll(examId)
-  await Promise.all(records.map((record) => tx.store.delete(record.id)))
-  await tx.done
-}
-
-async function deleteExamScopedRecords(
-  storeName: ExamScopedStoreName,
-  examId: string,
-): Promise<void> {
-  const db = await getDB()
-  await deleteExamScopedRecordsFromStore(db, storeName, examId)
 }
 
 export async function getAllEsami(): Promise<Esame[]> {
@@ -412,7 +402,20 @@ export async function saveQuizSession(session: QuizSession): Promise<void> {
 }
 
 export async function deleteQuizSessionsForExam(examId: string): Promise<void> {
-  await deleteExamScopedRecords('quizSessions', examId)
+  const db = await getDB()
+  const tx = db.transaction(['quizSessions', 'syncMetadata', 'syncRecordMetadata'], 'readwrite')
+  const quizSessions = tx.objectStore('quizSessions')
+  const syncRecordMetadata = tx.objectStore('syncRecordMetadata')
+  const records = await quizSessions.index('by-examId').getAll(examId)
+
+  await markPendingLocalChangesInTransaction(tx)
+  await Promise.all([
+    ...records.map((record) => quizSessions.delete(record.id)),
+    ...records.map((record) =>
+      syncRecordMetadata.delete(syncRecordMetadataId('quizSessions', record.id)),
+    ),
+  ])
+  await tx.done
 }
 
 export async function getQuestionStats(examId: string): Promise<QuestionStats[]> {
@@ -448,7 +451,32 @@ export async function saveQuestionStat(stat: QuestionStats): Promise<void> {
 }
 
 export async function deleteQuestionStatsForExam(examId: string): Promise<void> {
-  await deleteExamScopedRecords('questionStats', examId)
+  const db = await getDB()
+  const tx = db.transaction(
+    ['questionStats', 'syncMetadata', 'syncRecordMetadata', 'syncQuestionCounters'],
+    'readwrite',
+  )
+  const questionStats = tx.objectStore('questionStats')
+  const syncRecordMetadata = tx.objectStore('syncRecordMetadata')
+  const syncQuestionCounters = tx.objectStore('syncQuestionCounters')
+  const records = await questionStats.index('by-examId').getAll(examId)
+  const questionCounterKeys = (
+    await Promise.all(
+      records.map((record) =>
+        syncQuestionCounters.index('by-questionStatId').getAllKeys(record.id),
+      ),
+    )
+  ).flat()
+
+  await markPendingLocalChangesInTransaction(tx)
+  await Promise.all([
+    ...records.map((record) => questionStats.delete(record.id)),
+    ...records.map((record) =>
+      syncRecordMetadata.delete(syncRecordMetadataId('questionStats', record.id)),
+    ),
+    ...questionCounterKeys.map((key) => syncQuestionCounters.delete(key)),
+  ])
+  await tx.done
 }
 
 export async function getFlashcardStats(examId: string): Promise<FlashcardStats[]> {
@@ -465,7 +493,20 @@ export async function saveFlashcardStat(stat: FlashcardStats): Promise<void> {
 }
 
 export async function deleteFlashcardStatsForExam(examId: string): Promise<void> {
-  await deleteExamScopedRecords('flashcardStats', examId)
+  const db = await getDB()
+  const tx = db.transaction(['flashcardStats', 'syncMetadata', 'syncRecordMetadata'], 'readwrite')
+  const flashcardStats = tx.objectStore('flashcardStats')
+  const syncRecordMetadata = tx.objectStore('syncRecordMetadata')
+  const records = await flashcardStats.index('by-examId').getAll(examId)
+
+  await markPendingLocalChangesInTransaction(tx)
+  await Promise.all([
+    ...records.map((record) => flashcardStats.delete(record.id)),
+    ...records.map((record) =>
+      syncRecordMetadata.delete(syncRecordMetadataId('flashcardStats', record.id)),
+    ),
+  ])
+  await tx.done
 }
 
 export async function getPausedSession(id: string): Promise<PausedSession | undefined> {
