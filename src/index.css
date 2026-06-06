@@ -86,7 +86,7 @@ a {
   flex-direction: column;
   border-right: 1px solid var(--border);
   background: var(--bg-surface);
-  padding: 1.25rem 1rem;
+  padding: calc(1.25rem + env(safe-area-inset-top)) 1rem 1.25rem;
 }
 
 .brand {
@@ -131,7 +131,7 @@ a {
 .main-content {
   margin-left: 220px;
   min-height: 100dvh;
-  padding: 2rem;
+  padding: calc(2rem + env(safe-area-inset-top)) 2rem 2rem;
 }
 
 .bottom-tab {
@@ -167,7 +167,7 @@ a {
 
   .main-content {
     margin-left: 0;
-    padding: 1rem;
+    padding: calc(1rem + env(safe-area-inset-top)) 1rem 1rem;
     padding-bottom: 5.75rem;
   }
 }
