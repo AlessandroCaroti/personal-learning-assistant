@@ -28,6 +28,13 @@ Repository instruction files:
 - [.github/instructions/testing-standards.instructions.md](.github/instructions/testing-standards.instructions.md)
 - [.github/instructions/typescript-patterns.instructions.md](.github/instructions/typescript-patterns.instructions.md)
 
+## Documentation Lookup
+
+- For any technical question about software behavior, APIs, setup, versions, migrations, or troubleshooting, use Context7 first.
+- Resolve the relevant library or product in Context7, query the current documentation, and base the answer on retrieved docs instead of memory.
+- Do not answer from memory when the question depends on documentation that may have changed; check Context7 before responding.
+- If Context7 has no relevant match, say so explicitly and fall back to the nearest official source or repository code.
+
 ## Architecture
 
 ### State Management
