@@ -32,7 +32,7 @@ The app does not request broad Google Drive file access. Files in `appDataFolder
 |---|---|
 | `VITE_GOOGLE_DRIVE_CLIENT_ID` | Public OAuth client ID used by Google Identity Services. |
 | `VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID` | Public Desktop OAuth client ID used by the Tauri loopback sign-in flow. |
-| `VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET` | Desktop OAuth client secret sent by the Tauri token exchange when required by Google. |
+| `GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET` | Build-time Desktop OAuth client secret consumed by the Tauri Rust token exchange. It must not use the `VITE_` prefix. |
 
 If `VITE_GOOGLE_DRIVE_CLIENT_ID` is not configured, the runtime sync sign-in action reports a configuration error instead of using Google Drive. Unit tests can still use the fake sync provider directly.
 

@@ -44,16 +44,29 @@ Create or update `.env` in the repository root:
 ```env
 VITE_GOOGLE_DRIVE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
 VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID=your-google-desktop-oauth-client-id.apps.googleusercontent.com
-VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET=your-google-desktop-oauth-client-secret
 ```
 
 `VITE_GOOGLE_DRIVE_CLIENT_ID` is the Web client ID used by browser dev and preview builds.
 `VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID` is the Desktop client ID used by Tauri, which opens Google sign-in in the system browser and returns through a local loopback callback.
-`VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET` is the Desktop client secret used by Tauri when Google requires it during the authorization-code exchange.
+`GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET` is used only by the Tauri Rust token exchange. Do not add it to `.env` with a `VITE_` prefix.
 
 The desktop values are bundled into the installed app, so only use the OAuth credentials created for a Desktop app. Do not use a Web application client secret in the Vite app.
 
 ## Step 5: Start the app
+
+For Tauri desktop development, set the build-time secret in the same shell before starting Tauri:
+
+```powershell
+$env:GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET="your-google-desktop-oauth-client-secret"
+npm run tauri:dev
+```
+
+For Windows packaging, set it before the build:
+
+```powershell
+$env:GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET="your-google-desktop-oauth-client-secret"
+npm run build:win
+```
 
 Run:
 
@@ -72,7 +85,7 @@ After sign-in, confirm that the sync status changes to `Sincronizzato` after the
 ## If sign-in fails
 
 - Confirm the OAuth client ID matches the platform you are testing.
-- For Tauri, confirm `VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID` and `VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET` are set from the same Desktop OAuth client.
+- For Tauri, confirm `VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID` and build-time `GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET` come from the same Desktop OAuth client.
 - Confirm the local origin is allowed for browser testing.
 - Confirm the Drive API is enabled.
 - Confirm the consent screen includes the `drive.appdata` scope.
