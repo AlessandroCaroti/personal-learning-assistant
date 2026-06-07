@@ -236,7 +236,12 @@ async fn exchange_google_drive_oauth_code(
     &redirect_uri,
   );
 
-  let response = reqwest::Client::new()
+  let client = reqwest::Client::builder()
+    .timeout(Duration::from_secs(30))
+    .build()
+    .map_err(|error| error.to_string())?;
+
+  let response = client
     .post("https://oauth2.googleapis.com/token")
     .header("Content-Type", "application/x-www-form-urlencoded")
     .body(body)
