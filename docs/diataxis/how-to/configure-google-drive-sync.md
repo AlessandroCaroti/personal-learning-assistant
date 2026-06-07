@@ -52,7 +52,15 @@ VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID=your-google-desktop-oauth-client-id.apps.goo
 
 The desktop values are bundled into the installed app, so only use the OAuth credentials created for a Desktop app. Do not use a Web application client secret in the Vite app.
 
-## Step 5: Start the app
+## Step 5: Start or package the app
+
+For browser development, start the Vite dev server:
+
+```bash
+npm run dev
+```
+
+Open the app on the Home page.
 
 For Tauri desktop development, set the build-time secret in the same shell before starting Tauri:
 
@@ -67,14 +75,6 @@ For Windows packaging, set it before the build:
 $env:GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET="your-google-desktop-oauth-client-secret"
 npm run build:win
 ```
-
-Run:
-
-```bash
-npm run dev
-```
-
-Open the app on the Home page.
 
 ## Step 6: Sign in
 
