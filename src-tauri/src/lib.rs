@@ -6,13 +6,20 @@ use std::{
   time::Duration,
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct GoogleDriveOAuthResult {
   code: String,
   redirect_uri: String,
+}
+
+#[derive(Deserialize)]
+struct GoogleTokenResponse {
+  access_token: Option<String>,
+  error: Option<String>,
+  error_description: Option<String>,
 }
 
 fn percent_encode(value: &str) -> String {
@@ -27,6 +34,44 @@ fn percent_encode(value: &str) -> String {
   }
 
   encoded
+}
+
+fn form_pair(key: &str, value: &str) -> String {
+  format!("{}={}", percent_encode(key), percent_encode(value))
+}
+
+fn build_google_token_request_body(
+  client_id: &str,
+  client_secret: &str,
+  code: &str,
+  code_verifier: &str,
+  redirect_uri: &str,
+) -> String {
+  [
+    form_pair("client_id", client_id),
+    form_pair("client_secret", client_secret),
+    form_pair("code", code),
+    form_pair("code_verifier", code_verifier),
+    form_pair("grant_type", "authorization_code"),
+    form_pair("redirect_uri", redirect_uri),
+  ]
+  .join("&")
+}
+
+fn parse_google_token_response(status: u16, body: &str) -> Result<String, String> {
+  if status >= 400 {
+    let parsed = serde_json::from_str::<GoogleTokenResponse>(body).ok();
+
+    return Err(parsed
+      .and_then(|response| response.error_description.or(response.error))
+      .unwrap_or_else(|| format!("Google Drive request failed: {status}")));
+  }
+
+  let parsed: GoogleTokenResponse = serde_json::from_str(body).map_err(|error| error.to_string())?;
+
+  parsed
+    .access_token
+    .ok_or_else(|| "Accesso Google non riuscito".to_string())
 }
 
 fn percent_decode(value: &str) -> Result<String, String> {
@@ -183,4 +228,79 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![start_google_drive_oauth])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn build_google_token_request_body_includes_required_fields() {
+    let body = build_google_token_request_body(
+      "client-id",
+      "desktop-secret",
+      "auth-code",
+      "verifier",
+      "http://127.0.0.1:3210/",
+    );
+
+    assert!(body.contains("client_id=client-id"));
+    assert!(body.contains("client_secret=desktop-secret"));
+    assert!(body.contains("code=auth-code"));
+    assert!(body.contains("code_verifier=verifier"));
+    assert!(body.contains("grant_type=authorization_code"));
+    assert!(body.contains("redirect_uri=http%3A%2F%2F127.0.0.1%3A3210%2F"));
+  }
+
+  #[test]
+  fn build_google_token_request_body_percent_encodes_special_characters() {
+    let body = build_google_token_request_body(
+      "client+id",
+      "secret/value",
+      "code with spaces",
+      "verifier+slash/value",
+      "http://127.0.0.1:3210/callback?x=1&y=2",
+    );
+
+    assert!(body.contains("client_id=client%2Bid"));
+    assert!(body.contains("client_secret=secret%2Fvalue"));
+    assert!(body.contains("code=code%20with%20spaces"));
+    assert!(body.contains("code_verifier=verifier%2Bslash%2Fvalue"));
+    assert!(body.contains("redirect_uri=http%3A%2F%2F127.0.0.1%3A3210%2Fcallback%3Fx%3D1%26y%3D2"));
+  }
+
+  #[test]
+  fn parse_google_token_response_returns_access_token() {
+    let token = parse_google_token_response(200, r#"{"access_token":"desktop-token"}"#)
+      .expect("token response should parse");
+
+    assert_eq!(token, "desktop-token");
+  }
+
+  #[test]
+  fn parse_google_token_response_prefers_google_error_description() {
+    let error = parse_google_token_response(
+      400,
+      r#"{"error":"invalid_request","error_description":"client_secret is missing."}"#,
+    )
+    .expect_err("error response should fail");
+
+    assert_eq!(error, "client_secret is missing.");
+  }
+
+  #[test]
+  fn parse_google_token_response_reports_status_when_error_body_has_no_description() {
+    let error = parse_google_token_response(500, "not json")
+      .expect_err("unparseable error body should fail with status");
+
+    assert_eq!(error, "Google Drive request failed: 500");
+  }
+
+  #[test]
+  fn parse_google_token_response_reports_missing_access_token() {
+    let error = parse_google_token_response(200, r#"{"token_type":"Bearer"}"#)
+      .expect_err("missing access token should fail");
+
+    assert_eq!(error, "Accesso Google non riuscito");
+  }
 }
