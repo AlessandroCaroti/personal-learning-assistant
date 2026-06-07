@@ -295,7 +295,7 @@ describe('googleDriveSyncProvider', () => {
     expect(String(vi.mocked(fetch).mock.calls[0]?.[1]?.body)).toContain('grant_type=authorization_code')
   })
 
-  it('includes the desktop client secret when exchanging a Tauri authorization code', async () => {
+  it('exchanges a Tauri authorization code through Rust instead of the WebView token endpoint', async () => {
     vi.stubGlobal('crypto', {
       getRandomValues: (bytes: Uint8Array) => {
         bytes.fill(1)
@@ -305,32 +305,36 @@ describe('googleDriveSyncProvider', () => {
         digest: vi.fn().mockResolvedValue(new Uint8Array([2, 3, 4]).buffer),
       },
     })
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ access_token: 'desktop-token' }),
-    } as Response)
+    const exchangeDesktopOAuthCode = vi.fn().mockResolvedValue({ accessToken: 'desktop-token' })
 
-    await requestDesktopGoogleDriveToken(
+    const token = await requestDesktopGoogleDriveToken(
       'client-id',
       async () => ({
         code: 'auth-code',
         redirectUri: 'http://127.0.0.1:3210/',
       }),
-      'desktop-secret',
+      exchangeDesktopOAuthCode,
     )
 
-    expect(String(vi.mocked(fetch).mock.calls[0]?.[1]?.body)).toContain('client_secret=desktop-secret')
+    expect(token).toBe('desktop-token')
+    expect(exchangeDesktopOAuthCode).toHaveBeenCalledWith({
+      clientId: 'client-id',
+      code: 'auth-code',
+      codeVerifier: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE',
+      redirectUri: 'http://127.0.0.1:3210/',
+    })
+    expect(fetch).not.toHaveBeenCalledWith(
+      'https://oauth2.googleapis.com/token',
+      expect.anything(),
+    )
   })
 
   it('uses the desktop client id for Tauri sign-in', async () => {
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ access_token: 'desktop-token' }),
-    } as Response)
+    vi.mocked(fetch).mockReset()
+    const exchangeDesktopOAuthCode = vi.fn().mockResolvedValue({ accessToken: 'desktop-token' })
     const provider = createGoogleDriveSyncProvider({
       clientId: 'web-client-id',
       desktopClientId: 'desktop-client-id',
-      desktopClientSecret: 'desktop-secret',
       isTauriRuntime: () => true,
       startDesktopOAuth: async (request) => {
         expect(request.clientId).toBe('desktop-client-id')
@@ -339,6 +343,7 @@ describe('googleDriveSyncProvider', () => {
           redirectUri: 'http://127.0.0.1:3210/',
         }
       },
+      exchangeDesktopOAuthCode,
     })
 
     await expect(provider.signIn()).resolves.toEqual({
@@ -346,7 +351,16 @@ describe('googleDriveSyncProvider', () => {
       email: 'Google Drive',
       provider: 'google-drive',
     })
-    expect(String(vi.mocked(fetch).mock.calls[0]?.[1]?.body)).toContain('client_secret=desktop-secret')
+    expect(exchangeDesktopOAuthCode).toHaveBeenCalledWith({
+      clientId: 'desktop-client-id',
+      code: 'auth-code',
+      codeVerifier: expect.any(String),
+      redirectUri: 'http://127.0.0.1:3210/',
+    })
+    expect(fetch).not.toHaveBeenCalledWith(
+      'https://oauth2.googleapis.com/token',
+      expect.anything(),
+    )
   })
 
   it('reuses the desktop access token after sign-in for the first sync request', async () => {
