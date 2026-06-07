@@ -15,6 +15,12 @@ struct GoogleDriveOAuthResult {
   redirect_uri: String,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct GoogleDriveTokenResult {
+  access_token: String,
+}
+
 #[derive(Deserialize)]
 struct GoogleTokenResponse {
   access_token: Option<String>,
@@ -212,6 +218,39 @@ async fn start_google_drive_oauth(
   .map_err(|error| error.to_string())?
 }
 
+#[tauri::command]
+async fn exchange_google_drive_oauth_code(
+  client_id: String,
+  code: String,
+  code_verifier: String,
+  redirect_uri: String,
+) -> Result<GoogleDriveTokenResult, String> {
+  let client_secret = option_env!("GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET")
+    .ok_or("Configura GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET per usare Google Drive Sync in Tauri")?;
+
+  let body = build_google_token_request_body(
+    &client_id,
+    client_secret,
+    &code,
+    &code_verifier,
+    &redirect_uri,
+  );
+
+  let response = reqwest::Client::new()
+    .post("https://oauth2.googleapis.com/token")
+    .header("Content-Type", "application/x-www-form-urlencoded")
+    .body(body)
+    .send()
+    .await
+    .map_err(|error| error.to_string())?;
+
+  let status = response.status().as_u16();
+  let body = response.text().await.map_err(|error| error.to_string())?;
+  let access_token = parse_google_token_response(status, &body)?;
+
+  Ok(GoogleDriveTokenResult { access_token })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -225,7 +264,10 @@ pub fn run() {
       }
       Ok(())
     })
-    .invoke_handler(tauri::generate_handler![start_google_drive_oauth])
+    .invoke_handler(tauri::generate_handler![
+      start_google_drive_oauth,
+      exchange_google_drive_oauth_code
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
