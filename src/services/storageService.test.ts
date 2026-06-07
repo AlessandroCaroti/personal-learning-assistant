@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeEsame, makePausedFlash, makePausedQuiz, makeQuizSession } from '../__tests__/factories'
 import { resetDb } from '../__tests__/resetDb'
 import type { FileRecord, FlashcardStats, QuestionStats } from '../types'
@@ -613,6 +613,27 @@ describe('storageService', () => {
       }),
     ])
     expect(state.data.esami[0].updatedAt).not.toBe(beforeReplacement.state.data.esami[0].updatedAt)
+  })
+
+  it('notifies automatic sync listeners for flashcard replacement and exam deletion', async () => {
+    const dispatchEvent = vi.spyOn(window, 'dispatchEvent')
+
+    await saveEsame({
+      ...exam,
+      files: {
+        flashcard: fileRecord('old-flashcard.json'),
+      },
+    })
+    dispatchEvent.mockClear()
+
+    await replaceFlashcardFileForExam(exam.id, fileRecord('new-flashcard.json'))
+
+    expect(dispatchEvent).toHaveBeenCalledWith(new Event('study-app-sync-dirty'))
+    dispatchEvent.mockClear()
+
+    await deleteEsame(exam.id)
+
+    expect(dispatchEvent).toHaveBeenCalledWith(new Event('study-app-sync-dirty'))
   })
 
   it('clears question sync counters when replacing a quiz file', async () => {

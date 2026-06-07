@@ -21,6 +21,7 @@ import {
 const DB_NAME = 'study-app-db'
 const DB_VERSION = 3
 const SYNC_METADATA_ID = 'sync'
+const SYNC_DIRTY_EVENT = 'study-app-sync-dirty'
 
 interface LocalSyncQuestionCounter {
   id: string
@@ -216,6 +217,12 @@ async function markPendingLocalChangesInTransaction(
   return dirtyMetadata
 }
 
+function notifySyncDirty(): void {
+  if (typeof window === 'undefined') return
+
+  window.dispatchEvent(new Event(SYNC_DIRTY_EVENT))
+}
+
 export async function getSyncMetadata(): Promise<SyncMetadata> {
   const db = await getDB()
   const tx = db.transaction('syncMetadata', 'readwrite')
@@ -239,6 +246,7 @@ export async function saveEsame(esame: Esame): Promise<void> {
   await tx.objectStore('esami').put(esame)
   await markRecordDirtyInTransaction(tx, 'esami', esame.id)
   await tx.done
+  notifySyncDirty()
 }
 
 export async function replaceQuizFileForExam(examId: string, file: FileRecord): Promise<void> {
@@ -294,6 +302,7 @@ export async function replaceQuizFileForExam(examId: string, file: FileRecord): 
     pausedSessions.delete(`${examId}__quiz`),
   ])
   await tx.done
+  notifySyncDirty()
 }
 
 export async function replaceFlashcardFileForExam(
@@ -330,6 +339,7 @@ export async function replaceFlashcardFileForExam(
     pausedSessions.delete(`${examId}__flashcard`),
   ])
   await tx.done
+  notifySyncDirty()
 }
 
 export async function deleteEsame(id: string): Promise<void> {
@@ -386,6 +396,7 @@ export async function deleteEsame(id: string): Promise<void> {
     ...pausedRecords.map((record) => pausedSessions.delete(record.id)),
   ])
   await tx.done
+  notifySyncDirty()
 }
 
 export async function getQuizSessions(examId: string): Promise<QuizSession[]> {
@@ -399,6 +410,7 @@ export async function saveQuizSession(session: QuizSession): Promise<void> {
   await tx.objectStore('quizSessions').put(session)
   await markRecordDirtyInTransaction(tx, 'quizSessions', session.id)
   await tx.done
+  notifySyncDirty()
 }
 
 export async function deleteQuizSessionsForExam(examId: string): Promise<void> {
@@ -416,6 +428,7 @@ export async function deleteQuizSessionsForExam(examId: string): Promise<void> {
     ),
   ])
   await tx.done
+  notifySyncDirty()
 }
 
 export async function getQuestionStats(examId: string): Promise<QuestionStats[]> {
@@ -448,6 +461,7 @@ export async function saveQuestionStat(stat: QuestionStats): Promise<void> {
     }),
   ])
   await tx.done
+  notifySyncDirty()
 }
 
 export async function deleteQuestionStatsForExam(examId: string): Promise<void> {
@@ -477,6 +491,7 @@ export async function deleteQuestionStatsForExam(examId: string): Promise<void> 
     ...questionCounterKeys.map((key) => syncQuestionCounters.delete(key)),
   ])
   await tx.done
+  notifySyncDirty()
 }
 
 export async function getFlashcardStats(examId: string): Promise<FlashcardStats[]> {
@@ -490,6 +505,7 @@ export async function saveFlashcardStat(stat: FlashcardStats): Promise<void> {
   await tx.objectStore('flashcardStats').put(stat)
   await markRecordDirtyInTransaction(tx, 'flashcardStats', stat.id)
   await tx.done
+  notifySyncDirty()
 }
 
 export async function deleteFlashcardStatsForExam(examId: string): Promise<void> {
@@ -507,6 +523,7 @@ export async function deleteFlashcardStatsForExam(examId: string): Promise<void>
     ),
   ])
   await tx.done
+  notifySyncDirty()
 }
 
 export async function getPausedSession(id: string): Promise<PausedSession | undefined> {

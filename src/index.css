@@ -65,6 +65,107 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.sync-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-surface);
+}
+
+.sync-status > div:first-child {
+  min-width: 0;
+}
+
+.sync-status__title {
+  margin: 0 0 0.15rem;
+  font-weight: 700;
+}
+
+.sync-status__text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.sync-status__busy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+  color: var(--accent);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.sync-status__spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid var(--border);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: sync-status-spin 0.8s linear infinite;
+}
+
+@keyframes sync-status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sync-status__spinner {
+    animation: none;
+  }
+}
+
+.sync-status__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sync-status__actions button {
+  min-height: 48px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
+.sync-status__conflicts {
+  grid-column: 1 / -1;
+  margin: 0.5rem 0 0;
+  color: var(--danger);
+  font-size: 0.9rem;
+}
+
+.sync-status__conflicts ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.sync-status__conflict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+.sync-status__conflict-actions button {
+  min-height: 48px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text);
+}
+
 a {
   color: var(--accent);
 }
@@ -169,5 +270,11 @@ a {
     margin-left: 0;
     padding: calc(1rem + env(safe-area-inset-top)) 1rem 1rem;
     padding-bottom: 5.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .sync-status {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

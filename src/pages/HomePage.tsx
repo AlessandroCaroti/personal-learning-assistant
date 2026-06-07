@@ -1,12 +1,15 @@
 import { type KeyboardEvent, type MouseEvent, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { SyncStatus } from '../components/SyncStatus'
 import { useExam } from '../hooks/useExam'
+import { useSync } from '../hooks/useSync'
 import type { Esame } from '../types'
 
 export function HomePage() {
   const navigate = useNavigate()
-  const { esami, loading, createEsame, renameEsame, deleteEsame } = useExam()
+  const { esami, loading, createEsame, renameEsame, deleteEsame, reload } = useExam()
+  const sync = useSync()
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newExamName, setNewExamName] = useState('')
   const [creating, setCreating] = useState(false)
@@ -114,6 +117,21 @@ export function HomePage() {
     }
   }
 
+  async function handleSyncSignIn() {
+    await sync.signIn()
+    await reload()
+  }
+
+  async function handleSyncNow() {
+    await sync.syncNow()
+    await reload()
+  }
+
+  async function handleResolveConflict(choice: 'keep-local' | 'keep-remote') {
+    await sync.resolveConflict(choice)
+    await reload()
+  }
+
   return (
     <div style={{ maxWidth: '760px', margin: '0 auto' }}>
       <header
@@ -141,6 +159,14 @@ export function HomePage() {
           + Nuovo esame
         </button>
       </header>
+
+      <SyncStatus
+        status={sync.status}
+        onSignIn={handleSyncSignIn}
+        onSignOut={sync.signOut}
+        onSyncNow={handleSyncNow}
+        onResolveConflict={handleResolveConflict}
+      />
 
       {showCreateForm && (
         <form

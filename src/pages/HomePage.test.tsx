@@ -6,6 +6,11 @@ import type { Esame } from '../types'
 const createEsame = vi.fn()
 const renameEsame = vi.fn()
 const deleteEsame = vi.fn()
+const syncSignIn = vi.fn()
+const syncSignOut = vi.fn()
+const syncNow = vi.fn()
+const resolveConflict = vi.fn()
+const reloadEsami = vi.fn()
 
 let hookState: {
   esami: Esame[]
@@ -18,7 +23,24 @@ vi.mock('../hooks/useExam', () => ({
     createEsame,
     renameEsame,
     deleteEsame,
-    reload: vi.fn(),
+    reload: reloadEsami,
+  }),
+}))
+
+vi.mock('../hooks/useSync', () => ({
+  useSync: () => ({
+    status: {
+      kind: 'signed-out',
+      account: null,
+      lastSyncedAt: null,
+      pendingChanges: false,
+      message: null,
+      conflicts: [],
+    },
+    signIn: syncSignIn,
+    signOut: syncSignOut,
+    syncNow,
+    resolveConflict,
   }),
 }))
 
@@ -61,6 +83,11 @@ describe('HomePage', () => {
     })
     renameEsame.mockResolvedValue(undefined)
     deleteEsame.mockResolvedValue(undefined)
+    syncSignIn.mockResolvedValue(undefined)
+    syncSignOut.mockResolvedValue(undefined)
+    syncNow.mockResolvedValue(undefined)
+    resolveConflict.mockResolvedValue(undefined)
+    reloadEsami.mockResolvedValue(undefined)
   })
 
   it('shows loading and empty states', () => {
@@ -68,6 +95,7 @@ describe('HomePage', () => {
     const { rerender } = renderHome()
 
     expect(screen.getByText('Caricamento…')).not.toBeNull()
+    expect(screen.getByLabelText('Sincronizzazione')).not.toBeNull()
 
     hookState = { esami: [], loading: false }
     rerender(
@@ -144,5 +172,16 @@ describe('HomePage', () => {
     await waitFor(() => {
       expect(deleteEsame).toHaveBeenCalledWith('exam-1')
     })
+  })
+
+  it('reloads exams after Google Drive sign-in sync completes', async () => {
+    renderHome()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Accedi a Google Drive' }))
+
+    await waitFor(() => {
+      expect(syncSignIn).toHaveBeenCalled()
+    })
+    expect(reloadEsami).toHaveBeenCalled()
   })
 })
