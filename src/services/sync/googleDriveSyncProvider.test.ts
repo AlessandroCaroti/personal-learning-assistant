@@ -274,25 +274,21 @@ describe('googleDriveSyncProvider', () => {
         digest: vi.fn().mockResolvedValue(new Uint8Array([2, 3, 4]).buffer),
       },
     })
-    vi.mocked(fetch).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ access_token: 'desktop-token' }),
-    } as Response)
 
-    const token = await requestDesktopGoogleDriveToken('client-id', async () => ({
-      code: 'auth-code',
-      redirectUri: 'http://127.0.0.1:3210/',
-    }))
+    const token = await requestDesktopGoogleDriveToken(
+      'client-id',
+      async () => ({
+        code: 'auth-code',
+        redirectUri: 'http://127.0.0.1:3210/',
+      }),
+      async () => ({ accessToken: 'desktop-token' }),
+    )
 
     expect(token).toBe('desktop-token')
-    expect(fetch).toHaveBeenCalledWith(
+    expect(fetch).not.toHaveBeenCalledWith(
       'https://oauth2.googleapis.com/token',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      }),
+      expect.anything(),
     )
-    expect(String(vi.mocked(fetch).mock.calls[0]?.[1]?.body)).toContain('grant_type=authorization_code')
   })
 
   it('exchanges a Tauri authorization code through Rust instead of the WebView token endpoint', async () => {
@@ -368,26 +364,24 @@ describe('googleDriveSyncProvider', () => {
       code: 'auth-code',
       redirectUri: 'http://127.0.0.1:3210/',
     })
-    vi.mocked(fetch)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ access_token: 'desktop-token' }),
-      } as Response)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ files: [] }),
-      } as Response)
+    const exchangeDesktopOAuthCode = vi.fn().mockResolvedValue({ accessToken: 'desktop-token' })
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ files: [] }),
+    } as Response)
     const provider = createGoogleDriveSyncProvider({
       clientId: 'web-client-id',
       desktopClientId: 'desktop-client-id',
       isTauriRuntime: () => true,
       startDesktopOAuth,
+      exchangeDesktopOAuthCode,
     })
 
     await provider.signIn()
     await provider.readRemoteState()
 
     expect(startDesktopOAuth).toHaveBeenCalledTimes(1)
+    expect(exchangeDesktopOAuthCode).toHaveBeenCalledTimes(1)
     expect(fetch).toHaveBeenLastCalledWith(
       expect.stringContaining('spaces=appDataFolder'),
       expect.objectContaining({

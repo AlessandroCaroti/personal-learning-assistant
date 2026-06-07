@@ -10,15 +10,14 @@ const SYNC_FILE_NAME = 'study-app-sync-state.json'
 const GOOGLE_IDENTITY_SERVICES_URL = 'https://accounts.google.com/gsi/client'
 const DRIVE_FILES_URL = 'https://www.googleapis.com/drive/v3/files'
 const DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files'
-const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 
 interface GoogleDriveProviderOptions {
   clientId: string
   desktopClientId?: string
-  desktopClientSecret?: string
   getAccessToken?: () => Promise<string>
   isTauriRuntime?: () => boolean | Promise<boolean>
   startDesktopOAuth?: DesktopOAuthStarter
+  exchangeDesktopOAuthCode?: DesktopOAuthCodeExchanger
 }
 
 interface GoogleTokenResponse {
@@ -54,12 +53,23 @@ interface DesktopOAuthResult {
   redirectUri: string
 }
 
+interface DesktopTokenResult {
+  accessToken: string
+}
+
 type DesktopOAuthStarter = (request: {
   clientId: string
   scope: string
   codeChallenge: string
   state: string
 }) => Promise<DesktopOAuthResult>
+
+type DesktopOAuthCodeExchanger = (request: {
+  clientId: string
+  code: string
+  codeVerifier: string
+  redirectUri: string
+}) => Promise<DesktopTokenResult>
 
 let googleIdentityServicesLoad: Promise<void> | null = null
 
@@ -234,10 +244,20 @@ async function defaultStartDesktopOAuth(request: {
   return invoke<DesktopOAuthResult>('start_google_drive_oauth', request)
 }
 
+async function defaultExchangeDesktopOAuthCode(request: {
+  clientId: string
+  code: string
+  codeVerifier: string
+  redirectUri: string
+}): Promise<DesktopTokenResult> {
+  const { invoke } = await import('@tauri-apps/api/core')
+  return invoke<DesktopTokenResult>('exchange_google_drive_oauth_code', request)
+}
+
 export async function requestDesktopGoogleDriveToken(
   clientId: string,
   startDesktopOAuth: DesktopOAuthStarter = defaultStartDesktopOAuth,
-  clientSecret?: string,
+  exchangeDesktopOAuthCode: DesktopOAuthCodeExchanger = defaultExchangeDesktopOAuthCode,
 ): Promise<string> {
   const codeVerifier = randomBase64Url(32)
   const state = randomBase64Url(16)
@@ -248,31 +268,19 @@ export async function requestDesktopGoogleDriveToken(
     codeChallenge,
     state,
   })
-  const body = new URLSearchParams({
-    client_id: clientId,
+
+  const response = await exchangeDesktopOAuthCode({
+    clientId,
     code: authorization.code,
-    code_verifier: codeVerifier,
-    grant_type: 'authorization_code',
-    redirect_uri: authorization.redirectUri,
+    codeVerifier,
+    redirectUri: authorization.redirectUri,
   })
 
-  if (clientSecret) {
-    body.set('client_secret', clientSecret)
+  if (!response.accessToken) {
+    throw new Error('Accesso Google non riuscito')
   }
 
-  const response = await parseJsonResponse<{ access_token?: string; error?: string }>(
-    await fetch(GOOGLE_TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body,
-    }),
-  )
-
-  if (!response.access_token) {
-    throw new Error(response.error ?? 'Accesso Google non riuscito')
-  }
-
-  return response.access_token
+  return response.accessToken
 }
 
 export function createGoogleDriveSyncProvider(options: GoogleDriveProviderOptions): SyncProvider {
@@ -317,7 +325,7 @@ export function createGoogleDriveSyncProvider(options: GoogleDriveProviderOption
       cachedAccessToken = await requestDesktopGoogleDriveToken(
         options.desktopClientId,
         options.startDesktopOAuth,
-        options.desktopClientSecret,
+        options.exchangeDesktopOAuthCode,
       )
       return cachedAccessToken
     }

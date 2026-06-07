@@ -32,7 +32,6 @@ function getSyncService() {
   const key = [
     import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID ?? '',
     import.meta.env.VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID ?? '',
-    import.meta.env.VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET ?? '',
   ].join('|')
 
   if (syncService && syncServiceKey === key) return syncService
@@ -43,7 +42,6 @@ function getSyncService() {
       ? createGoogleDriveSyncProvider({
           clientId: import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID,
           desktopClientId: import.meta.env.VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID,
-          desktopClientSecret: import.meta.env.VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET,
         })
       : createUnconfiguredGoogleDriveProvider(),
     getLocalExport: exportLocalSyncState,
