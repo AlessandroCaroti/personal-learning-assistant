@@ -49,6 +49,7 @@ VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID=your-google-desktop-oauth-client-id.apps.goo
 `VITE_GOOGLE_DRIVE_CLIENT_ID` is the Web client ID used by browser dev and preview builds.
 `VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID` is the Desktop client ID used by Tauri, which opens Google sign-in in the system browser and returns through a local loopback callback.
 `GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET` is used only by the Tauri Rust token exchange. Do not add it to `.env` with a `VITE_` prefix.
+Tauri desktop builds fail if `GOOGLE_DRIVE_DESKTOP_CLIENT_SECRET` is missing or empty.
 
 The desktop values are bundled into the installed app, so only use the OAuth credentials created for a Desktop app. Do not use a Web application client secret in the Vite app.
 
