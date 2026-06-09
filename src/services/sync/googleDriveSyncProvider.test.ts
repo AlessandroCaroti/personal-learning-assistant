@@ -1,6 +1,10 @@
 import { waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createGoogleDriveSyncProvider, requestDesktopGoogleDriveToken } from './googleDriveSyncProvider'
+import {
+  createGoogleDriveSyncProvider,
+  requestDesktopGoogleDriveToken,
+  requestNativeGoogleDriveToken,
+} from './googleDriveSyncProvider'
 import { RemoteRevisionMismatchError, type RemoteSyncState } from './types'
 
 function emptyState(): RemoteSyncState {
@@ -204,6 +208,19 @@ describe('googleDriveSyncProvider', () => {
     expect(document.querySelector('script[src="https://accounts.google.com/gsi/client"]')).not.toBeNull()
   })
 
+  it('requires an Android client id on Capacitor native Android', async () => {
+    const provider = createGoogleDriveSyncProvider({
+      clientId: 'client-id',
+      isNativeRuntime: () => true,
+      isTauriRuntime: () => false,
+    })
+
+    expect(document.querySelector('script[src="https://accounts.google.com/gsi/client"]')).toBeNull()
+    await expect(provider.signIn()).rejects.toThrow(
+      'Configura VITE_GOOGLE_DRIVE_ANDROID_CLIENT_ID per usare Google Drive Sync su Android',
+    )
+  })
+
   it('rejects sign-in when the Google popup fails to open', async () => {
     const provider = createGoogleDriveSyncProvider({ clientId: 'client-id', isTauriRuntime: () => false })
     const script = document.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]')
@@ -357,6 +374,76 @@ describe('googleDriveSyncProvider', () => {
       'https://oauth2.googleapis.com/token',
       expect.anything(),
     )
+  })
+
+  it('exchanges a native Android authorization code for an access token', async () => {
+    vi.stubGlobal('crypto', {
+      getRandomValues: (bytes: Uint8Array) => {
+        bytes.fill(1)
+        return bytes
+      },
+      subtle: {
+        digest: vi.fn().mockResolvedValue(new Uint8Array([2, 3, 4]).buffer),
+      },
+    })
+
+    const exchangeNativeOAuthCode = vi.fn().mockResolvedValue({ accessToken: 'native-token' })
+    const token = await requestNativeGoogleDriveToken(
+      'android-client-id',
+      'com.studyapp.local:/oauth2redirect/google',
+      async (request) => {
+        expect(request.clientId).toBe('android-client-id')
+        expect(request.redirectUri).toBe('com.studyapp.local:/oauth2redirect/google')
+        return {
+          code: 'auth-code',
+          redirectUri: request.redirectUri,
+        }
+      },
+      exchangeNativeOAuthCode,
+    )
+
+    expect(token).toBe('native-token')
+    expect(exchangeNativeOAuthCode).toHaveBeenCalledWith({
+      clientId: 'android-client-id',
+      code: 'auth-code',
+      codeVerifier: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE',
+      redirectUri: 'com.studyapp.local:/oauth2redirect/google',
+    })
+  })
+
+  it('uses the native Android client id for Capacitor sign-in', async () => {
+    const startNativeOAuth = vi.fn().mockResolvedValue({
+      code: 'auth-code',
+      redirectUri: 'com.studyapp.local:/oauth2redirect/google',
+    })
+    const exchangeNativeOAuthCode = vi.fn().mockResolvedValue({ accessToken: 'native-token' })
+    const provider = createGoogleDriveSyncProvider({
+      clientId: 'web-client-id',
+      nativeClientId: 'android-client-id',
+      isNativeRuntime: () => true,
+      isTauriRuntime: () => false,
+      startNativeOAuth,
+      exchangeNativeOAuthCode,
+    })
+
+    await expect(provider.signIn()).resolves.toEqual({
+      id: 'google-drive',
+      email: 'Google Drive',
+      provider: 'google-drive',
+    })
+    expect(startNativeOAuth).toHaveBeenCalledWith({
+      clientId: 'android-client-id',
+      scope: 'https://www.googleapis.com/auth/drive.appdata',
+      codeChallenge: expect.any(String),
+      state: expect.any(String),
+      redirectUri: 'com.studyapp.local:/oauth2redirect/google',
+    })
+    expect(exchangeNativeOAuthCode).toHaveBeenCalledWith({
+      clientId: 'android-client-id',
+      code: 'auth-code',
+      codeVerifier: expect.any(String),
+      redirectUri: 'com.studyapp.local:/oauth2redirect/google',
+    })
   })
 
   it('reuses the desktop access token after sign-in for the first sync request', async () => {

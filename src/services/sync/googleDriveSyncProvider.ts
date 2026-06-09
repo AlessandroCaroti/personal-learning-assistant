@@ -8,14 +8,22 @@ import {
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata'
 const SYNC_FILE_NAME = 'study-app-sync-state.json'
 const GOOGLE_IDENTITY_SERVICES_URL = 'https://accounts.google.com/gsi/client'
+const GOOGLE_AUTHORIZATION_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
+const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const DRIVE_FILES_URL = 'https://www.googleapis.com/drive/v3/files'
 const DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3/files'
+const DEFAULT_NATIVE_REDIRECT_URI = 'com.studyapp.local:/oauth2redirect/google'
 
 interface GoogleDriveProviderOptions {
   clientId: string
+  nativeClientId?: string
+  nativeRedirectUri?: string
   desktopClientId?: string
   getAccessToken?: () => Promise<string>
+  isNativeRuntime?: () => boolean
   isTauriRuntime?: () => boolean | Promise<boolean>
+  startNativeOAuth?: NativeOAuthStarter
+  exchangeNativeOAuthCode?: NativeOAuthCodeExchanger
   startDesktopOAuth?: DesktopOAuthStarter
   exchangeDesktopOAuthCode?: DesktopOAuthCodeExchanger
 }
@@ -57,6 +65,27 @@ interface DesktopTokenResult {
   accessToken: string
 }
 
+interface NativeTokenResult {
+  access_token?: string
+  error?: string
+  error_description?: string
+}
+
+type NativeOAuthStarter = (request: {
+  clientId: string
+  scope: string
+  codeChallenge: string
+  state: string
+  redirectUri: string
+}) => Promise<DesktopOAuthResult>
+
+type NativeOAuthCodeExchanger = (request: {
+  clientId: string
+  code: string
+  codeVerifier: string
+  redirectUri: string
+}) => Promise<DesktopTokenResult>
+
 type DesktopOAuthStarter = (request: {
   clientId: string
   scope: string
@@ -97,6 +126,20 @@ function getGoogleIdentityServices(): GoogleIdentityServices | undefined {
       google?: GoogleIdentityServices
     }
   ).google
+}
+
+function defaultIsNativeRuntime(): boolean {
+  if (typeof window === 'undefined') return false
+
+  const capacitor = (
+    window as typeof window & {
+      Capacitor?: {
+        isNativePlatform?: () => boolean
+      }
+    }
+  ).Capacitor
+
+  return capacitor?.isNativePlatform?.() ?? false
 }
 
 async function loadGoogleIdentityServices(): Promise<void> {
@@ -254,6 +297,123 @@ async function defaultExchangeDesktopOAuthCode(request: {
   return invoke<DesktopTokenResult>('exchange_google_drive_oauth_code', request)
 }
 
+function createGoogleAuthorizationUrl(request: {
+  clientId: string
+  scope: string
+  codeChallenge: string
+  state: string
+  redirectUri: string
+}): string {
+  const url = new URL(GOOGLE_AUTHORIZATION_URL)
+  url.search = new URLSearchParams({
+    client_id: request.clientId,
+    redirect_uri: request.redirectUri,
+    response_type: 'code',
+    scope: request.scope,
+    code_challenge: request.codeChallenge,
+    code_challenge_method: 'S256',
+    state: request.state,
+    access_type: 'online',
+    prompt: 'consent',
+  }).toString()
+
+  return url.toString()
+}
+
+async function defaultStartNativeOAuth(request: {
+  clientId: string
+  scope: string
+  codeChallenge: string
+  state: string
+  redirectUri: string
+}): Promise<DesktopOAuthResult> {
+  const [{ App }, { Browser }] = await Promise.all([import('@capacitor/app'), import('@capacitor/browser')])
+  const authorizationUrl = createGoogleAuthorizationUrl(request)
+
+  return new Promise((resolve, reject) => {
+    let settled = false
+    let removeUrlListener: (() => Promise<void>) | null = null
+    let removeBrowserListener: (() => Promise<void>) | null = null
+
+    async function cleanup() {
+      await Promise.allSettled([removeUrlListener?.(), removeBrowserListener?.()])
+    }
+
+    function settle(result: { code: string; redirectUri: string } | Error) {
+      if (settled) return
+      settled = true
+      void cleanup()
+
+      if (result instanceof Error) {
+        reject(result)
+        return
+      }
+
+      resolve(result)
+    }
+
+    void Promise.all([
+      App.addListener('appUrlOpen', ({ url }) => {
+        if (!url.startsWith(request.redirectUri)) return
+
+        const redirectUrl = new URL(url)
+        const error = redirectUrl.searchParams.get('error')
+        const code = redirectUrl.searchParams.get('code')
+        const state = redirectUrl.searchParams.get('state')
+
+        if (state !== request.state) {
+          settle(new Error('Risposta Google non valida'))
+          return
+        }
+
+        if (error || !code) {
+          settle(new Error(error ?? 'Accesso Google non riuscito'))
+          return
+        }
+
+        settle({ code, redirectUri: request.redirectUri })
+      }),
+      Browser.addListener('browserFinished', () => {
+        settle(new Error('Accesso Google annullato'))
+      }),
+    ])
+      .then(([urlListener, browserListener]) => {
+        removeUrlListener = () => urlListener.remove()
+        removeBrowserListener = () => browserListener.remove()
+        return Browser.open({ url: authorizationUrl })
+      })
+      .catch((error: unknown) => {
+        settle(error instanceof Error ? error : new Error('Accesso Google non riuscito'))
+      })
+  })
+}
+
+async function defaultExchangeNativeOAuthCode(request: {
+  clientId: string
+  code: string
+  codeVerifier: string
+  redirectUri: string
+}): Promise<DesktopTokenResult> {
+  const response = await fetch(GOOGLE_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: request.clientId,
+      code: request.code,
+      code_verifier: request.codeVerifier,
+      grant_type: 'authorization_code',
+      redirect_uri: request.redirectUri,
+    }),
+  })
+  const result = (await response.json()) as NativeTokenResult
+
+  if (!response.ok || !result.access_token) {
+    throw new Error(result.error_description ?? result.error ?? 'Accesso Google non riuscito')
+  }
+
+  return { accessToken: result.access_token }
+}
+
 export async function requestDesktopGoogleDriveToken(
   clientId: string,
   startDesktopOAuth: DesktopOAuthStarter = defaultStartDesktopOAuth,
@@ -270,6 +430,37 @@ export async function requestDesktopGoogleDriveToken(
   })
 
   const response = await exchangeDesktopOAuthCode({
+    clientId,
+    code: authorization.code,
+    codeVerifier,
+    redirectUri: authorization.redirectUri,
+  })
+
+  if (!response.accessToken) {
+    throw new Error('Accesso Google non riuscito')
+  }
+
+  return response.accessToken
+}
+
+export async function requestNativeGoogleDriveToken(
+  clientId: string,
+  redirectUri: string = DEFAULT_NATIVE_REDIRECT_URI,
+  startNativeOAuth: NativeOAuthStarter = defaultStartNativeOAuth,
+  exchangeNativeOAuthCode: NativeOAuthCodeExchanger = defaultExchangeNativeOAuthCode,
+): Promise<string> {
+  const codeVerifier = randomBase64Url(32)
+  const state = randomBase64Url(16)
+  const codeChallenge = await sha256Base64Url(codeVerifier)
+  const authorization = await startNativeOAuth({
+    clientId,
+    scope: DRIVE_SCOPE,
+    codeChallenge,
+    state,
+    redirectUri,
+  })
+
+  const response = await exchangeNativeOAuthCode({
     clientId,
     code: authorization.code,
     codeVerifier,
@@ -308,7 +499,9 @@ export function createGoogleDriveSyncProvider(options: GoogleDriveProviderOption
     return tokenClientLoad
   }
 
-  if (!options.getAccessToken) {
+  const isNativeRuntime = options.isNativeRuntime ?? defaultIsNativeRuntime
+
+  if (!options.getAccessToken && !isNativeRuntime()) {
     void startTokenClientLoad()
   }
 
@@ -317,7 +510,7 @@ export function createGoogleDriveSyncProvider(options: GoogleDriveProviderOption
     if (cachedAccessToken) return cachedAccessToken
 
     const isTauriRuntime = options.isTauriRuntime ?? defaultIsTauriRuntime
-    if (await isTauriRuntime()) {
+    if (!isNativeRuntime() && (await isTauriRuntime())) {
       if (!options.desktopClientId) {
         throw new Error('Configura VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID per usare Google Drive Sync in Tauri')
       }
@@ -326,6 +519,20 @@ export function createGoogleDriveSyncProvider(options: GoogleDriveProviderOption
         options.desktopClientId,
         options.startDesktopOAuth,
         options.exchangeDesktopOAuthCode,
+      )
+      return cachedAccessToken
+    }
+
+    if (isNativeRuntime()) {
+      if (!options.nativeClientId) {
+        throw new Error('Configura VITE_GOOGLE_DRIVE_ANDROID_CLIENT_ID per usare Google Drive Sync su Android')
+      }
+
+      cachedAccessToken = await requestNativeGoogleDriveToken(
+        options.nativeClientId,
+        options.nativeRedirectUri,
+        options.startNativeOAuth,
+        options.exchangeNativeOAuthCode,
       )
       return cachedAccessToken
     }

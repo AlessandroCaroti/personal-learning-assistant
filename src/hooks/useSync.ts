@@ -31,6 +31,7 @@ let syncService: ReturnType<typeof createSyncService> | null = null
 function getSyncService() {
   const key = [
     import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID ?? '',
+    import.meta.env.VITE_GOOGLE_DRIVE_ANDROID_CLIENT_ID ?? '',
     import.meta.env.VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID ?? '',
   ].join('|')
 
@@ -41,6 +42,7 @@ function getSyncService() {
     provider: import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID
       ? createGoogleDriveSyncProvider({
           clientId: import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID,
+          nativeClientId: import.meta.env.VITE_GOOGLE_DRIVE_ANDROID_CLIENT_ID,
           desktopClientId: import.meta.env.VITE_GOOGLE_DRIVE_DESKTOP_CLIENT_ID,
         })
       : createUnconfiguredGoogleDriveProvider(),
