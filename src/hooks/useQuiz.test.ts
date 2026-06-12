@@ -265,6 +265,19 @@ describe('useQuiz', () => {
     expect(result.current.sessionState).toBeNull()
   })
 
+  it('dedupes review question ids while preserving first occurrence order', () => {
+    const { result } = renderHook(() => useQuiz('exam-1'))
+
+    act(() => {
+      result.current.startReviewSession(['q2', 'q2', 'q1'], domande)
+    })
+
+    expect(result.current.sessionState?.questions.map((question) => question.id)).toEqual([
+      'q2',
+      'q1',
+    ])
+  })
+
   it('pauses by saving the current ordered question ids and answers', async () => {
     const { result } = renderHook(() => useQuiz('exam-1'))
 
