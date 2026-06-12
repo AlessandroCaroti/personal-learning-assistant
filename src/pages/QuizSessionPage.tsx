@@ -26,8 +26,7 @@ type LoadedSession =
   | {
     mode: 'review'
     quizData: QuizFile
-    errors: string[]
-    unanswered: string[]
+    questionIds: string[]
   }
   | {
     mode: 'resume'
@@ -59,22 +58,25 @@ function readStartConfig(state: unknown): StartConfig {
   return { selectedMacro, count, limitSeconds }
 }
 
-function readReviewConfig(state: unknown): { errors: string[]; unanswered: string[] } | null {
+function readReviewConfig(state: unknown): { questionIds: string[] } | null {
   if (!state || typeof state !== 'object') return null
 
   const record = state as Record<string, unknown>
   if (record.isReview !== true) return null
 
-  const errors = Array.isArray(record.reviewErrors)
+  const explicitIds = Array.isArray(record.reviewQuestionIds)
+    ? record.reviewQuestionIds.filter((item): item is string => typeof item === 'string')
+    : []
+
+  const legacyErrors = Array.isArray(record.reviewErrors)
     ? record.reviewErrors.filter((item): item is string => typeof item === 'string')
     : []
-  const unanswered = Array.isArray(record.reviewUnanswered)
+  const legacyUnanswered = Array.isArray(record.reviewUnanswered)
     ? record.reviewUnanswered.filter((item): item is string => typeof item === 'string')
     : []
 
-  if (errors.length === 0 && unanswered.length === 0) return null
-
-  return { errors, unanswered }
+  const questionIds = explicitIds.length > 0 ? explicitIds : [...legacyErrors, ...legacyUnanswered]
+  return questionIds.length > 0 ? { questionIds } : null
 }
 
 export function QuizSessionPage() {
@@ -108,8 +110,7 @@ export function QuizSessionPage() {
             setLoadedSession({
               mode: 'review',
               quizData,
-              errors: reviewConfig.errors,
-              unanswered: reviewConfig.unanswered,
+              questionIds: reviewConfig.questionIds,
             })
           }
           return
@@ -211,11 +212,7 @@ function ActiveQuizSession({
     if (loadedSession.mode === 'resume') {
       quiz.resumeFromPaused(loadedSession.pausedSession, loadedSession.quizData.domande)
     } else if (loadedSession.mode === 'review') {
-      quiz.startReviewSession(
-        loadedSession.errors,
-        loadedSession.unanswered,
-        loadedSession.quizData.domande,
-      )
+      quiz.startReviewSession(loadedSession.questionIds, loadedSession.quizData.domande)
     } else {
       quiz.startSession(
         loadedSession.quizData.domande,

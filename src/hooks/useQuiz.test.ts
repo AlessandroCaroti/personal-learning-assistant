@@ -214,7 +214,7 @@ describe('useQuiz', () => {
     })
 
     await act(async () => {
-      result.current.startReviewSession(['q2'], [], domande)
+      result.current.startReviewSession(['q2'], domande)
       reviewSaved = await result.current.finishSession(18, false, domande)
     })
 
@@ -236,7 +236,7 @@ describe('useQuiz', () => {
     const { result } = renderHook(() => useQuiz('exam-1'))
 
     act(() => {
-      result.current.startReviewSession(['q2'], ['q3'], domande)
+      result.current.startReviewSession(['q2', 'q3'], domande)
       result.current.selectAnswer('Falso')
       result.current.confirmAnswer('q2', 5)
     })
@@ -343,7 +343,7 @@ describe('useQuiz', () => {
     const { result } = renderHook(() => useQuiz('exam-1'))
 
     act(() => {
-      result.current.startReviewSession(['q1'], ['q2'], domande)
+      result.current.startReviewSession(['q1', 'q2'], domande)
       result.current.selectAnswer('4')
       result.current.confirmAnswer('q1', 5)
     })
@@ -421,7 +421,7 @@ describe('useQuiz', () => {
 
     expect(() => {
       act(() => {
-        result.current.startReviewSession(['missing'], [], domande)
+        result.current.startReviewSession(['missing'], domande)
       })
     }).toThrow('Nessuna domanda disponibile per il ripasso')
     expect(result.current.sessionState?.questions.map((question) => question.id)).toEqual(['q1'])

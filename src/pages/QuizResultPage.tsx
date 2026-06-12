@@ -166,8 +166,7 @@ export function QuizResultPage() {
       onReview={() => {
         navigate(`/esame/${examId}/quiz/sessione`, {
           state: {
-            reviewErrors: currentSession.errors,
-            reviewUnanswered: currentSession.unanswered,
+            reviewQuestionIds: [...currentSession.errors, ...currentSession.unanswered],
             isReview: true,
           },
         })

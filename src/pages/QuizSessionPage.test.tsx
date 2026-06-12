@@ -212,8 +212,7 @@ describe('QuizSessionPage', () => {
     renderPage({
       entryState: {
         isReview: true,
-        reviewErrors: ['q1'],
-        reviewUnanswered: ['q2'],
+        reviewQuestionIds: ['q1', 'q2'],
       },
     })
 
@@ -231,6 +230,28 @@ describe('QuizSessionPage', () => {
     expect(savedSession.timeLimitSeconds).toBeNull()
     expect(savedSession.total).toBe(2)
     expect(savedSession.unanswered).toEqual(['q2'])
+  })
+
+  it('ignores invalid reviewQuestionIds and starts with the valid ordered ids', async () => {
+    renderPage({
+      entryState: {
+        isReview: true,
+        reviewQuestionIds: ['missing', 'q2', 'q1'],
+      },
+    })
+
+    expect(await screen.findByText('Domanda 1 di 2')).not.toBeNull()
+    expect(screen.getByText('Un triangolo ha tre lati.')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Consegna quiz/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Consegna' }))
+
+    await waitFor(() => {
+      expect(saveQuizSession).toHaveBeenCalled()
+    })
+    const savedSession = saveQuizSession.mock.calls[0][0] as QuizSession
+    expect(savedSession.isReview).toBe(true)
+    expect(savedSession.total).toBe(2)
+    expect(savedSession.unanswered).toEqual(['q2', 'q1'])
   })
 
   it('resumes a paused review session and saves the result as review', async () => {

@@ -294,8 +294,8 @@ export function useQuiz(examId: string) {
   )
 
   const startReviewSession = useCallback(
-    (errors: string[], unanswered: string[], allDomande: QuizDomanda[]) => {
-      const requestedIds = [...new Set([...errors, ...unanswered])]
+    (questionIds: string[], allDomande: QuizDomanda[]) => {
+      const requestedIds = [...new Set(questionIds)]
       const sourceById = new Map(allDomande.map((domanda) => [domanda.id, domanda]))
       const questions = requestedIds
         .map((questionId) => sourceById.get(questionId))

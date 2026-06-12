@@ -196,9 +196,7 @@ describe('QuizResultPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Ripassa errori' }))
 
     expect(
-      await screen.findByText(
-        '{"reviewErrors":["q1"],"reviewUnanswered":["q2"],"isReview":true}',
-      ),
+      await screen.findByText('{"reviewQuestionIds":["q1","q2"],"isReview":true}'),
     ).not.toBeNull()
   })
 
