@@ -88,7 +88,7 @@ describe('studyService', () => {
           questionId: 'q1',
           questionText: 'Domanda uno',
           macroargomenti: ['Algebra'],
-          resultType: 'unanswered',
+          lastResult: 'unanswered',
           lastMissedAt: '2026-01-03T10:00:00.000Z',
           latestSessionIndex: 0,
           accuracy: 0.75,
@@ -99,7 +99,7 @@ describe('studyService', () => {
         }),
         expect.objectContaining({
           questionId: 'q2',
-          resultType: 'unanswered',
+          lastResult: 'unanswered',
           lastMissedAt: '2026-01-01T10:00:00.000Z',
           latestSessionIndex: 1,
           accuracy: 0,
@@ -108,7 +108,7 @@ describe('studyService', () => {
         }),
         expect.objectContaining({
           questionId: 'q3',
-          resultType: 'error',
+          lastResult: 'error',
           lastMissedAt: '2026-01-03T10:00:00.000Z',
           latestSessionIndex: 0,
           accuracy: null,
@@ -117,6 +117,7 @@ describe('studyService', () => {
         }),
       ]),
     )
+    expect(queue.map((item) => item.questionId)).toEqual(['q1', 'q3', 'q2'])
     expect(queue.find((item) => item.questionId === 'missing-id')).toBeUndefined()
 
     const q1 = queue.find((item) => item.questionId === 'q1')
@@ -129,7 +130,7 @@ describe('studyService', () => {
         questionId: 'q3',
         questionText: 'Domanda tre',
         macroargomenti: [],
-        resultType: 'error',
+        lastResult: 'error',
         lastMissedAt: '2026-01-03T10:00:00.000Z',
         latestSessionIndex: 0,
         accuracy: 0.8,
@@ -142,7 +143,7 @@ describe('studyService', () => {
         questionId: 'q2',
         questionText: 'Domanda due',
         macroargomenti: [],
-        resultType: 'error',
+        lastResult: 'error',
         lastMissedAt: '2026-01-03T10:00:00.000Z',
         latestSessionIndex: 0,
         accuracy: 0.2,
@@ -155,7 +156,7 @@ describe('studyService', () => {
         questionId: 'q1',
         questionText: 'Domanda uno',
         macroargomenti: [],
-        resultType: 'unanswered',
+        lastResult: 'unanswered',
         lastMissedAt: '2026-01-01T10:00:00.000Z',
         latestSessionIndex: 1,
         accuracy: null,
@@ -168,7 +169,7 @@ describe('studyService', () => {
         questionId: 'q4',
         questionText: 'Domanda quattro',
         macroargomenti: [],
-        resultType: 'error',
+        lastResult: 'error',
         lastMissedAt: '2026-01-03T10:00:00.000Z',
         latestSessionIndex: 0,
         accuracy: 0.2,
@@ -245,6 +246,7 @@ describe('studyService', () => {
         score: index % 3,
         total: 3,
         totalTime: 90 + index * 3,
+        isReview: index === 11,
       }),
     )
     const stats = [
@@ -256,12 +258,12 @@ describe('studyService', () => {
     const summary = buildStudyStats({ quiz, sessions, stats })
 
     expect(summary).toEqual({
-      overallAccuracy: 4 / 6,
-      seenQuestionCount: 2,
-      totalQuestionCount: 3,
+      accuracy: 4 / 6,
+      seenQuestions: 2,
+      totalQuestions: 3,
       progress: 2 / 3,
       averageSecondsPerQuestion: 106.5 / 3,
-      completedSessionCount: 12,
+      completedSessions: 12,
       trend: expect.any(Array),
     })
     expect(summary.trend).toHaveLength(10)
@@ -282,8 +284,9 @@ describe('studyService', () => {
       date: '2026-01-12T10:00:00.000Z',
       score: 2,
       total: 3,
-      accuracyPercent: 67,
-      secondsPerQuestion: 41,
+      scorePercent: 67,
+      averageSecondsPerQuestion: 41,
+      isReview: true,
     })
   })
 
@@ -294,18 +297,19 @@ describe('studyService', () => {
       stats: [makeStat({ questionId: 'q1', timesShown: 0, timesCorrect: 0 })],
     })
 
-    expect(summary.overallAccuracy).toBeNull()
+    expect(summary.accuracy).toBeNull()
     expect(summary.averageSecondsPerQuestion).toBeNull()
-    expect(summary.seenQuestionCount).toBe(0)
+    expect(summary.seenQuestions).toBe(0)
     expect(summary.progress).toBe(0)
-    expect(summary.completedSessionCount).toBe(1)
+    expect(summary.completedSessions).toBe(1)
     expect(summary.trend[0]).toEqual({
       sessionId: 'empty',
       date: '2026-01-01T00:00:00.000Z',
       score: 0,
       total: 0,
-      accuracyPercent: 0,
-      secondsPerQuestion: null,
+      scorePercent: 0,
+      averageSecondsPerQuestion: null,
+      isReview: false,
     })
   })
 })

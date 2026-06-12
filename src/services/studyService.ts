@@ -8,7 +8,7 @@ export interface ReviewQueueItem {
   questionId: string
   questionText: string
   macroargomenti: string[]
-  resultType: ReviewResultType
+  lastResult: ReviewResultType
   lastMissedAt: string
   latestSessionIndex: number
   accuracy: number | null
@@ -29,17 +29,18 @@ export interface StudyTrendItem {
   date: string
   score: number
   total: number
-  accuracyPercent: number
-  secondsPerQuestion: number | null
+  scorePercent: number
+  averageSecondsPerQuestion: number | null
+  isReview: boolean
 }
 
 export interface StudyStatsSummary {
-  overallAccuracy: number | null
-  seenQuestionCount: number
-  totalQuestionCount: number
+  accuracy: number | null
+  seenQuestions: number
+  totalQuestions: number
   progress: number
   averageSecondsPerQuestion: number | null
-  completedSessionCount: number
+  completedSessions: number
   trend: StudyTrendItem[]
 }
 
@@ -107,7 +108,7 @@ export const buildReviewQueue = ({ quiz, sessions, stats }: StudyServiceInput): 
         questionId,
         questionText: question.testo,
         macroargomenti: [...question.macroargomenti],
-        resultType,
+        lastResult: resultType,
         lastMissedAt: session.date,
         latestSessionIndex,
         accuracy: getAccuracy(stat),
@@ -119,7 +120,7 @@ export const buildReviewQueue = ({ quiz, sessions, stats }: StudyServiceInput): 
     })
   })
 
-  return Array.from(queueByQuestionId.values())
+  return sortReviewQueue(Array.from(queueByQuestionId.values()))
 }
 
 export const sortReviewQueue = (queue: ReviewQueueItem[]): ReviewQueueItem[] =>
@@ -149,7 +150,7 @@ export const filterReviewQueue = (
       return false
     }
 
-    if (resultType !== 'all' && item.resultType !== resultType) {
+    if (resultType !== 'all' && item.lastResult !== resultType) {
       return false
     }
 
@@ -166,19 +167,19 @@ export const buildStudyStats = ({ quiz, sessions, stats }: StudyServiceInput): S
   const relevantStats = stats.filter((stat) => questionIds.has(stat.questionId))
   const totalShown = relevantStats.reduce((sum, stat) => sum + stat.timesShown, 0)
   const totalCorrect = relevantStats.reduce((sum, stat) => sum + stat.timesCorrect, 0)
-  const seenQuestionCount = relevantStats.filter((stat) => stat.timesShown > 0).length
-  const totalQuestionCount = quiz.domande.length
+  const seenQuestions = relevantStats.filter((stat) => stat.timesShown > 0).length
+  const totalQuestions = quiz.domande.length
   const totalSessionQuestions = sessions.reduce((sum, session) => sum + session.total, 0)
   const totalSessionSeconds = sessions.reduce((sum, session) => sum + session.totalTime, 0)
 
   return {
-    overallAccuracy: totalShown > 0 ? totalCorrect / totalShown : null,
-    seenQuestionCount,
-    totalQuestionCount,
-    progress: totalQuestionCount > 0 ? seenQuestionCount / totalQuestionCount : 0,
+    accuracy: totalShown > 0 ? totalCorrect / totalShown : null,
+    seenQuestions,
+    totalQuestions,
+    progress: totalQuestions > 0 ? seenQuestions / totalQuestions : 0,
     averageSecondsPerQuestion:
       totalSessionQuestions > 0 ? totalSessionSeconds / totalSessionQuestions : null,
-    completedSessionCount: sessions.length,
+    completedSessions: sessions.length,
     trend: sortSessionsByLatestDate(sessions)
       .slice(0, 10)
       .map((session) => ({
@@ -186,8 +187,9 @@ export const buildStudyStats = ({ quiz, sessions, stats }: StudyServiceInput): S
         date: session.date,
         score: session.score,
         total: session.total,
-        accuracyPercent: session.total > 0 ? Math.round((session.score / session.total) * 100) : 0,
-        secondsPerQuestion: session.total > 0 ? session.totalTime / session.total : null,
+        scorePercent: session.total > 0 ? Math.round((session.score / session.total) * 100) : 0,
+        averageSecondsPerQuestion: session.total > 0 ? session.totalTime / session.total : null,
+        isReview: session.isReview,
       })),
   }
 }
