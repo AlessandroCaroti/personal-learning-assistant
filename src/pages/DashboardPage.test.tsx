@@ -80,6 +80,7 @@ function renderDashboard(path = '/esame/exam-1') {
       <Routes>
         <Route path="/" element={<h1>Tutti gli esami</h1>} />
         <Route path="/esame/:examId" element={<DashboardPage />} />
+        <Route path="/esame/:examId/archivio" element={<h1>Archivio esame</h1>} />
         <Route path="/esame/:examId/quiz/config" element={<LocationStateView />} />
         <Route path="/esame/:examId/quiz/sessione" element={<LocationStateView />} />
         <Route path="/esame/:examId/flashcard/sessione" element={<LocationStateView />} />
@@ -176,6 +177,82 @@ describe('DashboardPage', () => {
       })
     })
     expect(await screen.findByText('quiz.json')).not.toBeNull()
+  })
+
+  it('shows an empty archive section on the dashboard', async () => {
+    renderDashboard()
+
+    expect(await screen.findByRole('heading', { name: 'Archivio' })).not.toBeNull()
+    expect(screen.getByText('Nessun file')).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Aggiungi file' })).not.toBeNull()
+    expect(screen.getByRole('button', { name: 'Apri archivio' })).not.toBeNull()
+  })
+
+  it('adds an archive attachment from the dashboard', async () => {
+    const current = makeExam()
+    getEsame.mockResolvedValue(current)
+    saveEsame.mockImplementation(async (updated: Esame) => {
+      getEsame.mockResolvedValue(updated)
+    })
+    const pickedData = encodeText('archive')
+    pickFile.mockResolvedValue({
+      name: 'archive.custom',
+      type: 'application/octet-stream',
+      data: pickedData,
+    })
+
+    renderDashboard()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Aggiungi file' }))
+
+    expect(pickFile).toHaveBeenCalledWith([])
+    await waitFor(() => {
+      expect(saveEsame).toHaveBeenCalledWith({
+        ...current,
+        attachments: [
+          expect.objectContaining({
+            id: expect.any(String),
+            name: 'archive.custom',
+            type: 'application/octet-stream',
+            data: pickedData,
+            createdAt: expect.any(String),
+          }),
+        ],
+      })
+    })
+    expect(await screen.findByText('archive.custom')).not.toBeNull()
+  })
+
+  it('shows recent archive attachments and navigates to the full archive', async () => {
+    getEsame.mockResolvedValue({
+      ...makeExam(),
+      attachments: [
+        {
+          id: 'old',
+          name: 'old.pdf',
+          type: 'application/pdf',
+          data: encodeText('old'),
+          createdAt: '2026-06-01T08:00:00.000Z',
+        },
+        {
+          id: 'new',
+          name: 'new.pdf',
+          type: 'application/pdf',
+          data: encodeText('new'),
+          createdAt: '2026-06-02T08:00:00.000Z',
+        },
+      ],
+    })
+
+    renderDashboard()
+
+    expect(await screen.findByText('2 file')).not.toBeNull()
+    expect(screen.getByText('new.pdf')).not.toBeNull()
+    expect(screen.getByText('old.pdf')).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Apri archivio' }))
+
+    expect(await screen.findByRole('heading', { name: 'Archivio esame' })).not.toBeNull()
   })
 
   it('validates quiz replacement before calling the transactional replacement helper', async () => {

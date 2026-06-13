@@ -1,5 +1,5 @@
-import type { FileRecord } from '../../types'
-import type { EncodedFileRecord } from './types'
+import type { ExamAttachment, FileRecord } from '../../types'
+import type { EncodedExamAttachment, EncodedFileRecord } from './types'
 
 const BASE64_CHUNK_SIZE = 0x8000
 
@@ -38,5 +38,25 @@ export function decodeFileRecord(file: EncodedFileRecord): FileRecord {
     name: file.name,
     type: file.type,
     data: base64ToArrayBuffer(file.dataBase64),
+  }
+}
+
+export function encodeExamAttachment(attachment: ExamAttachment): EncodedExamAttachment {
+  return {
+    id: attachment.id,
+    name: attachment.name,
+    type: attachment.type,
+    createdAt: attachment.createdAt,
+    dataBase64: arrayBufferToBase64(attachment.data),
+  }
+}
+
+export function decodeExamAttachment(attachment: EncodedExamAttachment): ExamAttachment {
+  return {
+    id: attachment.id,
+    name: attachment.name,
+    type: attachment.type,
+    createdAt: attachment.createdAt,
+    data: base64ToArrayBuffer(attachment.dataBase64),
   }
 }

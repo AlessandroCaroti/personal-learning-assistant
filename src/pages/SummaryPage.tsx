@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { prepareHtmlForIframe } from '../services/fileViewerService'
 import * as storageService from '../services/storageService'
 import type { FileRecord } from '../types'
 
@@ -136,24 +137,6 @@ function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message
   if (typeof error === 'string') return error
   return 'Impossibile aprire il riassunto.'
-}
-
-function prepareHtmlForIframe(html: string): string {
-  const baseTag = '<base href="about:srcdoc">'
-
-  if (html.includes(baseTag)) return html
-
-  const headTagMatch = html.match(/<head\b[^>]*>/i)
-  if (headTagMatch) {
-    return html.replace(headTagMatch[0], `${headTagMatch[0]}${baseTag}`)
-  }
-
-  const htmlTagMatch = html.match(/<html\b[^>]*>/i)
-  if (htmlTagMatch) {
-    return html.replace(htmlTagMatch[0], `${htmlTagMatch[0]}<head>${baseTag}</head>`)
-  }
-
-  return `${baseTag}${html}`
 }
 
 const pageStyle = {

@@ -66,6 +66,7 @@ describe('syncService', () => {
               name: 'Remote',
               createdAt: '2026-06-01T08:00:00.000Z',
               files: {},
+              attachments: [],
               updatedAt: '2026-06-01T11:00:00.000Z',
               updatedByDeviceId: 'remote-device',
             },

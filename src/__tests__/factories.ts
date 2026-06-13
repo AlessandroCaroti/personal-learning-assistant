@@ -1,4 +1,5 @@
 import type {
+  ExamAttachment,
   Esame,
   FlashCard,
   FlashcardFile,
@@ -62,11 +63,24 @@ export const makeFlashcardFile = (carte: FlashCard[] = [makeFlashCard()]): Flash
   carte,
 })
 
+export const makeExamAttachment = (overrides: Partial<ExamAttachment> = {}): ExamAttachment => ({
+  id: 'attachment-1',
+  name: 'attachment.pdf',
+  type: 'application/pdf',
+  data: (() => {
+    const bytes = new TextEncoder().encode('attachment')
+    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  })(),
+  createdAt: DEFAULT_DATE,
+  ...overrides,
+})
+
 export const makeEsame = (overrides: Partial<Esame> = {}): Esame => ({
   id: 'exam-1',
   name: 'Esame di Test',
   createdAt: DEFAULT_DATE,
   files: {},
+  attachments: [],
   ...overrides,
 })
 

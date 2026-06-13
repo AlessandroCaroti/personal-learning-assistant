@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { FileImportButton } from '../components/FileImportButton'
+import { createExamAttachment, sortAttachmentsNewestFirst } from '../services/archiveService'
 import { fileService } from '../services/fileService'
 import { validateFlashcardFile, validateQuizFile } from '../services/quizService'
 import * as storageService from '../services/storageService'
@@ -80,6 +81,31 @@ export function DashboardPage() {
     await saveFile('flashcard', data, name, type)
   }
 
+  async function importAttachment(data: ArrayBuffer, name: string, type: string) {
+    if (!examId) return
+
+    const currentExam = await storageService.getEsame(examId)
+    if (!currentExam) {
+      navigate('/', { replace: true })
+      return
+    }
+
+    const updatedExam: Esame = {
+      ...currentExam,
+      attachments: [
+        ...(currentExam.attachments ?? []),
+        createExamAttachment({
+          data,
+          name,
+          type,
+        }),
+      ],
+    }
+
+    await storageService.saveEsame(updatedExam)
+    setEsame(updatedExam)
+  }
+
   function openReplacementDialog(target: ReplaceTarget) {
     setReplaceTarget(target)
     setReplaceError(null)
@@ -137,6 +163,9 @@ export function DashboardPage() {
   const hasQuiz = Boolean(esame.files.quiz)
   const hasFlashcard = Boolean(esame.files.flashcard)
   const replacementIsQuiz = replaceTarget === 'quiz'
+  const attachments = sortAttachmentsNewestFirst(esame.attachments ?? [])
+  const archiveStatus = attachments.length === 0 ? 'Nessun file' : `${attachments.length} file`
+  const archivePreview = attachments.slice(0, 3)
 
   return (
     <div style={{ maxWidth: '760px', margin: '0 auto' }}>
@@ -194,6 +223,26 @@ export function DashboardPage() {
             accept={['.html', '.pdf', '.docx']}
             onFile={importSummary}
           />
+        </SectionCard>
+
+        <SectionCard title="Archivio" status={archiveStatus}>
+          <FileImportButton label="Aggiungi file" accept={[]} onFile={importAttachment} />
+          <button
+            type="button"
+            onClick={() => navigate(`/esame/${esame.id}/archivio`)}
+            style={secondaryButtonStyle}
+          >
+            Apri archivio
+          </button>
+          {archivePreview.length > 0 && (
+            <ul style={archivePreviewListStyle}>
+              {archivePreview.map((attachment) => (
+                <li key={attachment.id} style={archivePreviewItemStyle}>
+                  {attachment.name}
+                </li>
+              ))}
+            </ul>
+          )}
         </SectionCard>
 
         <SectionCard
@@ -410,6 +459,21 @@ const secondaryButtonStyle = {
 const mutedTextStyle = {
   color: 'var(--text-muted)',
   fontSize: '0.95rem',
+}
+
+const archivePreviewListStyle = {
+  flexBasis: '100%',
+  display: 'grid',
+  gap: '0.35rem',
+  marginTop: '0.25rem',
+  color: 'var(--text-muted)',
+  fontSize: '0.9rem',
+  listStyle: 'none',
+  padding: 0,
+}
+
+const archivePreviewItemStyle = {
+  overflowWrap: 'anywhere' as const,
 }
 
 const replacementErrorStyle = {

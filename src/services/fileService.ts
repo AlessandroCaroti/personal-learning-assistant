@@ -21,7 +21,7 @@ type FilePickerAcceptType = {
 }
 
 type FilePickerOptions = {
-  types: FilePickerAcceptType[]
+  types?: FilePickerAcceptType[]
   multiple: false
 }
 
@@ -78,10 +78,13 @@ async function pickFileBrowser(accept: string[]): Promise<PickedFile> {
   const filePickerWindow = window as WindowWithFilePicker
 
   if (filePickerWindow.showOpenFilePicker) {
-    const [fileHandle] = await filePickerWindow.showOpenFilePicker({
-      types: acceptFiltersFromExtensions(accept),
-      multiple: false,
-    })
+    const options: FilePickerOptions = { multiple: false }
+
+    if (accept.length > 0) {
+      options.types = acceptFiltersFromExtensions(accept)
+    }
+
+    const [fileHandle] = await filePickerWindow.showOpenFilePicker(options)
     const file = await fileHandle.getFile()
     const data = await file.arrayBuffer()
     return { name: file.name, type: file.type, data }

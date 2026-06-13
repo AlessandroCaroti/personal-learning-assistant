@@ -23,6 +23,7 @@ function examRecord(overrides: Partial<SyncExamRecord> = {}): SyncExamRecord {
     name: 'Exam 1',
     createdAt: '2026-06-01T08:00:00.000Z',
     files: {},
+    attachments: [],
     updatedAt: '2026-06-01T09:00:00.000Z',
     updatedByDeviceId: 'device-1',
     ...overrides,

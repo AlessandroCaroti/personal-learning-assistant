@@ -76,6 +76,27 @@ describe('fileService', () => {
     expect(new TextDecoder().decode(picked.data)).toBe('hello')
   })
 
+  it('uses unfiltered browser file picking when accept is empty', async () => {
+    const file = new File(['plain'], 'notes.txt', { type: 'text/plain' })
+    const showOpenFilePicker = vi.fn(async () => [
+      {
+        getFile: async () => file,
+      },
+    ])
+    ;(window as WindowWithOpenFilePicker).showOpenFilePicker = showOpenFilePicker
+
+    const { fileService } = await freshFileService(false)
+
+    const picked = await fileService.pickFile([])
+
+    expect(showOpenFilePicker).toHaveBeenCalledWith({
+      multiple: false,
+    })
+    expect(picked.name).toBe('notes.txt')
+    expect(picked.type).toBe('text/plain')
+    expect(new TextDecoder().decode(picked.data)).toBe('plain')
+  })
+
   it('falls back to a hidden file input in browsers without File System Access API', async () => {
     const file = new File(['fallback'], 'summary.html', { type: 'text/html' })
     const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function (
@@ -97,6 +118,29 @@ describe('fileService', () => {
     expect(picked.type).toBe('text/html')
     expect(new TextDecoder().decode(picked.data)).toBe('fallback')
     expect(document.querySelector('input[type="file"]')).toBeNull()
+  })
+
+  it('leaves fallback input accept empty when accept is empty', async () => {
+    const file = new File(['fallback'], 'summary.html', { type: 'text/html' })
+    const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function (
+      this: HTMLInputElement,
+    ) {
+      expect(this.accept).toBe('')
+      Object.defineProperty(this, 'files', {
+        configurable: true,
+        value: [file],
+      })
+      this.dispatchEvent(new Event('change'))
+    })
+
+    const { fileService } = await freshFileService(false)
+
+    const picked = await fileService.pickFile([])
+
+    expect(click).toHaveBeenCalledOnce()
+    expect(picked.name).toBe('summary.html')
+    expect(picked.type).toBe('text/html')
+    expect(new TextDecoder().decode(picked.data)).toBe('fallback')
   })
 
   it('uses Capacitor file picker with MIME filters in native mode and decodes base64 data', async () => {

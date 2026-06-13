@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import type { FileRecord } from '../../types'
-import { decodeFileRecord, encodeFileRecord } from './serialization'
+import type { ExamAttachment, FileRecord } from '../../types'
+import {
+  decodeExamAttachment,
+  decodeFileRecord,
+  encodeExamAttachment,
+  encodeFileRecord,
+} from './serialization'
 
 function fileRecord(): FileRecord {
   const bytes = new TextEncoder().encode('quiz payload')
@@ -8,6 +13,17 @@ function fileRecord(): FileRecord {
     name: 'quiz.json',
     type: 'application/json',
     data: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+  }
+}
+
+function attachment(): ExamAttachment {
+  const bytes = new TextEncoder().encode('attachment payload')
+  return {
+    id: 'attachment-1',
+    name: 'slides.pdf',
+    type: 'application/pdf',
+    data: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    createdAt: '2026-06-13T09:00:00.000Z',
   }
 }
 
@@ -24,6 +40,24 @@ describe('sync serialization', () => {
     expect(decoded.name).toBe('quiz.json')
     expect(decoded.type).toBe('application/json')
     expect(new TextDecoder().decode(decoded.data)).toBe('quiz payload')
+  })
+
+  it('round-trips exam attachments through base64 payloads', () => {
+    const encoded = encodeExamAttachment(attachment())
+    const decoded = decodeExamAttachment(encoded)
+
+    expect(encoded).toEqual({
+      id: 'attachment-1',
+      name: 'slides.pdf',
+      type: 'application/pdf',
+      dataBase64: 'YXR0YWNobWVudCBwYXlsb2Fk',
+      createdAt: '2026-06-13T09:00:00.000Z',
+    })
+    expect(decoded.id).toBe('attachment-1')
+    expect(decoded.name).toBe('slides.pdf')
+    expect(decoded.type).toBe('application/pdf')
+    expect(decoded.createdAt).toBe('2026-06-13T09:00:00.000Z')
+    expect(new TextDecoder().decode(decoded.data)).toBe('attachment payload')
   })
 
   it('round-trips empty file records', () => {

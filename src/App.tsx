@@ -4,8 +4,10 @@ import { Capacitor } from '@capacitor/core'
 import { BrowserRouter, HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { DashboardPage } from './pages/DashboardPage'
+import { ArchivePage } from './pages/ArchivePage'
 import { FlashcardConfigPage } from './pages/FlashcardConfigPage'
 import { FlashcardSessionPage } from './pages/FlashcardSessionPage'
+import { FileViewerPage } from './pages/FileViewerPage'
 import { HomePage } from './pages/HomePage'
 import { QuizConfigPage } from './pages/QuizConfigPage'
 import { QuizResultPage } from './pages/QuizResultPage'
@@ -97,6 +99,8 @@ export default function App() {
           <Route path="/guida" element={<TutorialPage />} />
           <Route path="/esame/:examId" element={<DashboardPage />} />
           <Route path="/esame/:examId/riassunto" element={<SummaryPage />} />
+          <Route path="/esame/:examId/archivio" element={<ArchivePage />} />
+          <Route path="/esame/:examId/file/:fileId" element={<FileViewerPage />} />
           <Route path="/esame/:examId/quiz/config" element={<QuizConfigPage />} />
           <Route path="/esame/:examId/quiz/sessione" element={<QuizSessionPage />} />
           <Route path="/esame/:examId/quiz/risultato" element={<QuizResultPage />} />

@@ -1,4 +1,12 @@
-import type { CardEval, Esame, FileRecord, FlashcardStats, QuestionStats, QuizSession } from '../../types'
+import type {
+  CardEval,
+  Esame,
+  ExamAttachment,
+  FileRecord,
+  FlashcardStats,
+  QuestionStats,
+  QuizSession,
+} from '../../types'
 
 export const SYNC_SCHEMA_VERSION = 1
 
@@ -19,8 +27,13 @@ export interface EncodedFileRecord {
   dataBase64: string
 }
 
-export interface SyncExamRecord extends Omit<Esame, 'files'> {
+export interface EncodedExamAttachment extends Omit<ExamAttachment, 'data'> {
+  dataBase64: string
+}
+
+export interface SyncExamRecord extends Omit<Esame, 'files' | 'attachments'> {
   files: Partial<Record<SyncFileSlot, EncodedFileRecord>>
+  attachments: EncodedExamAttachment[]
   updatedAt: string
   updatedByDeviceId: string
 }

@@ -8,7 +8,12 @@ import type {
   QuestionStats,
   QuizSession,
 } from '../types'
-import { decodeFileRecord, encodeFileRecord } from './sync/serialization'
+import {
+  decodeExamAttachment,
+  decodeFileRecord,
+  encodeExamAttachment,
+  encodeFileRecord,
+} from './sync/serialization'
 import {
   SYNC_SCHEMA_VERSION,
   type LocalSyncRecordMetadata,
@@ -223,6 +228,17 @@ function notifySyncDirty(): void {
   window.dispatchEvent(new Event(SYNC_DIRTY_EVENT))
 }
 
+function normalizeAttachments(esame: Esame): NonNullable<Esame['attachments']> {
+  return esame.attachments ?? []
+}
+
+function normalizeEsame(esame: Esame): Esame {
+  return {
+    ...esame,
+    attachments: normalizeAttachments(esame),
+  }
+}
+
 export async function getSyncMetadata(): Promise<SyncMetadata> {
   const db = await getDB()
   const tx = db.transaction('syncMetadata', 'readwrite')
@@ -232,11 +248,13 @@ export async function getSyncMetadata(): Promise<SyncMetadata> {
 }
 
 export async function getAllEsami(): Promise<Esame[]> {
-  return (await getDB()).getAll('esami')
+  const esami = await (await getDB()).getAll('esami')
+  return esami.map((esame) => normalizeEsame(esame))
 }
 
 export async function getEsame(id: string): Promise<Esame | undefined> {
-  return (await getDB()).get('esami', id)
+  const esame = await (await getDB()).get('esami', id)
+  return esame ? normalizeEsame(esame) : undefined
 }
 
 export async function saveEsame(esame: Esame): Promise<void> {
@@ -597,6 +615,9 @@ export async function exportLocalSyncState(): Promise<{
 
           return {
             ...esame,
+            attachments: normalizeAttachments(esame).map((attachment) =>
+              encodeExamAttachment(attachment),
+            ),
             files: Object.fromEntries(
               Object.entries(esame.files).map(([slot, file]) => [slot, encodeFileRecord(file)]),
             ),
@@ -653,7 +674,7 @@ export async function importMergedSyncState(
   const db = await getDB()
   const currentMetadata = await getSyncMetadata()
   const normalizedEsami: Esame[] = state.data.esami.map(
-    ({ id, name, createdAt, files }) => ({
+    ({ id, name, createdAt, files, attachments }) => ({
       id,
       name,
       createdAt,
@@ -662,6 +683,7 @@ export async function importMergedSyncState(
         ...(files.quiz ? { quiz: decodeFileRecord(files.quiz) } : {}),
         ...(files.flashcard ? { flashcard: decodeFileRecord(files.flashcard) } : {}),
       },
+      attachments: (attachments ?? []).map((attachment) => decodeExamAttachment(attachment)),
     }),
   )
   const esamiMetadata: LocalSyncRecordMetadata[] = state.data.esami.map(

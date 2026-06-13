@@ -7,12 +7,18 @@ export interface Esame {
     quiz?: FileRecord
     flashcard?: FileRecord
   }
+  attachments?: ExamAttachment[]
 }
 
 export interface FileRecord {
   name: string
   type: string
   data: ArrayBuffer
+}
+
+export interface ExamAttachment extends FileRecord {
+  id: string
+  createdAt: string
 }
 
 export interface QuizSession {

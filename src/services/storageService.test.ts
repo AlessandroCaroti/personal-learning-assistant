@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { makeEsame, makePausedFlash, makePausedQuiz, makeQuizSession } from '../__tests__/factories'
 import { resetDb } from '../__tests__/resetDb'
-import type { FileRecord, FlashcardStats, QuestionStats } from '../types'
+import type { Esame, ExamAttachment, FileRecord, FlashcardStats, QuestionStats } from '../types'
 import { SYNC_SCHEMA_VERSION, type RemoteSyncState } from './sync/types'
 import {
   deleteEsame,
@@ -70,6 +70,19 @@ function fileRecord(name: string): FileRecord {
     name,
     type: 'application/json',
     data: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+  }
+}
+
+function attachmentRecord(overrides: Partial<ExamAttachment> = {}): ExamAttachment {
+  const bytes = new TextEncoder().encode(overrides.name ?? 'archive.pdf')
+
+  return {
+    id: 'attachment-1',
+    name: 'archive.pdf',
+    type: 'application/pdf',
+    data: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    createdAt: '2026-06-13T09:00:00.000Z',
+    ...overrides,
   }
 }
 
@@ -151,6 +164,45 @@ describe('storageService', () => {
 
     await expect(getEsame(exam.id)).resolves.toBeUndefined()
     await expect(getAllEsami()).resolves.toEqual([otherExam])
+  })
+
+  it('persists exam attachments without changing study file slots', async () => {
+    const attachment = attachmentRecord()
+    const examWithAttachment: Esame = {
+      ...exam,
+      files: {
+        quiz: fileRecord('quiz.json'),
+      },
+      attachments: [attachment],
+    }
+
+    await saveEsame(examWithAttachment)
+
+    await expect(getEsame(exam.id)).resolves.toEqual(examWithAttachment)
+  })
+
+  it('normalizes legacy exams without attachments on read', async () => {
+    await getAllEsami()
+
+    await withRawDb(['esami'], 'readwrite', async (_db, tx) => {
+      tx.objectStore('esami').put({
+        id: 'legacy-exam',
+        name: 'Legacy exam',
+        createdAt: '2026-06-01T10:00:00.000Z',
+        files: {},
+      })
+    })
+
+    const expectedLegacyExam: Esame = {
+      id: 'legacy-exam',
+      name: 'Legacy exam',
+      createdAt: '2026-06-01T10:00:00.000Z',
+      files: {},
+      attachments: [],
+    }
+
+    await expect(getEsame('legacy-exam')).resolves.toEqual(expectedLegacyExam)
+    await expect(getAllEsami()).resolves.toEqual([expectedLegacyExam])
   })
 
   it('deletes an exam and cascades only records for that exam', async () => {
@@ -773,6 +825,30 @@ describe('storageService', () => {
     expect(JSON.stringify(state)).not.toContain(pausedOnlyMarker)
   })
 
+  it('exports exam attachments as encoded sync data', async () => {
+    await saveEsame({
+      ...exam,
+      attachments: [attachmentRecord()],
+    })
+
+    const { state } = await exportLocalSyncState()
+
+    expect(state.data.esami).toEqual([
+      expect.objectContaining({
+        id: exam.id,
+        attachments: [
+          {
+            id: 'attachment-1',
+            name: 'archive.pdf',
+            type: 'application/pdf',
+            dataBase64: 'YXJjaGl2ZS5wZGY=',
+            createdAt: '2026-06-13T09:00:00.000Z',
+          },
+        ],
+      }),
+    ])
+  })
+
   it('imports merged sync state and aggregates question stat device counters', async () => {
     const metadataBeforeImport = await getSyncMetadata()
     const syncedAt = '2026-06-06T10:00:00.000Z'
@@ -793,6 +869,7 @@ describe('storageService', () => {
                 dataBase64: 'aW1wb3J0ZWQtcXVpeg==',
               },
             },
+            attachments: [],
             updatedAt: '2026-06-05T10:00:00.000Z',
             updatedByDeviceId: 'remote-device',
           },
@@ -844,6 +921,7 @@ describe('storageService', () => {
           type: 'application/json',
         }),
       },
+      attachments: [],
     })
     expect(new TextDecoder().decode(importedExam?.files.quiz?.data)).toBe('imported-quiz')
     expect(importedQuestionStat).toEqual({
@@ -900,6 +978,51 @@ describe('storageService', () => {
     await expect(getPausedSession(pausedQuiz.id)).resolves.toEqual(pausedQuiz)
   })
 
+  it('imports merged sync state with exam attachments', async () => {
+    const remoteState: RemoteSyncState = {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: '2026-06-13T09:15:00.000Z',
+      writerDeviceId: 'remote-device',
+      data: {
+        esami: [
+          {
+            id: 'exam-imported',
+            name: 'Imported exam',
+            createdAt: '2026-06-13T09:00:00.000Z',
+            files: {},
+            attachments: [
+              {
+                id: 'attachment-1',
+                name: 'archive.pdf',
+                type: 'application/pdf',
+                dataBase64: 'bm90ZXM=',
+                createdAt: '2026-06-13T09:00:00.000Z',
+              },
+            ],
+            updatedAt: '2026-06-13T09:10:00.000Z',
+            updatedByDeviceId: 'remote-device',
+          },
+        ],
+        quizSessions: [],
+        questionStats: [],
+        flashcardStats: [],
+      },
+      tombstones: [],
+    }
+
+    await importMergedSyncState(remoteState, 'remote-revision-attachments', '2026-06-13T09:16:00.000Z')
+
+    const importedExam = await getEsame('exam-imported')
+    expect(importedExam?.attachments).toHaveLength(1)
+    expect(importedExam?.attachments?.[0]).toMatchObject({
+      id: 'attachment-1',
+      name: 'archive.pdf',
+      type: 'application/pdf',
+      createdAt: '2026-06-13T09:00:00.000Z',
+    })
+    expect(new TextDecoder().decode(importedExam?.attachments?.[0].data)).toBe('notes')
+  })
+
   it('leaves existing syncable stores intact when import normalization fails', async () => {
     const existingExam = {
       ...exam,
@@ -927,6 +1050,7 @@ describe('storageService', () => {
                 dataBase64: '%%%not-valid-base64%%%',
               },
             },
+            attachments: [],
             updatedAt: '2026-06-05T10:00:00.000Z',
             updatedByDeviceId: 'remote-device',
           },
@@ -966,6 +1090,7 @@ describe('storageService', () => {
             name: 'Imported exam',
             createdAt: '2026-06-05T09:00:00.000Z',
             files: {},
+            attachments: [],
             updatedAt: '2026-06-05T10:00:00.000Z',
             updatedByDeviceId: 'remote-device',
             remoteOnlyExamField: 'must-not-persist',
@@ -1012,6 +1137,7 @@ describe('storageService', () => {
       name: 'Imported exam',
       createdAt: '2026-06-05T09:00:00.000Z',
       files: {},
+      attachments: [],
     })
     await expect(getQuizSessions('exam-imported')).resolves.toEqual([
       {
