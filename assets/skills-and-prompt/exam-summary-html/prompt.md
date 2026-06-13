@@ -1,7 +1,3 @@
-Here is the converted prompt:
-
----
-
 # Exam Summary HTML Prompt
 
 ## Context

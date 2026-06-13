@@ -1,7 +1,7 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import patologiaSummaryHtml from '../../assets/tests/patologia/patologia-summary.html?raw'
+import patologiaSummaryHtml from '../../assets/exams/patologia/patologia-summary.html?raw'
 import type { Esame, FileRecord } from '../types'
 
 const getEsame = vi.fn()

@@ -1,7 +1,3 @@
-Here is the converted prompt, ready to copy-paste directly into any AI system:
-
----
-
 # Exam Quiz Generator Prompt
 
 ## Context

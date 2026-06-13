@@ -1,9 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
-import smokeFlashcardText from '../../assets/tests/patologia/patologia_flashcard.json?raw'
-import smokeQuizText from '../../assets/tests/patologia/patologia_quiz.json?raw'
-import smokeSummaryText from '../../assets/tests/patologia/patologia-summary.html?raw'
+import smokeFlashcardText from '../../assets/exams/patologia/patologia_flashcard.json?raw'
+import smokeQuizText from '../../assets/exams/patologia/patologia_quiz.json?raw'
+import smokeSummaryText from '../../assets/exams/patologia/patologia-summary.html?raw'
 import type { Esame, PausedSession } from '../types'
 
 const getEsame = vi.fn()

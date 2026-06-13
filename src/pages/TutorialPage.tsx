@@ -2,81 +2,13 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export const PROMPT_QUIZ = `Ho allegato i miei documenti di studio per l'esame di [NOME ESAME].
-Analizza tutto il contenuto e genera un file JSON chiamato quiz.json.
+import quizPrompt from '../../assets/skills-and-prompt/exam-quiz-generator/prompt.md?raw'
+import summaryPrompt from '../../assets/skills-and-prompt/exam-summary-html/prompt.md?raw'
+import flashcardPrompt from '../../assets/skills-and-prompt/flashcard-generator/prompt.md?raw'
 
-━━━ FILE: quiz.json ━━━
-Schema:
-{
-  "esame": "[NOME ESAME]",
-  "domande": [
-    {
-      "id": "q1",
-      "macroargomenti": ["Argomento A", "Argomento B"],
-      "tipo": "multipla",
-      "testo": "testo della domanda",
-      "opzioni": ["opzione 1", "opzione 2", "opzione 3", "opzione 4"],
-      "risposta_corretta": "testo esatto dell'opzione corretta",
-      "spiegazione": "spiegazione dettagliata della risposta"
-    },
-    {
-      "id": "q2",
-      "macroargomenti": ["Argomento A"],
-      "tipo": "vero_falso",
-      "testo": "affermazione da valutare",
-      "risposta_corretta": "Vero",
-      "spiegazione": "spiegazione dettagliata"
-    }
-  ]
-}
-Regole:
-- Genera il maggior numero possibile di domande (minimo 50)
-- Alterna domande multipla e vero/falso
-- Per multipla: da 3 a 5 opzioni, testo puro senza prefissi A/B/C
-- risposta_corretta per multipla = testo esatto di una delle opzioni (non una lettera)
-- risposta_corretta per vero_falso = "Vero" oppure "Falso"
-- macroargomenti: argomenti tematici coerenti, riutilizzati tra le domande
-- Copri uniformemente tutti gli argomenti del materiale
-- id sequenziale: q1, q2, q3...
-
-Rispondi con un solo blocco di codice JSON per quiz.json. Nient'altro.`
-
-export const PROMPT_FLASHCARD = `Ho allegato i miei documenti di studio per l'esame di [NOME ESAME].
-Analizza tutto il contenuto e genera un file JSON chiamato flashcard.json.
-
-━━━ FILE: flashcard.json ━━━
-Schema:
-{
-  "esame": "[NOME ESAME]",
-  "carte": [
-    {
-      "id": "f1",
-      "macroargomenti": ["Argomento A"],
-      "fronte": "domanda, termine o concetto",
-      "retro": "risposta o definizione completa e autosufficiente"
-    }
-  ]
-}
-Regole:
-- Genera il maggior numero possibile di carte (minimo 60)
-- Il fronte è una domanda aperta, un termine chiave, o una formula
-- Il retro è la risposta completa, comprensibile da sola
-- macroargomenti: argomenti tematici coerenti, riutilizzati tra le carte
-- id sequenziale: f1, f2, f3...
-
-Rispondi con un solo blocco di codice JSON per flashcard.json. Nient'altro.`
-
-export const PROMPT_RIASSUNTO = `Ho allegato i miei documenti di studio per l'esame di [NOME ESAME].
-Crea un riassunto completo in formato HTML con queste caratteristiche:
-
-- File HTML autocontenuto (CSS inline o in un tag <style> nell'<head>)
-- <h1> per il titolo dell'esame, <h2> per i macroargomenti, <h3> per i sottotemi
-- Usa tabelle per confronti, elenchi puntati per definizioni o passaggi
-- Formule scritte in forma testuale leggibile
-- Stile: sfondo bianco, font sans-serif, margini comodi, leggibile su schermo
-- Copri tutto il materiale in modo esaustivo senza tralasciare nulla
-
-Rispondi con solo il file HTML completo, nient'altro.`
+export const PROMPT_QUIZ = quizPrompt
+export const PROMPT_FLASHCARD = flashcardPrompt
+export const PROMPT_RIASSUNTO = summaryPrompt
 
 interface StepProps {
   number: number
