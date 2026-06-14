@@ -1,5 +1,6 @@
 import type {
   ExamAttachment,
+  ExamDate,
   Esame,
   FlashCard,
   FlashcardFile,
@@ -75,12 +76,20 @@ export const makeExamAttachment = (overrides: Partial<ExamAttachment> = {}): Exa
   ...overrides,
 })
 
+export const makeExamDate = (overrides: Partial<ExamDate> = {}): ExamDate => ({
+  id: 'exam-date-1',
+  date: '2026-07-15',
+  createdAt: DEFAULT_DATE,
+  ...overrides,
+})
+
 export const makeEsame = (overrides: Partial<Esame> = {}): Esame => ({
   id: 'exam-1',
   name: 'Esame di Test',
   createdAt: DEFAULT_DATE,
   files: {},
   attachments: [],
+  examDates: [],
   ...overrides,
 })
 

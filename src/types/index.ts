@@ -1,3 +1,11 @@
+export interface ExamDate {
+  id: string
+  date: string
+  label?: string
+  notes?: string
+  createdAt: string
+}
+
 export interface Esame {
   id: string
   name: string
@@ -8,6 +16,7 @@ export interface Esame {
     flashcard?: FileRecord
   }
   attachments?: ExamAttachment[]
+  examDates?: ExamDate[]
 }
 
 export interface FileRecord {
