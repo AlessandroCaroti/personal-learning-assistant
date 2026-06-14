@@ -247,6 +247,15 @@ describe('storageService', () => {
 
     await expect(getEsame('legacy-dates-exam')).resolves.toEqual(expectedLegacyExam)
     await expect(getAllEsami()).resolves.toEqual([expectedLegacyExam])
+
+    const [storedExam] = await withRawDb(['esami'], 'readonly', async (_db, tx) =>
+      rawRequestResult(tx.objectStore('esami').getAll()),
+    )
+
+    expect(storedExam).toEqual(expectedLegacyExam)
+    await expect(getSyncMetadata()).resolves.toMatchObject({
+      pendingLocalChanges: true,
+    })
   })
 
   it('prunes expired exam dates on single exam reads and marks the exam dirty', async () => {
@@ -268,6 +277,40 @@ describe('storageService', () => {
         attachments: [],
         examDates: [makeExamDate({ id: 'active', date: '2026-07-11' })],
       })
+
+      const metadata = await getSyncMetadata()
+      const { state } = await exportLocalSyncState()
+
+      expect(metadata.pendingLocalChanges).toBe(true)
+      expect(state.data.esami[0].examDates).toEqual([
+        makeExamDate({ id: 'active', date: '2026-07-11' }),
+      ])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('prunes expired exam dates on exam list reads and marks the exam dirty', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-07-12T00:00:00'))
+
+    try {
+      await saveEsame({
+        ...exam,
+        examDates: [
+          makeExamDate({ id: 'expired', date: '2026-07-10' }),
+          makeExamDate({ id: 'active', date: '2026-07-11' }),
+        ],
+      })
+      await markSyncMetadataCleanForTest()
+
+      await expect(getAllEsami()).resolves.toEqual([
+        {
+          ...exam,
+          attachments: [],
+          examDates: [makeExamDate({ id: 'active', date: '2026-07-11' })],
+        },
+      ])
 
       const metadata = await getSyncMetadata()
       const { state } = await exportLocalSyncState()
@@ -1079,6 +1122,7 @@ describe('storageService', () => {
               },
             },
             attachments: [],
+            examDates: [],
             updatedAt: '2026-06-05T10:00:00.000Z',
             updatedByDeviceId: 'remote-device',
           },

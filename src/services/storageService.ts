@@ -248,8 +248,11 @@ async function normalizeAndPruneEsame(
 ): Promise<Esame> {
   const normalized = normalizeEsame(esame)
   const pruned = pruneExpiredExamDates(normalized.examDates ?? [])
+  const normalizedChanged =
+    esame.attachments == null ||
+    JSON.stringify(esame.examDates) !== JSON.stringify(normalized.examDates)
 
-  if (!pruned.pruned) {
+  if (!normalizedChanged && !pruned.pruned) {
     return normalized
   }
 
@@ -789,7 +792,7 @@ export async function importMergedSyncState(
   const db = await getDB()
   const currentMetadata = await getSyncMetadata()
   const normalizedEsami: Esame[] = state.data.esami.map(
-    ({ id, name, createdAt, files, attachments }) => ({
+    ({ id, name, createdAt, files, attachments, examDates }) => ({
       id,
       name,
       createdAt,
@@ -799,6 +802,7 @@ export async function importMergedSyncState(
         ...(files.flashcard ? { flashcard: decodeFileRecord(files.flashcard) } : {}),
       },
       attachments: (attachments ?? []).map((attachment) => decodeExamAttachment(attachment)),
+      examDates: normalizeExamDates(examDates),
     }),
   )
   const esamiMetadata: LocalSyncRecordMetadata[] = state.data.esami.map(
