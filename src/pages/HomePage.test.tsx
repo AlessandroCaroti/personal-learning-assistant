@@ -11,6 +11,11 @@ const syncSignOut = vi.fn()
 const syncNow = vi.fn()
 const resolveConflict = vi.fn()
 const reloadEsami = vi.fn()
+const pickFile = vi.fn()
+const restoreExamBackupArchive = vi.fn()
+const saveImportedExamBackupBundle = vi.fn()
+const uuidv4 = vi.fn()
+let pickedBackupData: ArrayBuffer
 
 let hookState: {
   esami: Esame[]
@@ -42,6 +47,25 @@ vi.mock('../hooks/useSync', () => ({
     syncNow,
     resolveConflict,
   }),
+}))
+
+vi.mock('../services/fileService', () => ({
+  fileService: {
+    pickFile,
+  },
+}))
+
+vi.mock('../services/examBackupService', () => ({
+  BACKUP_ARCHIVE_EXTENSION: '.pla-exam-backup',
+  restoreExamBackupArchive,
+}))
+
+vi.mock('../services/storageService', () => ({
+  saveImportedExamBackupBundle,
+}))
+
+vi.mock('uuid', () => ({
+  v4: uuidv4,
 }))
 
 const { HomePage } = await import('./HomePage')
@@ -88,6 +112,27 @@ describe('HomePage', () => {
     syncNow.mockResolvedValue(undefined)
     resolveConflict.mockResolvedValue(undefined)
     reloadEsami.mockResolvedValue(undefined)
+    uuidv4.mockReturnValue('restored-exam-id')
+    pickedBackupData = new TextEncoder().encode('backup').buffer
+    pickFile.mockResolvedValue({
+      name: 'diritto.pla-exam-backup',
+      type: 'application/zip',
+      data: pickedBackupData,
+    })
+    restoreExamBackupArchive.mockResolvedValue({
+      exam: {
+        id: 'restored-exam-id',
+        name: 'Diritto privato',
+        createdAt: '2026-06-01T08:00:00.000Z',
+        files: {},
+        attachments: [],
+      },
+      quizSessions: [],
+      questionStats: [],
+      flashcardStats: [],
+      pausedSessions: [],
+    })
+    saveImportedExamBackupBundle.mockResolvedValue(undefined)
   })
 
   it('shows loading and empty states', () => {
@@ -183,5 +228,79 @@ describe('HomePage', () => {
       expect(syncSignIn).toHaveBeenCalled()
     })
     expect(reloadEsami).toHaveBeenCalled()
+  })
+
+  it('imports a backup as a new exam and navigates to it', async () => {
+    renderHome()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Importa backup' }))
+
+    await waitFor(() => {
+      expect(pickFile).toHaveBeenCalledWith(['.pla-exam-backup'])
+    })
+    const [archiveData, restoredExamId] = restoreExamBackupArchive.mock.calls[0]
+    expect(archiveData).toBe(pickedBackupData)
+    expect(restoredExamId).toBe('restored-exam-id')
+    expect(saveImportedExamBackupBundle).toHaveBeenCalledWith({
+      exam: {
+        id: 'restored-exam-id',
+        name: 'Diritto privato',
+        createdAt: '2026-06-01T08:00:00.000Z',
+        files: {},
+        attachments: [],
+      },
+      quizSessions: [],
+      questionStats: [],
+      flashcardStats: [],
+      pausedSessions: [],
+    })
+    expect(reloadEsami).toHaveBeenCalled()
+    expect(await screen.findByRole('heading', { name: 'Dashboard esame' })).not.toBeNull()
+  })
+
+  it('shows a validation error when backup import fails', async () => {
+    restoreExamBackupArchive.mockRejectedValue(
+      new Error('Backup non valido: manifest.json mancante'),
+    )
+
+    renderHome()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Importa backup' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Backup non valido: manifest.json mancante',
+    )
+    expect(saveImportedExamBackupBundle).not.toHaveBeenCalled()
+    expect(reloadEsami).not.toHaveBeenCalled()
+  })
+
+  it('imports a same-name backup as a distinct new exam id', async () => {
+    hookState = {
+      esami: [
+        exam,
+        {
+          id: 'existing-same-name',
+          name: 'Diritto privato',
+          createdAt: '2026-06-02T08:00:00.000Z',
+          files: {},
+        },
+      ],
+      loading: false,
+    }
+
+    renderHome()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Importa backup' }))
+
+    await waitFor(() => {
+      expect(restoreExamBackupArchive).toHaveBeenCalled()
+    })
+    const [archiveData, restoredExamId] = restoreExamBackupArchive.mock.calls[0]
+    expect(archiveData).toBe(pickedBackupData)
+    expect(restoredExamId).toBe('restored-exam-id')
+    expect(saveImportedExamBackupBundle.mock.calls[0][0].exam).toMatchObject({
+      id: 'restored-exam-id',
+      name: 'Diritto privato',
+    })
   })
 })

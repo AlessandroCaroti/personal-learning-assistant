@@ -1,9 +1,16 @@
 import { type KeyboardEvent, type MouseEvent, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { v4 as uuidv4 } from 'uuid'
 import { ConfirmDialog } from '../components/ConfirmDialog'
+import { FileImportButton } from '../components/FileImportButton'
 import { SyncStatus } from '../components/SyncStatus'
 import { useExam } from '../hooks/useExam'
 import { useSync } from '../hooks/useSync'
+import {
+  BACKUP_ARCHIVE_EXTENSION,
+  restoreExamBackupArchive,
+} from '../services/examBackupService'
+import * as storageService from '../services/storageService'
 import type { Esame } from '../types'
 
 export function HomePage() {
@@ -13,6 +20,8 @@ export function HomePage() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [newExamName, setNewExamName] = useState('')
   const [creating, setCreating] = useState(false)
+  const [importingBackup, setImportingBackup] = useState(false)
+  const [backupImportError, setBackupImportError] = useState<string | null>(null)
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
@@ -51,6 +60,24 @@ export function HomePage() {
 
     event.preventDefault()
     void handleCreate()
+  }
+
+  async function importBackup(data: ArrayBuffer) {
+    if (importingBackup) return
+
+    setImportingBackup(true)
+    setBackupImportError(null)
+
+    try {
+      const restored = await restoreExamBackupArchive(data, uuidv4())
+      await storageService.saveImportedExamBackupBundle(restored)
+      await reload()
+      navigate(`/esame/${restored.exam.id}`)
+    } catch (error) {
+      setBackupImportError(errorMessage(error))
+    } finally {
+      setImportingBackup(false)
+    }
   }
 
   function openMenu(event: MouseEvent<HTMLButtonElement>, examId: string) {
@@ -144,20 +171,28 @@ export function HomePage() {
         }}
       >
         <h1 style={{ fontSize: '1.6rem', fontWeight: 700 }}>I tuoi esami</h1>
-        <button
-          type="button"
-          onClick={() => setShowCreateForm(true)}
-          style={{
-            padding: '0.65rem 1rem',
-            borderRadius: '8px',
-            background: 'var(--accent)',
-            color: '#fff',
-            fontWeight: 600,
-            minHeight: '44px',
-          }}
-        >
-          + Nuovo esame
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <FileImportButton
+            label={importingBackup ? 'Importazione...' : 'Importa backup'}
+            accept={[BACKUP_ARCHIVE_EXTENSION]}
+            onFile={importBackup}
+            disabled={importingBackup}
+          />
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            style={{
+              padding: '0.65rem 1rem',
+              borderRadius: '8px',
+              background: 'var(--accent)',
+              color: '#fff',
+              fontWeight: 600,
+              minHeight: '44px',
+            }}
+          >
+            + Nuovo esame
+          </button>
+        </div>
       </header>
 
       <SyncStatus
@@ -167,6 +202,12 @@ export function HomePage() {
         onSyncNow={handleSyncNow}
         onResolveConflict={handleResolveConflict}
       />
+
+      {backupImportError && (
+        <p role="alert" style={{ ...mutedTextStyle, marginBottom: '1rem', color: 'var(--danger)' }}>
+          {backupImportError}
+        </p>
+      )}
 
       {showCreateForm && (
         <form
@@ -340,6 +381,12 @@ function formatDate(value: string): string {
     month: '2-digit',
     year: 'numeric',
   }).format(new Date(value))
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Errore sconosciuto'
 }
 
 const inputStyle = {
