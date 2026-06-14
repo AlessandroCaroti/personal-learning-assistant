@@ -11,6 +11,10 @@ const saveEsame = vi.fn()
 const getPausedSession = vi.fn()
 const replaceQuizFileForExam = vi.fn()
 const replaceFlashcardFileForExam = vi.fn()
+const getExamBackupSourceBundle = vi.fn()
+const buildExamBackupArchive = vi.fn()
+const downloadExamBackupArchive = vi.fn()
+const suggestedBackupFileName = vi.fn()
 const pickFile = vi.fn()
 
 vi.mock('../services/storageService', () => ({
@@ -19,12 +23,19 @@ vi.mock('../services/storageService', () => ({
   getPausedSession,
   replaceQuizFileForExam,
   replaceFlashcardFileForExam,
+  getExamBackupSourceBundle,
 }))
 
 vi.mock('../services/fileService', () => ({
   fileService: {
     pickFile,
   },
+}))
+
+vi.mock('../services/examBackupService', () => ({
+  buildExamBackupArchive,
+  downloadExamBackupArchive,
+  suggestedBackupFileName,
 }))
 
 const { DashboardPage } = await import('./DashboardPage')
@@ -122,6 +133,16 @@ describe('DashboardPage', () => {
     saveEsame.mockResolvedValue(undefined)
     replaceQuizFileForExam.mockResolvedValue(undefined)
     replaceFlashcardFileForExam.mockResolvedValue(undefined)
+    getExamBackupSourceBundle.mockResolvedValue({
+      exam: makeExam(),
+      quizSessions: [],
+      questionStats: [],
+      flashcardStats: [],
+      pausedSessions: [],
+    })
+    buildExamBackupArchive.mockResolvedValue(encodeText('backup-archive'))
+    suggestedBackupFileName.mockReturnValue('analisi-1-2026-06-13.pla-exam-backup')
+    downloadExamBackupArchive.mockReturnValue(undefined)
   })
 
   it('redirects to all exams when the exam is missing', async () => {
@@ -253,6 +274,39 @@ describe('DashboardPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Apri archivio' }))
 
     expect(await screen.findByRole('heading', { name: 'Archivio esame' })).not.toBeNull()
+  })
+
+  it('exports a full exam backup from the dashboard', async () => {
+    renderDashboard()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Esporta backup' }))
+
+    await waitFor(() => {
+      expect(getExamBackupSourceBundle).toHaveBeenCalledWith('exam-1')
+    })
+    expect(buildExamBackupArchive).toHaveBeenCalledWith({
+      exam: makeExam(),
+      quizSessions: [],
+      questionStats: [],
+      flashcardStats: [],
+      pausedSessions: [],
+    })
+    expect(suggestedBackupFileName).toHaveBeenCalledWith('Analisi 1')
+    expect(downloadExamBackupArchive).toHaveBeenCalledWith(
+      encodeText('backup-archive'),
+      'analisi-1-2026-06-13.pla-exam-backup',
+    )
+  })
+
+  it('shows an export error when backup generation fails', async () => {
+    buildExamBackupArchive.mockRejectedValue(new Error('ZIP failed'))
+
+    renderDashboard()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Esporta backup' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('ZIP failed')
+    expect(downloadExamBackupArchive).not.toHaveBeenCalled()
   })
 
   it('validates quiz replacement before calling the transactional replacement helper', async () => {

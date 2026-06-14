@@ -85,6 +85,19 @@ export function suggestedBackupFileName(examName: string): string {
   return `${slug}-${todayIsoDate()}${BACKUP_ARCHIVE_EXTENSION}`
 }
 
+export function downloadExamBackupArchive(archive: ArrayBuffer, fileName: string): void {
+  const blob = new Blob([archive], { type: 'application/zip' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 function fileExtension(fileName: string, fallback: string): string {
   const match = fileName.match(/\.([a-zA-Z0-9]+)$/)
   return match ? match[1].toLowerCase() : fallback

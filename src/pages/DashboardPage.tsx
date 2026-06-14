@@ -3,6 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { FileImportButton } from '../components/FileImportButton'
 import { createExamAttachment, sortAttachmentsNewestFirst } from '../services/archiveService'
+import {
+  buildExamBackupArchive,
+  downloadExamBackupArchive,
+  suggestedBackupFileName,
+} from '../services/examBackupService'
 import { fileService } from '../services/fileService'
 import { validateFlashcardFile, validateQuizFile } from '../services/quizService'
 import * as storageService from '../services/storageService'
@@ -19,6 +24,8 @@ export function DashboardPage() {
   const [replaceTarget, setReplaceTarget] = useState<ReplaceTarget | null>(null)
   const [replaceError, setReplaceError] = useState<string | null>(null)
   const [replacing, setReplacing] = useState(false)
+  const [exportingBackup, setExportingBackup] = useState(false)
+  const [backupExportError, setBackupExportError] = useState<string | null>(null)
 
   const loadDashboard = useCallback(async () => {
     if (!examId) {
@@ -106,6 +113,23 @@ export function DashboardPage() {
     setEsame(updatedExam)
   }
 
+  async function exportBackup() {
+    if (!examId || !esame || exportingBackup) return
+
+    setExportingBackup(true)
+    setBackupExportError(null)
+
+    try {
+      const bundle = await storageService.getExamBackupSourceBundle(examId)
+      const archive = await buildExamBackupArchive(bundle)
+      downloadExamBackupArchive(archive, suggestedBackupFileName(esame.name))
+    } catch (error) {
+      setBackupExportError(errorMessage(error))
+    } finally {
+      setExportingBackup(false)
+    }
+  }
+
   function openReplacementDialog(target: ReplaceTarget) {
     setReplaceTarget(target)
     setReplaceError(null)
@@ -179,7 +203,30 @@ export function DashboardPage() {
       </button>
 
       <header style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 700 }}>{esame.name}</h1>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <h1 style={{ fontSize: '1.6rem', fontWeight: 700 }}>{esame.name}</h1>
+          <button
+            type="button"
+            onClick={() => void exportBackup()}
+            disabled={exportingBackup}
+            style={secondaryButtonStyle}
+          >
+            {exportingBackup ? 'Esportazione...' : 'Esporta backup'}
+          </button>
+        </div>
+        {backupExportError && (
+          <p role="alert" style={{ ...mutedTextStyle, marginTop: '0.5rem', color: 'var(--danger)' }}>
+            {backupExportError}
+          </p>
+        )}
       </header>
 
       <div style={{ display: 'grid', gap: '0.75rem', marginBottom: '1.25rem' }}>
