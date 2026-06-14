@@ -9,6 +9,7 @@ import type {
   QuizSession,
 } from '../types'
 import type { ExamBackupSourceBundle, ImportedExamBackupBundle } from './examBackupService'
+import { normalizeExamDates, pruneExpiredExamDates } from './examDateService'
 import {
   decodeExamAttachment,
   decodeFileRecord,
@@ -237,7 +238,33 @@ function normalizeEsame(esame: Esame): Esame {
   return {
     ...esame,
     attachments: normalizeAttachments(esame),
+    examDates: normalizeExamDates(esame.examDates),
   }
+}
+
+async function normalizeAndPruneEsame(
+  db: IDBPDatabase<StudyAppDB>,
+  esame: Esame,
+): Promise<Esame> {
+  const normalized = normalizeEsame(esame)
+  const pruned = pruneExpiredExamDates(normalized.examDates ?? [])
+
+  if (!pruned.pruned) {
+    return normalized
+  }
+
+  const updated: Esame = {
+    ...normalized,
+    examDates: pruned.dates,
+  }
+  const tx = db.transaction(['esami', 'syncMetadata', 'syncRecordMetadata'], 'readwrite')
+
+  await tx.objectStore('esami').put(updated)
+  await markRecordDirtyInTransaction(tx, 'esami', updated.id)
+  await tx.done
+  notifySyncDirty()
+
+  return updated
 }
 
 export async function getSyncMetadata(): Promise<SyncMetadata> {
@@ -249,20 +276,22 @@ export async function getSyncMetadata(): Promise<SyncMetadata> {
 }
 
 export async function getAllEsami(): Promise<Esame[]> {
-  const esami = await (await getDB()).getAll('esami')
-  return esami.map((esame) => normalizeEsame(esame))
+  const db = await getDB()
+  const esami = await db.getAll('esami')
+  return Promise.all(esami.map((esame) => normalizeAndPruneEsame(db, esame)))
 }
 
 export async function getEsame(id: string): Promise<Esame | undefined> {
-  const esame = await (await getDB()).get('esami', id)
-  return esame ? normalizeEsame(esame) : undefined
+  const db = await getDB()
+  const esame = await db.get('esami', id)
+  return esame ? normalizeAndPruneEsame(db, esame) : undefined
 }
 
 export async function saveEsame(esame: Esame): Promise<void> {
   const db = await getDB()
   const tx = db.transaction(['esami', 'syncMetadata', 'syncRecordMetadata'], 'readwrite')
 
-  await tx.objectStore('esami').put(esame)
+  await tx.objectStore('esami').put(normalizeEsame(esame))
   await markRecordDirtyInTransaction(tx, 'esami', esame.id)
   await tx.done
   notifySyncDirty()
@@ -307,7 +336,7 @@ export async function replaceQuizFileForExam(examId: string, file: FileRecord): 
   ).flat()
 
   await examStore.put({
-    ...existingExam,
+    ...normalizeEsame(existingExam),
     files: {
       ...existingExam.files,
       quiz: file,
@@ -346,7 +375,7 @@ export async function replaceFlashcardFileForExam(
   const statsRecords = await flashcardStats.index('by-examId').getAll(examId)
 
   await examStore.put({
-    ...existingExam,
+    ...normalizeEsame(existingExam),
     files: {
       ...existingExam.files,
       flashcard: file,

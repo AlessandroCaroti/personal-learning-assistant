@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   makeEsame,
   makeExamAttachment,
+  makeExamDate,
   makePausedFlash,
   makePausedQuiz,
   makeQuizSession,
@@ -215,10 +216,93 @@ describe('storageService', () => {
       createdAt: '2026-06-01T10:00:00.000Z',
       files: {},
       attachments: [],
+      examDates: [],
     }
 
     await expect(getEsame('legacy-exam')).resolves.toEqual(expectedLegacyExam)
     await expect(getAllEsami()).resolves.toEqual([expectedLegacyExam])
+  })
+
+  it('normalizes legacy exams without exam dates on read', async () => {
+    await getAllEsami()
+
+    await withRawDb(['esami'], 'readwrite', async (_db, tx) => {
+      tx.objectStore('esami').put({
+        id: 'legacy-dates-exam',
+        name: 'Legacy dates exam',
+        createdAt: '2026-06-01T10:00:00.000Z',
+        files: {},
+        attachments: [],
+      })
+    })
+
+    const expectedLegacyExam: Esame = {
+      id: 'legacy-dates-exam',
+      name: 'Legacy dates exam',
+      createdAt: '2026-06-01T10:00:00.000Z',
+      files: {},
+      attachments: [],
+      examDates: [],
+    }
+
+    await expect(getEsame('legacy-dates-exam')).resolves.toEqual(expectedLegacyExam)
+    await expect(getAllEsami()).resolves.toEqual([expectedLegacyExam])
+  })
+
+  it('prunes expired exam dates on single exam reads and marks the exam dirty', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-07-12T00:00:00'))
+
+    try {
+      await saveEsame({
+        ...exam,
+        examDates: [
+          makeExamDate({ id: 'expired', date: '2026-07-10' }),
+          makeExamDate({ id: 'active', date: '2026-07-11' }),
+        ],
+      })
+      await markSyncMetadataCleanForTest()
+
+      await expect(getEsame(exam.id)).resolves.toEqual({
+        ...exam,
+        attachments: [],
+        examDates: [makeExamDate({ id: 'active', date: '2026-07-11' })],
+      })
+
+      const metadata = await getSyncMetadata()
+      const { state } = await exportLocalSyncState()
+
+      expect(metadata.pendingLocalChanges).toBe(true)
+      expect(state.data.esami[0].examDates).toEqual([
+        makeExamDate({ id: 'active', date: '2026-07-11' }),
+      ])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not prune dates before the grace period expires', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-07-11T23:59:59'))
+
+    try {
+      await saveEsame({
+        ...exam,
+        examDates: [makeExamDate({ id: 'still-active', date: '2026-07-10' })],
+      })
+      await markSyncMetadataCleanForTest()
+
+      await expect(getEsame(exam.id)).resolves.toEqual({
+        ...exam,
+        attachments: [],
+        examDates: [makeExamDate({ id: 'still-active', date: '2026-07-10' })],
+      })
+      await expect(getSyncMetadata()).resolves.toMatchObject({
+        pendingLocalChanges: false,
+      })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('deletes an exam and cascades only records for that exam', async () => {
@@ -1047,6 +1131,7 @@ describe('storageService', () => {
         }),
       },
       attachments: [],
+      examDates: [],
     })
     expect(new TextDecoder().decode(importedExam?.files.quiz?.data)).toBe('imported-quiz')
     expect(importedQuestionStat).toEqual({
@@ -1263,6 +1348,7 @@ describe('storageService', () => {
       createdAt: '2026-06-05T09:00:00.000Z',
       files: {},
       attachments: [],
+      examDates: [],
     })
     await expect(getQuizSessions('exam-imported')).resolves.toEqual([
       {
