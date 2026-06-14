@@ -1,8 +1,22 @@
 import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { makeEsame, makePausedFlash, makePausedQuiz, makeQuizSession } from '../__tests__/factories'
+import {
+  makeEsame,
+  makeExamAttachment,
+  makePausedFlash,
+  makePausedQuiz,
+  makeQuizSession,
+} from '../__tests__/factories'
 import { resetDb } from '../__tests__/resetDb'
-import type { Esame, ExamAttachment, FileRecord, FlashcardStats, QuestionStats } from '../types'
+import type {
+  Esame,
+  ExamAttachment,
+  FileRecord,
+  FlashcardStats,
+  PausedSession,
+  QuestionStats,
+  QuizSession,
+} from '../types'
 import { SYNC_SCHEMA_VERSION, type RemoteSyncState } from './sync/types'
 import {
   deleteEsame,
@@ -12,6 +26,7 @@ import {
   deleteQuizSessionsForExam,
   exportLocalSyncState,
   getAllEsami,
+  getExamBackupSourceBundle,
   getEsame,
   getFlashcardStats,
   importMergedSyncState,
@@ -23,6 +38,7 @@ import {
   replaceFlashcardFileForExam,
   replaceQuizFileForExam,
   saveEsame,
+  saveImportedExamBackupBundle,
   saveFlashcardStat,
   savePausedSession,
   saveQuestionStat,
@@ -335,6 +351,115 @@ describe('storageService', () => {
     await expect(getPausedSession('exam-1__quiz')).resolves.toBeUndefined()
     await expect(getPausedSessionsForExam(exam.id)).resolves.toEqual([flashcard])
     await expect(getPausedSessionsForExam(otherExam.id)).resolves.toEqual([otherQuiz])
+  })
+
+  it('reads a full backup source bundle for one exam only', async () => {
+    const examWithFiles = {
+      ...exam,
+      files: {
+        quiz: fileRecord('quiz.json'),
+      },
+      attachments: [makeExamAttachment({ id: 'attachment-1' })],
+    }
+    const quiz = makeQuizSession({ id: 'quiz-1', examId: exam.id })
+    const otherQuiz = makeQuizSession({ id: 'quiz-2', examId: otherExam.id })
+    const question = questionStat({ id: 'exam-1__q1', examId: exam.id })
+    const otherQuestion = questionStat({ id: 'exam-2__q1', examId: otherExam.id })
+    const flashcard = flashcardStat({ id: 'exam-1__f1', examId: exam.id })
+    const otherFlashcard = flashcardStat({ id: 'exam-2__f1', examId: otherExam.id })
+    const pausedQuiz = makePausedQuiz({ id: 'exam-1__quiz', examId: exam.id })
+    const otherPausedQuiz = makePausedQuiz({ id: 'exam-2__quiz', examId: otherExam.id })
+
+    await saveEsame(examWithFiles)
+    await saveEsame(otherExam)
+    await saveQuizSession(quiz)
+    await saveQuizSession(otherQuiz)
+    await saveQuestionStat(question)
+    await saveQuestionStat(otherQuestion)
+    await saveFlashcardStat(flashcard)
+    await saveFlashcardStat(otherFlashcard)
+    await savePausedSession(pausedQuiz)
+    await savePausedSession(otherPausedQuiz)
+
+    await expect(getExamBackupSourceBundle(exam.id)).resolves.toEqual({
+      exam: examWithFiles,
+      quizSessions: [quiz],
+      questionStats: [question],
+      flashcardStats: [flashcard],
+      pausedSessions: [pausedQuiz],
+    })
+  })
+
+  it('rejects backup source reads for missing exams', async () => {
+    await expect(getExamBackupSourceBundle('missing-exam')).rejects.toThrow(
+      'Exam missing-exam not found',
+    )
+  })
+
+  it('atomically imports a restored backup bundle as local state', async () => {
+    const importedExam = {
+      ...exam,
+      id: 'imported-exam',
+      name: 'Diritto privato',
+      attachments: [makeExamAttachment({ id: 'attachment-imported' })],
+    }
+    const importedQuiz: QuizSession = makeQuizSession({
+      id: 'quiz-imported',
+      examId: 'imported-exam',
+    })
+    const importedQuestion: QuestionStats = questionStat({
+      id: 'imported-exam__q1',
+      examId: 'imported-exam',
+    })
+    const importedFlashcard: FlashcardStats = flashcardStat({
+      id: 'imported-exam__f1',
+      examId: 'imported-exam',
+    })
+    const importedPausedQuiz: PausedSession = makePausedQuiz({
+      id: 'imported-exam__quiz',
+      examId: 'imported-exam',
+    })
+
+    await saveImportedExamBackupBundle({
+      exam: importedExam,
+      quizSessions: [importedQuiz],
+      questionStats: [importedQuestion],
+      flashcardStats: [importedFlashcard],
+      pausedSessions: [importedPausedQuiz],
+    })
+
+    await expect(getEsame('imported-exam')).resolves.toEqual(importedExam)
+    await expect(getQuizSessions('imported-exam')).resolves.toEqual([importedQuiz])
+    await expect(getQuestionStats('imported-exam')).resolves.toEqual([importedQuestion])
+    await expect(getFlashcardStats('imported-exam')).resolves.toEqual([importedFlashcard])
+    await expect(getPausedSession('imported-exam__quiz')).resolves.toEqual(importedPausedQuiz)
+    await expect(getSyncMetadata()).resolves.toMatchObject({
+      pendingLocalChanges: true,
+    })
+  })
+
+  it('rolls back imported backup writes when any record cannot be cloned', async () => {
+    const badBundle = {
+      exam: {
+        ...exam,
+        id: 'bad-import',
+      },
+      quizSessions: [makeQuizSession({ id: 'bad-quiz', examId: 'bad-import' })],
+      questionStats: [
+        {
+          ...questionStat({ id: 'bad-import__q1', examId: 'bad-import' }),
+          timesShown: (() => 1) as unknown as number,
+        },
+      ],
+      flashcardStats: [],
+      pausedSessions: [],
+    }
+
+    await expect(saveImportedExamBackupBundle(badBundle)).rejects.toThrow()
+
+    await expect(getEsame('bad-import')).resolves.toBeUndefined()
+    await expect(getQuizSessions('bad-import')).resolves.toEqual([])
+    await expect(getQuestionStats('bad-import')).resolves.toEqual([])
   })
 
   it('replaces a quiz file and deletes only quiz-scoped progress', async () => {

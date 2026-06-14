@@ -8,6 +8,7 @@ import type {
   QuestionStats,
   QuizSession,
 } from '../types'
+import type { ExamBackupSourceBundle, ImportedExamBackupBundle } from './examBackupService'
 import {
   decodeExamAttachment,
   decodeFileRecord,
@@ -558,6 +559,91 @@ export async function deletePausedSession(id: string): Promise<void> {
 
 export async function getPausedSessionsForExam(examId: string): Promise<PausedSession[]> {
   return (await getDB()).getAllFromIndex('pausedSessions', 'by-examId', examId)
+}
+
+export async function getExamBackupSourceBundle(examId: string): Promise<ExamBackupSourceBundle> {
+  const db = await getDB()
+  const tx = db.transaction(
+    ['esami', 'quizSessions', 'questionStats', 'flashcardStats', 'pausedSessions'],
+    'readonly',
+  )
+  const exam = await tx.objectStore('esami').get(examId)
+
+  if (!exam) {
+    throw new Error(`Exam ${examId} not found`)
+  }
+
+  const [quizSessions, questionStats, flashcardStats, pausedSessions] = await Promise.all([
+    tx.objectStore('quizSessions').index('by-examId').getAll(examId),
+    tx.objectStore('questionStats').index('by-examId').getAll(examId),
+    tx.objectStore('flashcardStats').index('by-examId').getAll(examId),
+    tx.objectStore('pausedSessions').index('by-examId').getAll(examId),
+  ])
+  await tx.done
+
+  return {
+    exam: normalizeEsame(exam),
+    quizSessions,
+    questionStats,
+    flashcardStats,
+    pausedSessions,
+  }
+}
+
+export async function saveImportedExamBackupBundle(
+  bundle: ImportedExamBackupBundle,
+): Promise<void> {
+  // IndexedDB uses structured cloning. Preflight the imported bundle so malformed
+  // records fail before the transaction mutates any store.
+  structuredClone(bundle)
+
+  const db = await getDB()
+  const tx = db.transaction(
+    [
+      'esami',
+      'quizSessions',
+      'questionStats',
+      'flashcardStats',
+      'pausedSessions',
+      'syncMetadata',
+      'syncRecordMetadata',
+      'syncQuestionCounters',
+    ],
+    'readwrite',
+  )
+  const questionCounters = tx.objectStore('syncQuestionCounters')
+
+  await tx.objectStore('esami').put(bundle.exam)
+  await markRecordDirtyInTransaction(tx, 'esami', bundle.exam.id)
+
+  for (const session of bundle.quizSessions) {
+    await tx.objectStore('quizSessions').put(session)
+    await markRecordDirtyInTransaction(tx, 'quizSessions', session.id)
+  }
+
+  for (const stat of bundle.questionStats) {
+    await tx.objectStore('questionStats').put(stat)
+    const currentMetadata = await markRecordDirtyInTransaction(tx, 'questionStats', stat.id)
+    await questionCounters.put({
+      id: syncQuestionCounterId(stat.id, currentMetadata.deviceId),
+      questionStatId: stat.id,
+      deviceId: currentMetadata.deviceId,
+      timesShown: stat.timesShown,
+      timesCorrect: stat.timesCorrect,
+    })
+  }
+
+  for (const stat of bundle.flashcardStats) {
+    await tx.objectStore('flashcardStats').put(stat)
+    await markRecordDirtyInTransaction(tx, 'flashcardStats', stat.id)
+  }
+
+  for (const session of bundle.pausedSessions) {
+    await tx.objectStore('pausedSessions').put(session)
+  }
+
+  await tx.done
+  notifySyncDirty()
 }
 
 export async function exportLocalSyncState(): Promise<{
