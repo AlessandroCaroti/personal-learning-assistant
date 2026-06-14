@@ -111,6 +111,12 @@ function addFile(zip: JSZip, path: string, file: FileRecord): void {
   zip.file(path, new Uint8Array(file.data), { createFolders: false })
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength)
+  copy.set(bytes)
+  return copy.buffer
+}
+
 function fixedFileEntry(
   zip: JSZip,
   path: string,
@@ -408,7 +414,7 @@ async function readFileRecord(zip: JSZip, entry: BackupFileEntry): Promise<FileR
   return {
     name: entry.name,
     type: entry.type,
-    data: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+    data: toArrayBuffer(bytes),
   }
 }
 
