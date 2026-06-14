@@ -401,9 +401,60 @@ describe('examBackupService', () => {
     ).rejects.toThrow('Backup non valido: pausedSessions contiene mode non supportato')
   })
 
-  it('documents the temporary restore stub failure contract', async () => {
-    await expect(restoreExamBackupArchive(encodeText('stub'), 'new-exam-id')).rejects.toThrow(
-      'Backup archive restore is unavailable',
+  it('restores a backup as a new exam id and remaps exam-scoped records', async () => {
+    const restored = await restoreExamBackupArchive(
+      await buildExamBackupArchive(fullBundle),
+      'new-exam-id',
     )
+
+    expect(restored.exam).toMatchObject({
+      id: 'new-exam-id',
+      name: 'Diritto privato',
+      createdAt: '2026-06-01T08:00:00.000Z',
+    })
+    expect(restored.quizSessions).toEqual([
+      {
+        ...fullBundle.quizSessions[0],
+        examId: 'new-exam-id',
+      },
+    ])
+    expect(restored.questionStats).toEqual([
+      {
+        ...fullBundle.questionStats[0],
+        id: 'new-exam-id__q1',
+        examId: 'new-exam-id',
+      },
+    ])
+    expect(restored.flashcardStats).toEqual([
+      {
+        ...fullBundle.flashcardStats[0],
+        id: 'new-exam-id__f1',
+        examId: 'new-exam-id',
+      },
+    ])
+    expect(restored.pausedSessions).toEqual([
+      {
+        ...fullBundle.pausedSessions[0],
+        id: 'new-exam-id__quiz',
+        examId: 'new-exam-id',
+      },
+      {
+        ...fullBundle.pausedSessions[1],
+        id: 'new-exam-id__flashcard',
+        examId: 'new-exam-id',
+      },
+    ])
+  })
+
+  it('round-trips export and restore without base64-wrapping packaged files', async () => {
+    const restored = await restoreExamBackupArchive(
+      await buildExamBackupArchive(fullBundle),
+      'new-exam-id',
+    )
+
+    expect(JSON.parse(decodeText(restored.exam.files.quiz!.data))).toEqual(quizFile)
+    expect(JSON.parse(decodeText(restored.exam.files.flashcard!.data))).toEqual(flashcardFile)
+    expect(decodeText(restored.exam.files.riassunto!.data)).toBe('<h1>Summary</h1>')
+    expect(decodeText(restored.exam.attachments![0].data)).toBe('slides')
   })
 })

@@ -476,8 +476,34 @@ export async function readExamBackupArchive(archive: ArrayBuffer): Promise<ExamB
 }
 
 export async function restoreExamBackupArchive(
-  _archive: ArrayBuffer,
-  _newExamId: string,
+  archive: ArrayBuffer,
+  newExamId: string,
 ): Promise<ImportedExamBackupBundle> {
-  throw new Error('Backup archive restore is unavailable')
+  const parsed = await readExamBackupArchive(archive)
+
+  return {
+    exam: {
+      ...parsed.exam,
+      id: newExamId,
+    },
+    quizSessions: parsed.quizSessions.map((session) => ({
+      ...session,
+      examId: newExamId,
+    })),
+    questionStats: parsed.questionStats.map((stat) => ({
+      ...stat,
+      id: `${newExamId}__${stat.questionId}`,
+      examId: newExamId,
+    })),
+    flashcardStats: parsed.flashcardStats.map((stat) => ({
+      ...stat,
+      id: `${newExamId}__${stat.cardId}`,
+      examId: newExamId,
+    })),
+    pausedSessions: parsed.pausedSessions.map((session) => ({
+      ...session,
+      id: `${newExamId}__${session.mode}`,
+      examId: newExamId,
+    })),
+  }
 }
