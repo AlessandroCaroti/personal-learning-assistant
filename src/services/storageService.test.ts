@@ -221,6 +221,15 @@ describe('storageService', () => {
 
     await expect(getEsame('legacy-exam')).resolves.toEqual(expectedLegacyExam)
     await expect(getAllEsami()).resolves.toEqual([expectedLegacyExam])
+
+    const [storedExam] = await withRawDb(['esami'], 'readonly', async (_db, tx) =>
+      rawRequestResult(tx.objectStore('esami').getAll()),
+    )
+
+    expect(storedExam).toEqual(expectedLegacyExam)
+    await expect(getSyncMetadata()).resolves.toMatchObject({
+      pendingLocalChanges: true,
+    })
   })
 
   it('normalizes legacy exams without exam dates on read', async () => {
@@ -1209,6 +1218,97 @@ describe('storageService', () => {
       },
     ])
     expect(exportedAfterImport.state.tombstones).toEqual(remoteState.tombstones)
+  })
+
+  it('normalizes imported exam dates from sync payloads without marking sync metadata dirty', async () => {
+    const metadataBeforeImport = await getSyncMetadata()
+    const syncedAt = '2026-06-06T10:00:00.000Z'
+    const remoteState: RemoteSyncState = {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: syncedAt,
+      writerDeviceId: 'remote-device',
+      data: {
+        esami: [
+          {
+            id: 'exam-imported-dates',
+            name: 'Imported exam with dates',
+            createdAt: '2026-06-05T09:00:00.000Z',
+            files: {},
+            attachments: [],
+            examDates: [
+              makeExamDate({
+                id: 'later-date',
+                date: '2026-07-20',
+                createdAt: '2026-06-14T12:00:00.000Z',
+                label: '  Orale  ',
+                notes: '  Aula 5  ',
+              }),
+              {
+                id: 'invalid-date',
+                date: '2026-02-31',
+                createdAt: '2026-06-14T09:00:00.000Z',
+              },
+              {
+                id: 'missing-created-at',
+                date: '2026-07-10',
+              },
+              makeExamDate({
+                id: 'earlier-date',
+                date: '2026-07-15',
+                createdAt: '2026-06-14T10:00:00.000Z',
+                label: '   ',
+              }),
+              makeExamDate({
+                id: 'same-day-earlier-created',
+                date: '2026-07-20',
+                createdAt: '2026-06-14T08:00:00.000Z',
+              }),
+            ],
+            updatedAt: '2026-06-05T10:00:00.000Z',
+            updatedByDeviceId: 'remote-device',
+          },
+        ],
+        quizSessions: [],
+        questionStats: [],
+        flashcardStats: [],
+      },
+      tombstones: [],
+    }
+
+    await importMergedSyncState(remoteState, 'remote-revision-dates', syncedAt)
+
+    await expect(getEsame('exam-imported-dates')).resolves.toEqual({
+      id: 'exam-imported-dates',
+      name: 'Imported exam with dates',
+      createdAt: '2026-06-05T09:00:00.000Z',
+      files: {},
+      attachments: [],
+      examDates: [
+        makeExamDate({
+          id: 'earlier-date',
+          date: '2026-07-15',
+          createdAt: '2026-06-14T10:00:00.000Z',
+        }),
+        makeExamDate({
+          id: 'same-day-earlier-created',
+          date: '2026-07-20',
+          createdAt: '2026-06-14T08:00:00.000Z',
+        }),
+        makeExamDate({
+          id: 'later-date',
+          date: '2026-07-20',
+          createdAt: '2026-06-14T12:00:00.000Z',
+          label: 'Orale',
+          notes: 'Aula 5',
+        }),
+      ],
+    })
+    await expect(getSyncMetadata()).resolves.toEqual({
+      ...metadataBeforeImport,
+      lastRemoteRevision: 'remote-revision-dates',
+      lastSyncedAt: syncedAt,
+      pendingLocalChanges: false,
+    })
   })
 
   it('preserves paused sessions while importing merged sync state', async () => {
