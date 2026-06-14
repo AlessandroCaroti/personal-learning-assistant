@@ -1223,7 +1223,7 @@ describe('storageService', () => {
   it('normalizes imported exam dates from sync payloads without marking sync metadata dirty', async () => {
     const metadataBeforeImport = await getSyncMetadata()
     const syncedAt = '2026-06-06T10:00:00.000Z'
-    const remoteState: RemoteSyncState = {
+    const remoteState = {
       syncVersion: SYNC_SCHEMA_VERSION,
       updatedAt: syncedAt,
       writerDeviceId: 'remote-device',
@@ -1273,7 +1273,7 @@ describe('storageService', () => {
         flashcardStats: [],
       },
       tombstones: [],
-    }
+    } as unknown as RemoteSyncState
 
     await importMergedSyncState(remoteState, 'remote-revision-dates', syncedAt)
 
