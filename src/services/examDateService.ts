@@ -157,9 +157,5 @@ export function countdownLabel(date: string, now = new Date()): string {
     return '1 giorno'
   }
 
-  if (diffDays < 0) {
-    return `${Math.abs(diffDays)} giorni fa`
-  }
-
   return `${diffDays} giorni`
 }
