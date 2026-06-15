@@ -3,6 +3,7 @@ import JSZip from 'jszip'
 import {
   makeEsame,
   makeExamAttachment,
+  makeExamDate,
   makeFlashcardFile,
   makePausedFlash,
   makePausedQuiz,
@@ -93,6 +94,15 @@ const fullBundle = {
         createdAt: '2026-06-02T08:00:00.000Z',
       }),
     ],
+    examDates: [
+      makeExamDate({
+        id: 'written',
+        date: '2026-07-15',
+        label: 'Scritto',
+        notes: 'Aula 3',
+        createdAt: '2026-06-14T10:00:00.000Z',
+      }),
+    ],
   }),
   quizSessions: [makeQuizSession({ id: 'quiz-session-1', examId: 'exam-1' })],
   questionStats: [questionStat()],
@@ -147,6 +157,7 @@ describe('examBackupService', () => {
         originalExamId: 'exam-1',
         name: 'Diritto privato',
         createdAt: '2026-06-01T08:00:00.000Z',
+        examDates: fullBundle.exam.examDates,
         files: {
           quiz: {
             path: 'files/quiz.json',
@@ -235,6 +246,7 @@ describe('examBackupService', () => {
       id: 'exam-1',
       name: 'Diritto privato',
       createdAt: '2026-06-01T08:00:00.000Z',
+      examDates: fullBundle.exam.examDates,
       files: {
         quiz: {
           name: 'quiz.json',
@@ -266,6 +278,19 @@ describe('examBackupService', () => {
     expect(parsed.questionStats).toEqual(fullBundle.questionStats)
     expect(parsed.flashcardStats).toEqual(fullBundle.flashcardStats)
     expect(parsed.pausedSessions).toEqual(fullBundle.pausedSessions)
+  })
+
+  it('accepts older manifests without exam dates and normalizes them to an empty array', async () => {
+    const archive = await buildExamBackupArchive(fullBundle)
+    const zip = await JSZip.loadAsync(archive)
+    const manifest = JSON.parse(await zip.file(BACKUP_MANIFEST_PATH)!.async('string'))
+
+    delete manifest.exam.examDates
+    zip.file(BACKUP_MANIFEST_PATH, JSON.stringify(manifest))
+
+    const parsed = await readExamBackupArchive(await zip.generateAsync({ type: 'arraybuffer' }))
+
+    expect(parsed.exam.examDates).toEqual([])
   })
 
   it('rejects an unreadable archive', async () => {
@@ -411,6 +436,7 @@ describe('examBackupService', () => {
       id: 'new-exam-id',
       name: 'Diritto privato',
       createdAt: '2026-06-01T08:00:00.000Z',
+      examDates: fullBundle.exam.examDates,
     })
     expect(restored.quizSessions).toEqual([
       {

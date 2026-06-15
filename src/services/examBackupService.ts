@@ -8,6 +8,7 @@ import type {
   QuestionStats,
   QuizSession,
 } from '../types'
+import { normalizeExamDates } from './examDateService'
 import { validateFlashcardFile, validateQuizFile } from './quizService'
 
 export const BACKUP_SCHEMA_VERSION = 1
@@ -53,6 +54,7 @@ interface BackupManifest {
     originalExamId: string
     name: string
     createdAt: string
+    examDates: NonNullable<Esame['examDates']>
     files: {
       quiz?: BackupFileEntry
       flashcard?: BackupFileEntry
@@ -166,6 +168,7 @@ export async function buildExamBackupArchive(
       originalExamId: bundle.exam.id,
       name: bundle.exam.name,
       createdAt: bundle.exam.createdAt,
+      examDates: normalizeExamDates(bundle.exam.examDates),
       files: {
         ...(files.quiz
           ? { quiz: fixedFileEntry(zip, 'files/quiz.json', files.quiz) }
@@ -362,6 +365,7 @@ function normalizeManifest(value: unknown): BackupManifest {
         'createdAt',
         'Backup non valido: createdAt mancante',
       ),
+      examDates: normalizeExamDates(value.exam.examDates),
       files: {
         ...(quiz ? { quiz } : {}),
         ...(flashcard ? { flashcard } : {}),
@@ -480,6 +484,7 @@ export async function readExamBackupArchive(archive: ArrayBuffer): Promise<ExamB
       id: manifest.exam.originalExamId,
       name: manifest.exam.name,
       createdAt: manifest.exam.createdAt,
+      examDates: manifest.exam.examDates,
       files: {
         ...(quiz ? { quiz } : {}),
         ...(flashcard ? { flashcard } : {}),

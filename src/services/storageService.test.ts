@@ -1046,6 +1046,7 @@ describe('storageService', () => {
     expect(state.data.esami).toEqual([
       {
         ...examWithFiles,
+        examDates: [],
         files: {
           quiz: {
             name: 'quiz.json',
@@ -1308,6 +1309,52 @@ describe('storageService', () => {
       lastRemoteRevision: 'remote-revision-dates',
       lastSyncedAt: syncedAt,
       pendingLocalChanges: false,
+    })
+  })
+
+  it('preserves exam dates through sync export and import', async () => {
+    const datedExam = {
+      ...exam,
+      examDates: [
+        makeExamDate({
+          id: 'written',
+          date: '2026-07-15',
+          label: 'Scritto',
+          notes: 'Aula 3',
+        }),
+      ],
+    }
+
+    await saveEsame(datedExam)
+
+    const { state } = await exportLocalSyncState()
+    const syncedAt = '2026-06-14T12:00:00.000Z'
+
+    expect(state.data.esami[0].examDates).toEqual(datedExam.examDates)
+
+    await importMergedSyncState(
+      {
+        ...state,
+        data: {
+          ...state.data,
+          esami: [
+            {
+              ...state.data.esami[0],
+              id: 'exam-imported-dates',
+              name: 'Imported with dates',
+              updatedAt: syncedAt,
+            },
+          ],
+        },
+      },
+      'remote-revision-dates',
+      syncedAt,
+    )
+
+    await expect(getEsame('exam-imported-dates')).resolves.toMatchObject({
+      id: 'exam-imported-dates',
+      name: 'Imported with dates',
+      examDates: datedExam.examDates,
     })
   })
 

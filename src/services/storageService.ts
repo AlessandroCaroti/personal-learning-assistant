@@ -736,6 +736,7 @@ export async function exportLocalSyncState(): Promise<{
             attachments: normalizeAttachments(esame).map((attachment) =>
               encodeExamAttachment(attachment),
             ),
+            examDates: normalizeExamDates(esame.examDates),
             files: Object.fromEntries(
               Object.entries(esame.files).map(([slot, file]) => [slot, encodeFileRecord(file)]),
             ),
