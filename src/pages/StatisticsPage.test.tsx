@@ -182,8 +182,10 @@ describe('StatisticsPage', () => {
     expect(screen.getByRole('heading', { name: 'Date esame' })).not.toBeNull()
     expect(screen.getByText('Scritto')).not.toBeNull()
     expect(screen.getByText('oggi')).not.toBeNull()
+    expect(screen.getByText(localDateString(0))).not.toBeNull()
     expect(screen.getByText('Orale')).not.toBeNull()
     expect(screen.getByText('1 giorno')).not.toBeNull()
+    expect(screen.getByText(localDateString(1))).not.toBeNull()
     expect(screen.getByText('Aula 3')).not.toBeNull()
 
     expect(screen.getByRole('heading', { name: 'Quiz' })).not.toBeNull()
@@ -201,6 +203,13 @@ describe('StatisticsPage', () => {
     expect(screen.getByText('Domanda facile').closest('li')).toHaveTextContent(
       '50% corrette su 4 tentativi',
     )
+    expect(screen.getByRole('heading', { name: 'Macroargomenti deboli' })).not.toBeNull()
+    expect(
+      screen.getByRole('heading', { name: 'Macroargomenti deboli' }).closest('section'),
+    ).toHaveTextContent('Algebra')
+    expect(
+      screen.getByRole('heading', { name: 'Macroargomenti deboli' }).closest('section'),
+    ).toHaveTextContent('20% corrette su 5 tentativi')
 
     expect(screen.getByRole('heading', { name: 'Flashcard' })).not.toBeNull()
     expect(screen.getByText('Nessun file flashcard importato.')).not.toBeNull()
