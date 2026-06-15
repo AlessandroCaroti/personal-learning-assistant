@@ -429,6 +429,49 @@ describe('mergeSyncStates', () => {
     expect(result.conflicts).toEqual([])
   })
 
+  it('keeps an explicit empty examDates array when the newer record clears dates', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        name: 'Local exam',
+        examDates: [
+          {
+            id: 'written',
+            date: '2026-07-15',
+            createdAt: '2026-06-14T10:00:00.000Z',
+            label: 'Scritto',
+          },
+        ],
+        updatedAt: '2026-06-01T10:00:00.000Z',
+        updatedByDeviceId: 'device-a',
+      }),
+    )
+    remote.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        name: 'Remote cleared exam',
+        examDates: [],
+        updatedAt: '2026-06-01T11:00:00.000Z',
+        updatedByDeviceId: 'device-z',
+      }),
+    )
+
+    const result = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(result.state.data.esami).toEqual([
+      examRecord({
+        id: 'exam-1',
+        name: 'Remote cleared exam',
+        examDates: [],
+        updatedAt: '2026-06-01T11:00:00.000Z',
+        updatedByDeviceId: 'device-z',
+      }),
+    ])
+    expect(result.conflicts).toEqual([])
+  })
+
   it('converges exam tombstone ties by stable device id independent of merge order', () => {
     const local = emptyState('local-device')
     const remote = emptyState('remote-device')

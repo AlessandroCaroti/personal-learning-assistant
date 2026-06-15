@@ -1406,6 +1406,56 @@ describe('storageService', () => {
     })
   })
 
+  it('clears local exam dates when importing an explicit empty examDates array', async () => {
+    const localExam = {
+      ...exam,
+      name: 'Local dated exam',
+      examDates: [
+        makeExamDate({
+          id: 'written',
+          date: '2026-07-15',
+          label: 'Scritto',
+          notes: 'Aula 3',
+        }),
+      ],
+    }
+    const syncedAt = '2026-06-14T12:00:00.000Z'
+
+    await saveEsame(localExam)
+
+    const remoteState: RemoteSyncState = {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: syncedAt,
+      writerDeviceId: 'remote-device',
+      data: {
+        esami: [
+          {
+            id: localExam.id,
+            name: 'Remote cleared exam',
+            createdAt: localExam.createdAt,
+            files: {},
+            attachments: [],
+            examDates: [],
+            updatedAt: syncedAt,
+            updatedByDeviceId: 'remote-device',
+          },
+        ],
+        quizSessions: [],
+        questionStats: [],
+        flashcardStats: [],
+      },
+      tombstones: [],
+    }
+
+    await importMergedSyncState(remoteState, 'remote-revision-clear-dates', syncedAt)
+
+    await expect(getEsame(localExam.id)).resolves.toEqual({
+      ...localExam,
+      name: 'Remote cleared exam',
+      examDates: [],
+    })
+  })
+
   it('preserves paused sessions while importing merged sync state', async () => {
     const pausedQuiz = makePausedQuiz({ id: 'local-exam__quiz', examId: 'local-exam' })
     const remoteState: RemoteSyncState = {
