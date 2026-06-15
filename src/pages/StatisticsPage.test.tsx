@@ -379,6 +379,57 @@ describe('StatisticsPage', () => {
     })
   })
 
+  it('clears optional label and notes when editing an exam date', async () => {
+    const user = userEvent.setup()
+    const originalDate = makeExamDate({
+      id: 'date-1',
+      date: '2026-07-15',
+      label: 'Scritto',
+      notes: 'Aula 3',
+    })
+    const current = makeEsame({ examDates: [originalDate] })
+    getEsame.mockResolvedValue(current)
+
+    renderStatisticsPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Modifica Scritto' }))
+    await user.clear(screen.getByLabelText('Etichetta'))
+    await user.clear(screen.getByLabelText('Note'))
+    await user.click(screen.getByRole('button', { name: 'Salva data' }))
+
+    await waitFor(() => {
+      expect(saveEsame).toHaveBeenCalledWith({
+        ...current,
+        examDates: [
+          {
+            id: 'date-1',
+            date: '2026-07-15',
+            createdAt: originalDate.createdAt,
+          },
+        ],
+      })
+    })
+  })
+
+  it('shows an error and does not apply local success state when saving a date fails', async () => {
+    const user = userEvent.setup()
+    const current = makeEsame({ examDates: [] })
+    getEsame.mockResolvedValue(current)
+    saveEsame.mockRejectedValueOnce(new Error('Salvataggio non riuscito'))
+
+    renderStatisticsPage()
+
+    await user.type(await screen.findByLabelText('Data'), '2026-07-15')
+    await user.type(screen.getByLabelText('Etichetta'), 'Scritto')
+    await user.click(screen.getByRole('button', { name: 'Aggiungi data' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Salvataggio non riuscito')
+    expect(screen.getByLabelText('Data')).toHaveValue('2026-07-15')
+    expect(screen.getByLabelText('Etichetta')).toHaveValue('Scritto')
+    expect(screen.getByText('Nessuna data esame configurata.')).not.toBeNull()
+    expect(screen.queryByText('Scritto')).toBeNull()
+  })
+
   it('shows validation feedback for invalid date input', async () => {
     const user = userEvent.setup()
 

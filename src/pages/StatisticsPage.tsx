@@ -102,20 +102,42 @@ export function StatisticsPage() {
     setDateError(null)
 
     if (editingDateId) {
-      await saveExamDates(
-        (esame.examDates ?? []).map((examDate) =>
-          examDate.id === editingDateId ? { ...examDate, ...result.value } : examDate,
-        ),
-      )
+      const existingDate = (esame.examDates ?? []).find((examDate) => examDate.id === editingDateId)
+      if (!existingDate) {
+        setDateError('Data esame non trovata.')
+        return
+      }
+
+      try {
+        await saveExamDates(
+          (esame.examDates ?? []).map((examDate) =>
+            examDate.id === editingDateId
+              ? {
+                  id: existingDate.id,
+                  createdAt: existingDate.createdAt,
+                  ...result.value,
+                }
+              : examDate,
+          ),
+        )
+      } catch (saveError) {
+        setDateError(errorMessage(saveError))
+        return
+      }
     } else {
-      await saveExamDates([
-        ...(esame.examDates ?? []),
-        {
-          id: uuidv4(),
-          ...result.value,
-          createdAt: new Date().toISOString(),
-        },
-      ])
+      try {
+        await saveExamDates([
+          ...(esame.examDates ?? []),
+          {
+            id: uuidv4(),
+            ...result.value,
+            createdAt: new Date().toISOString(),
+          },
+        ])
+      } catch (saveError) {
+        setDateError(errorMessage(saveError))
+        return
+      }
     }
 
     setDateForm({ date: '', label: '', notes: '' })
@@ -136,7 +158,12 @@ export function StatisticsPage() {
   async function confirmDeleteDate() {
     if (!esame || !deleteDateId) return
 
-    await saveExamDates((esame.examDates ?? []).filter((examDate) => examDate.id !== deleteDateId))
+    try {
+      await saveExamDates((esame.examDates ?? []).filter((examDate) => examDate.id !== deleteDateId))
+    } catch (saveError) {
+      setDateError(errorMessage(saveError))
+      return
+    }
 
     if (editingDateId === deleteDateId) {
       setEditingDateId(null)
