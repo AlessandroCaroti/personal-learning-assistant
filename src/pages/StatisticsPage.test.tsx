@@ -9,7 +9,16 @@ import {
   createMemoryRouter,
   useNavigate,
 } from 'react-router-dom'
-import type { Esame } from '../types'
+import {
+  makeEsame,
+  makeExamDate,
+  makeFlashCard,
+  makeFlashcardFile,
+  makeQuizDomanda,
+  makeQuizFile,
+  makeQuizSession,
+} from '../__tests__/factories'
+import type { Esame, FlashcardStats, QuestionStats } from '../types'
 
 const getEsame = vi.fn()
 const getQuizSessions = vi.fn()
@@ -27,12 +36,30 @@ vi.mock('../services/storageService', () => ({
 
 const { StatisticsPage } = await import('./StatisticsPage')
 
-function makeExam(): Esame {
+function encodeJson(value: unknown): ArrayBuffer {
+  const bytes = new TextEncoder().encode(JSON.stringify(value))
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+}
+
+function questionStat(overrides: Partial<QuestionStats> = {}): QuestionStats {
   return {
-    id: 'exam-1',
-    name: 'Analisi 1',
-    createdAt: '2026-06-01T08:00:00.000Z',
-    files: {},
+    id: 'exam-1__q1',
+    examId: 'exam-1',
+    questionId: 'q1',
+    timesShown: 4,
+    timesCorrect: 2,
+    ...overrides,
+  }
+}
+
+function flashcardStat(overrides: Partial<FlashcardStats> = {}): FlashcardStats {
+  return {
+    id: 'exam-1__f1',
+    examId: 'exam-1',
+    cardId: 'f1',
+    lastEval: 'Sì',
+    lastSeen: '2026-06-14T10:00:00.000Z',
+    ...overrides,
   }
 }
 
@@ -61,28 +88,188 @@ function DeferredRouteLayout() {
   )
 }
 
+function localDateString(offsetDays: number): string {
+  const date = new Date()
+  date.setHours(12, 0, 0, 0)
+  date.setDate(date.getDate() + offsetDays)
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
 describe('StatisticsPage', () => {
   afterEach(() => {
     cleanup()
+    vi.useRealTimers()
   })
 
   beforeEach(() => {
     vi.clearAllMocks()
-    getEsame.mockResolvedValue(makeExam())
+    getEsame.mockResolvedValue(makeEsame({ name: 'Analisi 1' }))
     getQuizSessions.mockResolvedValue([])
     getQuestionStats.mockResolvedValue([])
     getFlashcardStats.mockResolvedValue([])
     saveEsame.mockResolvedValue(undefined)
   })
 
-  it('renders the statistics shell for the current exam', async () => {
+  it('renders exam dates, quiz summary, weak questions, and weak macroargomenti', async () => {
+    getEsame.mockResolvedValue(
+      makeEsame({
+        name: 'Analisi 1',
+        examDates: [
+          makeExamDate({ id: 'date-1', date: localDateString(0), label: 'Scritto' }),
+          makeExamDate({
+            id: 'date-2',
+            date: localDateString(1),
+            label: 'Orale',
+            notes: 'Aula 3',
+          }),
+        ],
+        files: {
+          quiz: {
+            name: 'quiz.json',
+            type: 'application/json',
+            data: encodeJson(
+              makeQuizFile([
+                makeQuizDomanda({
+                  id: 'q1',
+                  testo: 'Domanda difficile',
+                  macroargomenti: ['Algebra'],
+                }),
+                makeQuizDomanda({
+                  id: 'q2',
+                  testo: 'Domanda facile',
+                  macroargomenti: ['Analisi'],
+                }),
+              ]),
+            ),
+          },
+        },
+      }),
+    )
+    getQuizSessions.mockResolvedValue([
+      makeQuizSession({
+        id: 's1',
+        score: 6,
+        total: 10,
+        totalTime: 120,
+        completedByTimeout: false,
+        isReview: false,
+        date: '2026-06-13T10:00:00.000Z',
+      }),
+      makeQuizSession({
+        id: 's2',
+        score: 8,
+        total: 10,
+        totalTime: 60,
+        completedByTimeout: true,
+        isReview: true,
+        date: '2026-06-14T10:00:00.000Z',
+      }),
+    ])
+    getQuestionStats.mockResolvedValue([
+      questionStat({ questionId: 'q1', timesShown: 5, timesCorrect: 1 }),
+      questionStat({ questionId: 'q2', timesShown: 4, timesCorrect: 2 }),
+    ])
+
     renderStatisticsPage()
 
     expect(await screen.findByRole('heading', { name: 'Statistiche' })).not.toBeNull()
     expect(screen.getByText('Analisi 1')).not.toBeNull()
     expect(screen.getByRole('heading', { name: 'Date esame' })).not.toBeNull()
+    expect(screen.getByText('Scritto')).not.toBeNull()
+    expect(screen.getByText('oggi')).not.toBeNull()
+    expect(screen.getByText('Orale')).not.toBeNull()
+    expect(screen.getByText('1 giorno')).not.toBeNull()
+    expect(screen.getByText('Aula 3')).not.toBeNull()
+
     expect(screen.getByRole('heading', { name: 'Quiz' })).not.toBeNull()
+    expect(screen.getByText('Sessioni completate')).not.toBeNull()
+    expect(screen.getByText('Sessioni completate').closest('div')).toHaveTextContent('2')
+    expect(screen.getByText('70%')).not.toBeNull()
+    expect(screen.getByText('Migliore').closest('div')).toHaveTextContent('80%')
+    expect(screen.getByText('Ultimo risultato').closest('div')).toHaveTextContent('80%')
+    expect(screen.getByText('1m 30s')).not.toBeNull()
+    expect(screen.getByText('Domanda difficile')).not.toBeNull()
+    expect(screen.getByText('Domanda difficile').closest('li')).toHaveTextContent(
+      '20% corrette su 5 tentativi',
+    )
+    expect(screen.getByText('Domanda difficile').closest('li')).toHaveTextContent('Algebra')
+    expect(screen.getByText('Domanda facile').closest('li')).toHaveTextContent(
+      '50% corrette su 4 tentativi',
+    )
+
     expect(screen.getByRole('heading', { name: 'Flashcard' })).not.toBeNull()
+    expect(screen.getByText('Nessun file flashcard importato.')).not.toBeNull()
+  })
+
+  it('renders flashcard summary and weak flashcards', async () => {
+    const cards = [
+      makeFlashCard({ id: 'f1', fronte: 'Concetto fragile', macroargomenti: ['Patologia'] }),
+      makeFlashCard({ id: 'f2', fronte: 'Concetto stabile', macroargomenti: ['Patologia'] }),
+    ]
+    getEsame.mockResolvedValue(
+      makeEsame({
+        files: {
+          flashcard: {
+            name: 'flashcard.json',
+            type: 'application/json',
+            data: encodeJson(makeFlashcardFile(cards)),
+          },
+        },
+      }),
+    )
+    getFlashcardStats.mockResolvedValue([
+      flashcardStat({ cardId: 'f1', lastEval: 'No', lastSeen: '2026-06-14T09:00:00.000Z' }),
+      flashcardStat({
+        id: 'exam-1__f2',
+        cardId: 'f2',
+        lastEval: 'Sì',
+        lastSeen: '2026-06-14T11:00:00.000Z',
+      }),
+    ])
+
+    renderStatisticsPage()
+
+    expect(await screen.findByText('Flashcard')).not.toBeNull()
+    expect(screen.getByText('Flashcard con progressi')).not.toBeNull()
+    expect(screen.getByText('Flashcard con progressi').closest('div')).toHaveTextContent('2')
+    expect(screen.getByText('Sì').closest('div')).toHaveTextContent('1')
+    expect(screen.getByText('Concetto fragile')).not.toBeNull()
+    expect(screen.getByText('Patologia')).not.toBeNull()
+    expect(screen.getByText('Concetto fragile').closest('li')).toHaveTextContent('No')
+    expect(screen.getByText(new Date('2026-06-14T09:00:00.000Z').toLocaleDateString())).not.toBeNull()
+  })
+
+  it('shows concrete source errors when imported JSON is invalid', async () => {
+    getEsame.mockResolvedValue(
+      makeEsame({
+        files: {
+          quiz: {
+            name: 'quiz.json',
+            type: 'application/json',
+            data: encodeJson({ esame: 'Broken' }),
+          },
+          flashcard: {
+            name: 'flashcard.json',
+            type: 'application/json',
+            data: encodeJson({ esame: 'Broken' }),
+          },
+        },
+      }),
+    )
+
+    renderStatisticsPage()
+
+    expect(
+      await screen.findByText('Dettagli quiz non disponibili: file quiz non valido.'),
+    ).not.toBeNull()
+    expect(
+      screen.getByText('Dettagli flashcard non disponibili: file flashcard non valido.'),
+    ).not.toBeNull()
   })
 
   it('redirects to all exams when the exam is missing', async () => {
@@ -120,7 +307,7 @@ describe('StatisticsPage', () => {
   it('clears stale exam content while loading a different exam route', async () => {
     let resolveSecondExam: ((value: Esame) => void) | undefined
     getEsame
-      .mockResolvedValueOnce(makeExam())
+      .mockResolvedValueOnce(makeEsame({ name: 'Analisi 1' }))
       .mockImplementationOnce(
         () =>
           new Promise<Esame>((resolve) => {
@@ -149,12 +336,14 @@ describe('StatisticsPage', () => {
     expect(screen.queryByText('Analisi 1')).toBeNull()
 
     resolveSecondExam?.({
-      ...makeExam(),
+      ...makeEsame(),
       id: 'exam-2',
       name: 'Geometria',
     })
 
-    expect(await screen.findByText('Geometria')).not.toBeNull()
+    await waitFor(() => {
+      expect(screen.getByText('Geometria')).not.toBeNull()
+    })
   })
 
   it('ignores a late response from an older exam load after switching routes', async () => {
@@ -193,14 +382,16 @@ describe('StatisticsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Vai a exam-2' }))
 
     resolveSecondExam?.({
-      ...makeExam(),
+      ...makeEsame({ name: 'Geometria' }),
       id: 'exam-2',
       name: 'Geometria',
     })
 
-    expect(await screen.findByText('Geometria')).not.toBeNull()
+    await waitFor(() => {
+      expect(screen.getByText('Geometria')).not.toBeNull()
+    })
 
-    resolveFirstExam?.(makeExam())
+    resolveFirstExam?.(makeEsame())
 
     await waitFor(() => {
       expect(screen.getByText('Geometria')).not.toBeNull()

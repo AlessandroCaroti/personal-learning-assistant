@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { countdownLabel } from '../services/examDateService'
 import * as storageService from '../services/storageService'
+import {
+  buildFlashcardSummary,
+  buildQuizSummary,
+  decodeFlashcardSource,
+  decodeQuizSource,
+  weakFlashcards,
+  weakMacroargomenti,
+  weakQuizQuestions,
+} from '../services/statisticsService'
 import type { Esame, FlashcardStats, QuestionStats, QuizSession } from '../types'
 
 export function StatisticsPage() {
@@ -95,6 +105,21 @@ export function StatisticsPage() {
     return null
   }
 
+  const quizSummary = buildQuizSummary(quizSessions)
+  const flashcardSummary = buildFlashcardSummary(flashcardStats)
+  const quizSource = decodeQuizSource(esame.files.quiz?.data)
+  const flashcardSource = decodeFlashcardSource(esame.files.flashcard?.data)
+  const weakQuestions =
+    quizSource.status === 'ready' ? weakQuizQuestions(questionStats, quizSource.questions).slice(0, 5) : []
+  const weakMacros =
+    quizSource.status === 'ready' ? weakMacroargomenti(questionStats, quizSource.questions).slice(0, 5) : []
+  const weakCards =
+    flashcardSource.status === 'ready'
+      ? weakFlashcards(flashcardStats, flashcardSource.cards).slice(0, 5)
+      : []
+
+  const examDates = esame.examDates ?? []
+
   return (
     <div style={pageStyle}>
       <button
@@ -112,27 +137,160 @@ export function StatisticsPage() {
       </header>
 
       <div style={sectionsGridStyle}>
-        <StatisticsSection title="Date esame" itemCount={esame.examDates?.length ?? 0} />
-        <StatisticsSection title="Quiz" itemCount={quizSessions.length + questionStats.length} />
-        <StatisticsSection title="Flashcard" itemCount={flashcardStats.length} />
+        <StatisticsSection title="Date esame">
+          {examDates.length === 0 ? (
+            <p style={mutedTextStyle}>Nessuna data esame configurata.</p>
+          ) : (
+            <ul style={listStyle}>
+              {examDates.map((examDate) => (
+                <li key={examDate.id} style={itemStyle}>
+                  <strong>{examDate.label ?? 'Data esame'}</strong>
+                  <span>{countdownLabel(examDate.date)}</span>
+                  <span>{examDate.date}</span>
+                  {examDate.notes && <span>{examDate.notes}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </StatisticsSection>
+
+        <StatisticsSection title="Quiz">
+          {!esame.files.quiz && <p style={mutedTextStyle}>Nessun file quiz importato.</p>}
+          {esame.files.quiz && quizSummary.totalSessions === 0 && (
+            <p style={mutedTextStyle}>Nessuna sessione quiz completata.</p>
+          )}
+          <MetricGrid
+            metrics={[
+              ['Sessioni completate', String(quizSummary.totalSessions)],
+              ['Media', formatPercent(quizSummary.averageScorePercent)],
+              ['Migliore', formatPercent(quizSummary.bestScorePercent)],
+              ['Ultimo risultato', formatPercent(quizSummary.latestScorePercent)],
+              ['Tempo medio', formatDuration(quizSummary.averageTimeSeconds)],
+              ['Timeout', String(quizSummary.timeoutCount)],
+              ['Ripassi', String(quizSummary.reviewCount)],
+            ]}
+          />
+          {quizSource.status === 'error' && (
+            <p role="status" style={mutedTextStyle}>
+              {quizSource.message}
+            </p>
+          )}
+          {weakQuestions.length > 0 && (
+            <>
+              <h3 style={subsectionTitleStyle}>Domande deboli</h3>
+              <ul style={listStyle}>
+                {weakQuestions.map((question) => (
+                  <li key={question.questionId} style={itemStyle}>
+                    <strong>{question.text}</strong>
+                    <span>
+                      {question.accuracyPercent}% corrette su {question.timesShown} tentativi
+                    </span>
+                    <span>{question.macroargomenti.join(', ')}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {weakMacros.length > 0 && (
+            <>
+              <h3 style={subsectionTitleStyle}>Macroargomenti deboli</h3>
+              <ul style={listStyle}>
+                {weakMacros.map((macro) => (
+                  <li key={macro.name} style={itemStyle}>
+                    <strong>{macro.name}</strong>
+                    <span>
+                      {macro.accuracyPercent}% corrette su {macro.timesShown} tentativi
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </StatisticsSection>
+
+        <StatisticsSection title="Flashcard">
+          {!esame.files.flashcard && <p style={mutedTextStyle}>Nessun file flashcard importato.</p>}
+          {esame.files.flashcard && flashcardSummary.totalSeen === 0 && (
+            <p style={mutedTextStyle}>Nessun progresso flashcard registrato.</p>
+          )}
+          <MetricGrid
+            metrics={[
+              ['Flashcard con progressi', String(flashcardSummary.totalSeen)],
+              ['Sì', String(flashcardSummary.si)],
+              ['In parte', String(flashcardSummary.inParte)],
+              ['No', String(flashcardSummary.no)],
+              ['Non risposta', String(flashcardSummary.nonRisposta)],
+            ]}
+          />
+          {flashcardSource.status === 'error' && (
+            <p role="status" style={mutedTextStyle}>
+              {flashcardSource.message}
+            </p>
+          )}
+          {weakCards.length > 0 && (
+            <>
+              <h3 style={subsectionTitleStyle}>Flashcard deboli</h3>
+              <ul style={listStyle}>
+                {weakCards.map((card) => (
+                  <li key={card.cardId} style={itemStyle}>
+                    <strong>{card.front}</strong>
+                    <span>{card.lastEval}</span>
+                    <span>{card.macroargomenti.join(', ')}</span>
+                    <span>{new Date(card.lastSeen).toLocaleDateString()}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </StatisticsSection>
       </div>
     </div>
   )
 }
 
-function StatisticsSection({ title, itemCount }: { title: string; itemCount: number }) {
+function StatisticsSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const titleId = `${title.toLowerCase().replace(/\s+/g, '-')}-title`
+
   return (
-    <section
-      aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-title`}
-      data-item-count={itemCount}
-      style={sectionStyle}
-    >
-      <h2 id={`${title.toLowerCase().replace(/\s+/g, '-')}-title`} style={sectionTitleStyle}>
+    <section aria-labelledby={titleId} style={sectionStyle}>
+      <h2 id={titleId} style={sectionTitleStyle}>
         {title}
       </h2>
-      <p style={mutedTextStyle}>Contenuto in arrivo.</p>
+      <div style={{ display: 'grid', gap: '0.9rem' }}>{children}</div>
     </section>
   )
+}
+
+function MetricGrid({ metrics }: { metrics: [string, string][] }) {
+  return (
+    <dl style={metricGridStyle}>
+      {metrics.map(([label, value]) => (
+        <div key={label} style={metricStyle}>
+          <dt style={metricLabelStyle}>{label}</dt>
+          <dd style={metricValueStyle}>{value}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+function formatPercent(value: number | null): string {
+  return value === null ? '-' : `${value}%`
+}
+
+function formatDuration(value: number | null): string {
+  if (value === null) {
+    return '-'
+  }
+
+  const minutes = Math.floor(value / 60)
+  const seconds = value % 60
+
+  if (minutes === 0) {
+    return `${seconds}s`
+  }
+
+  return `${minutes}m ${String(seconds).padStart(2, '0')}s`
 }
 
 function errorMessage(error: unknown): string {
@@ -173,6 +331,52 @@ const sectionTitleStyle = {
   fontSize: '1.05rem',
   fontWeight: 700,
   marginBottom: '0.75rem',
+}
+
+const subsectionTitleStyle = {
+  fontSize: '0.98rem',
+  fontWeight: 700,
+}
+
+const metricGridStyle = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+  gap: '0.75rem',
+}
+
+const metricStyle = {
+  display: 'grid',
+  gap: '0.2rem',
+  padding: '0.75rem',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  background: 'var(--bg-elevated)',
+}
+
+const metricLabelStyle = {
+  color: 'var(--text-muted)',
+  fontSize: '0.9rem',
+}
+
+const metricValueStyle = {
+  fontSize: '1.15rem',
+  fontWeight: 700,
+}
+
+const listStyle = {
+  display: 'grid',
+  gap: '0.6rem',
+  listStyle: 'none',
+  padding: 0,
+}
+
+const itemStyle = {
+  display: 'grid',
+  gap: '0.2rem',
+  padding: '0.75rem',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  background: 'var(--bg-elevated)',
 }
 
 const secondaryButtonStyle = {
