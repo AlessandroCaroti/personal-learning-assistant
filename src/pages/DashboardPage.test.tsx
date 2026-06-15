@@ -92,6 +92,7 @@ function renderDashboard(path = '/esame/exam-1') {
         <Route path="/" element={<h1>Tutti gli esami</h1>} />
         <Route path="/esame/:examId" element={<DashboardPage />} />
         <Route path="/esame/:examId/archivio" element={<h1>Archivio esame</h1>} />
+        <Route path="/esame/:examId/statistiche" element={<h1>Statistiche</h1>} />
         <Route path="/esame/:examId/quiz/config" element={<LocationStateView />} />
         <Route path="/esame/:examId/quiz/sessione" element={<LocationStateView />} />
         <Route path="/esame/:examId/flashcard/sessione" element={<LocationStateView />} />
@@ -296,6 +297,14 @@ describe('DashboardPage', () => {
       encodeText('backup-archive'),
       'analisi-1-2026-06-13.pla-exam-backup',
     )
+  })
+
+  it('navigates to the statistics page from the dashboard header', async () => {
+    renderDashboard()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Statistiche' }))
+
+    expect(await screen.findByRole('heading', { name: 'Statistiche' })).not.toBeNull()
   })
 
   it('shows an export error when backup generation fails', async () => {

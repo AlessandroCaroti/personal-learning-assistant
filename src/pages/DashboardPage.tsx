@@ -213,14 +213,23 @@ export function DashboardPage() {
           }}
         >
           <h1 style={{ fontSize: '1.6rem', fontWeight: 700 }}>{esame.name}</h1>
-          <button
-            type="button"
-            onClick={() => void exportBackup()}
-            disabled={exportingBackup}
-            style={secondaryButtonStyle}
-          >
-            {exportingBackup ? 'Esportazione...' : 'Esporta backup'}
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => navigate(`/esame/${esame.id}/statistiche`)}
+              style={secondaryButtonStyle}
+            >
+              Statistiche
+            </button>
+            <button
+              type="button"
+              onClick={() => void exportBackup()}
+              disabled={exportingBackup}
+              style={secondaryButtonStyle}
+            >
+              {exportingBackup ? 'Esportazione...' : 'Esporta backup'}
+            </button>
+          </div>
         </div>
         {backupExportError && (
           <p role="alert" style={{ ...mutedTextStyle, marginTop: '0.5rem', color: 'var(--danger)' }}>

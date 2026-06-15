@@ -12,6 +12,7 @@ import { HomePage } from './pages/HomePage'
 import { QuizConfigPage } from './pages/QuizConfigPage'
 import { QuizResultPage } from './pages/QuizResultPage'
 import { QuizSessionPage } from './pages/QuizSessionPage'
+import { StatisticsPage } from './pages/StatisticsPage'
 import { SummaryPage } from './pages/SummaryPage'
 import { TutorialPage } from './pages/TutorialPage'
 
@@ -98,6 +99,7 @@ export default function App() {
           <Route path="/onboarding" element={<TutorialPage isOnboarding />} />
           <Route path="/guida" element={<TutorialPage />} />
           <Route path="/esame/:examId" element={<DashboardPage />} />
+          <Route path="/esame/:examId/statistiche" element={<StatisticsPage />} />
           <Route path="/esame/:examId/riassunto" element={<SummaryPage />} />
           <Route path="/esame/:examId/archivio" element={<ArchivePage />} />
           <Route path="/esame/:examId/file/:fileId" element={<FileViewerPage />} />
