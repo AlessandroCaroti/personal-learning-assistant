@@ -135,6 +135,63 @@ describe('statisticsService', () => {
     ])
   })
 
+  it('keeps weak quiz question ordering deterministic when accuracy and exposure tie', () => {
+    const questions = [
+      makeQuizDomanda({ id: 'q1', testo: 'Question 1' }),
+      makeQuizDomanda({ id: 'q2', testo: 'Question 2' }),
+      makeQuizDomanda({ id: 'q3', testo: 'Question 3' }),
+    ]
+    const stats = [
+      questionStat({ questionId: 'q3', timesShown: 4, timesCorrect: 2 }),
+      questionStat({ questionId: 'q1', timesShown: 4, timesCorrect: 2 }),
+      questionStat({ questionId: 'q2', timesShown: 4, timesCorrect: 2 }),
+    ]
+
+    expect(weakQuizQuestions(stats, questions).map((question) => question.questionId)).toEqual([
+      'q1',
+      'q2',
+      'q3',
+    ])
+  })
+
+  it('dedupes repeated macroargomenti within a single question and keeps macro ordering deterministic on ties', () => {
+    const questions = [
+      makeQuizDomanda({
+        id: 'q1',
+        macroargomenti: ['Beta', 'Beta', 'Alpha'],
+      }),
+      makeQuizDomanda({
+        id: 'q2',
+        macroargomenti: ['Gamma'],
+      }),
+    ]
+    const stats = [
+      questionStat({ questionId: 'q1', timesShown: 4, timesCorrect: 2 }),
+      questionStat({ questionId: 'q2', timesShown: 4, timesCorrect: 2 }),
+    ]
+
+    expect(weakMacroargomenti(stats, questions)).toEqual([
+      {
+        name: 'Alpha',
+        timesShown: 4,
+        timesCorrect: 2,
+        accuracyPercent: 50,
+      },
+      {
+        name: 'Beta',
+        timesShown: 4,
+        timesCorrect: 2,
+        accuracyPercent: 50,
+      },
+      {
+        name: 'Gamma',
+        timesShown: 4,
+        timesCorrect: 2,
+        accuracyPercent: 50,
+      },
+    ])
+  })
+
   it('builds flashcard summary and weak flashcards', () => {
     const cards = [
       makeFlashCard({ id: 'f1', fronte: 'Front 1', macroargomenti: ['A'] }),
@@ -178,7 +235,23 @@ describe('statisticsService', () => {
     ])
   })
 
+  it('keeps weak flashcard ordering deterministic when urgency and lastSeen tie', () => {
+    const cards = [
+      makeFlashCard({ id: 'f1', fronte: 'Front 1' }),
+      makeFlashCard({ id: 'f2', fronte: 'Front 2' }),
+      makeFlashCard({ id: 'f3', fronte: 'Front 3' }),
+    ]
+    const stats = [
+      flashcardStat({ cardId: 'f3', lastEval: 'No', lastSeen: '2026-06-13T10:00:00.000Z' }),
+      flashcardStat({ cardId: 'f1', lastEval: 'No', lastSeen: '2026-06-13T10:00:00.000Z' }),
+      flashcardStat({ cardId: 'f2', lastEval: 'In parte', lastSeen: '2026-06-13T10:00:00.000Z' }),
+    ]
+
+    expect(weakFlashcards(stats, cards).map((card) => card.cardId)).toEqual(['f1', 'f3', 'f2'])
+  })
+
   it('decodes valid sources and returns errors for invalid sources', () => {
+    expect(decodeQuizSource(undefined)).toEqual({ status: 'missing' })
     expect(decodeQuizSource(encodeJson(makeQuizFile()))).toMatchObject({
       status: 'ready',
       questions: expect.any(Array),
@@ -187,6 +260,7 @@ describe('statisticsService', () => {
       status: 'error',
       message: 'Dettagli quiz non disponibili: file quiz non valido.',
     })
+    expect(decodeFlashcardSource(undefined)).toEqual({ status: 'missing' })
     expect(decodeFlashcardSource(encodeJson(makeFlashcardFile()))).toMatchObject({
       status: 'ready',
       cards: expect.any(Array),

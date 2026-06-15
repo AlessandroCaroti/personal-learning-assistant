@@ -185,7 +185,7 @@ export function weakMacroargomenti(
       continue
     }
 
-    for (const macroargomento of question.macroargomenti) {
+    for (const macroargomento of new Set(question.macroargomenti)) {
       const existing = totals.get(macroargomento) ?? { timesShown: 0, timesCorrect: 0 }
       totals.set(macroargomento, {
         timesShown: existing.timesShown + stat.timesShown,
@@ -252,6 +252,11 @@ export function weakFlashcards(stats: FlashcardStats[], cards: FlashCard[]): Wea
         return urgencyComparison
       }
 
-      return left.lastSeen.localeCompare(right.lastSeen)
+      const lastSeenComparison = left.lastSeen.localeCompare(right.lastSeen)
+      if (lastSeenComparison !== 0) {
+        return lastSeenComparison
+      }
+
+      return left.cardId.localeCompare(right.cardId)
     })
 }
