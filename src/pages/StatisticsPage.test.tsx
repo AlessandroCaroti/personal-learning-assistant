@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
@@ -291,21 +291,25 @@ describe('StatisticsPage', () => {
   })
 
   it('navigates back to the exam dashboard', async () => {
+    const user = userEvent.setup()
+
     renderStatisticsPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: "Torna alla dashboard dell'esame" }))
+    await user.click(await screen.findByRole('button', { name: "Torna alla dashboard dell'esame" }))
 
     expect(await screen.findByRole('heading', { name: 'Dashboard esame' })).not.toBeNull()
   })
 
   it('shows an error state and retries loading statistics', async () => {
+    const user = userEvent.setup()
+
     getQuizSessions.mockRejectedValueOnce(new Error('DB failed')).mockResolvedValueOnce([])
 
     renderStatisticsPage()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('DB failed')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Riprova' }))
+    await user.click(screen.getByRole('button', { name: 'Riprova' }))
 
     await waitFor(() => {
       expect(getQuizSessions).toHaveBeenCalledTimes(2)
@@ -387,6 +391,7 @@ describe('StatisticsPage', () => {
   })
 
   it('clears stale exam content while loading a different exam route', async () => {
+    const user = userEvent.setup()
     let resolveSecondExam: ((value: Esame) => void) | undefined
     getEsame
       .mockResolvedValueOnce(makeEsame({ name: 'Analisi 1' }))
@@ -412,7 +417,7 @@ describe('StatisticsPage', () => {
 
     expect(await screen.findByText('Analisi 1')).not.toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Vai a exam-2' }))
+    await user.click(screen.getByRole('button', { name: 'Vai a exam-2' }))
 
     expect(await screen.findByText('Caricamento...')).not.toBeNull()
     expect(screen.queryByText('Analisi 1')).toBeNull()
@@ -429,6 +434,7 @@ describe('StatisticsPage', () => {
   })
 
   it('ignores a late response from an older exam load after switching routes', async () => {
+    const user = userEvent.setup()
     let resolveFirstExam: ((value: Esame) => void) | undefined
     let resolveSecondExam: ((value: Esame) => void) | undefined
 
@@ -461,7 +467,7 @@ describe('StatisticsPage', () => {
 
     expect(await screen.findByText('Caricamento...')).not.toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Vai a exam-2' }))
+    await user.click(screen.getByRole('button', { name: 'Vai a exam-2' }))
 
     resolveSecondExam?.({
       ...makeEsame({ name: 'Geometria' }),
