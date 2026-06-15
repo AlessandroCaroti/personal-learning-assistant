@@ -156,4 +156,55 @@ describe('StatisticsPage', () => {
 
     expect(await screen.findByText('Geometria')).not.toBeNull()
   })
+
+  it('ignores a late response from an older exam load after switching routes', async () => {
+    let resolveFirstExam: ((value: Esame) => void) | undefined
+    let resolveSecondExam: ((value: Esame) => void) | undefined
+
+    getEsame
+      .mockImplementationOnce(
+        () =>
+          new Promise<Esame>((resolve) => {
+            resolveFirstExam = resolve
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<Esame>((resolve) => {
+            resolveSecondExam = resolve
+          }),
+      )
+
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/esame/:examId',
+          element: <DeferredRouteLayout />,
+          children: [{ path: 'statistiche', element: <StatisticsPage /> }],
+        },
+      ],
+      { initialEntries: ['/esame/exam-1/statistiche'] },
+    )
+
+    render(<RouterProvider router={router} />)
+
+    expect(await screen.findByText('Caricamento...')).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Vai a exam-2' }))
+
+    resolveSecondExam?.({
+      ...makeExam(),
+      id: 'exam-2',
+      name: 'Geometria',
+    })
+
+    expect(await screen.findByText('Geometria')).not.toBeNull()
+
+    resolveFirstExam?.(makeExam())
+
+    await waitFor(() => {
+      expect(screen.getByText('Geometria')).not.toBeNull()
+    })
+    expect(screen.queryByText('Analisi 1')).toBeNull()
+  })
 })

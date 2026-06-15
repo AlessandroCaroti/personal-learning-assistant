@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import * as storageService from '../services/storageService'
 import type { Esame, FlashcardStats, QuestionStats, QuizSession } from '../types'
@@ -12,12 +12,16 @@ export function StatisticsPage() {
   const [flashcardStats, setFlashcardStats] = useState<FlashcardStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const loadSequence = useRef(0)
 
   const loadStatistics = useCallback(async () => {
     if (!examId) {
       navigate('/', { replace: true })
       return
     }
+
+    const requestId = loadSequence.current + 1
+    loadSequence.current = requestId
 
     setLoading(true)
     setError(null)
@@ -28,6 +32,8 @@ export function StatisticsPage() {
 
     try {
       const currentExam = await storageService.getEsame(examId)
+      if (loadSequence.current !== requestId) return
+
       if (!currentExam) {
         navigate('/', { replace: true })
         return
@@ -38,14 +44,17 @@ export function StatisticsPage() {
         storageService.getQuestionStats(examId),
         storageService.getFlashcardStats(examId),
       ])
+      if (loadSequence.current !== requestId) return
 
       setEsame(currentExam)
       setQuizSessions(loadedQuizSessions)
       setQuestionStats(loadedQuestionStats)
       setFlashcardStats(loadedFlashcardStats)
     } catch (loadError) {
+      if (loadSequence.current !== requestId) return
       setError(errorMessage(loadError))
     } finally {
+      if (loadSequence.current !== requestId) return
       setLoading(false)
     }
   }, [examId, navigate])
