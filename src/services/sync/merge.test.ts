@@ -24,6 +24,7 @@ function examRecord(overrides: Partial<SyncExamRecord> = {}): SyncExamRecord {
     createdAt: '2026-06-01T08:00:00.000Z',
     files: {},
     attachments: [],
+    examDates: [],
     updatedAt: '2026-06-01T09:00:00.000Z',
     updatedByDeviceId: 'device-1',
     ...overrides,
@@ -376,6 +377,56 @@ describe('mergeSyncStates', () => {
     ])
     expect(localFirst.conflicts).toEqual([])
     expect(remoteFirst.conflicts).toEqual([])
+  })
+
+  it('preserves exam dates when a newer legacy exam record omits the field', () => {
+    const local = emptyState('local-device')
+    const remote = emptyState('remote-device')
+    local.data.esami.push(
+      examRecord({
+        id: 'exam-1',
+        name: 'Local exam',
+        examDates: [
+          {
+            id: 'written',
+            date: '2026-07-15',
+            createdAt: '2026-06-14T10:00:00.000Z',
+            label: 'Scritto',
+          },
+        ],
+        updatedAt: '2026-06-01T10:00:00.000Z',
+        updatedByDeviceId: 'device-a',
+      }),
+    )
+    remote.data.esami.push({
+      ...examRecord({
+        id: 'exam-1',
+        name: 'Legacy remote exam',
+        updatedAt: '2026-06-01T11:00:00.000Z',
+        updatedByDeviceId: 'device-z',
+      }),
+      examDates: undefined,
+    } as SyncExamRecord)
+
+    const result = mergeSyncStates(local, remote, 'writer-device', '2026-06-01T12:00:00.000Z')
+
+    expect(result.state.data.esami).toEqual([
+      examRecord({
+        id: 'exam-1',
+        name: 'Legacy remote exam',
+        examDates: [
+          {
+            id: 'written',
+            date: '2026-07-15',
+            createdAt: '2026-06-14T10:00:00.000Z',
+            label: 'Scritto',
+          },
+        ],
+        updatedAt: '2026-06-01T11:00:00.000Z',
+        updatedByDeviceId: 'device-z',
+      }),
+    ])
+    expect(result.conflicts).toEqual([])
   })
 
   it('converges exam tombstone ties by stable device id independent of merge order', () => {

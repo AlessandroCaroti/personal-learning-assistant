@@ -181,6 +181,8 @@ function mergeExams(
   remoteTombstones: SyncTombstone[],
   conflicts: SyncConflict[],
 ): SyncExamRecord[] {
+  const localById = new Map(local.map((exam) => [exam.id, exam]))
+  const remoteById = new Map(remote.map((exam) => [exam.id, exam]))
   const examTombstones = newestByIdWithOrigin(
     localTombstones.filter(isExamTombstone),
     remoteTombstones.filter(isExamTombstone),
@@ -200,21 +202,51 @@ function mergeExams(
   const kept: SyncExamRecord[] = []
 
   for (const exam of merged.values()) {
+    const hydratedExam = hydrateLegacyExamDates(
+      exam.value,
+      exam.side === 'local' ? remoteById.get(exam.value.id) : localById.get(exam.value.id),
+    )
     const tombstone = examTombstones.get(exam.value.id)
     if (!tombstone) {
-      kept.push(applyFileTombstones(exam, fileTombstones, conflicts))
+      kept.push(
+        applyFileTombstones(
+          { ...exam, value: hydratedExam },
+          fileTombstones,
+          conflicts,
+        ),
+      )
       continue
     }
 
-    if (compareIso(exam.value.updatedAt, tombstone.value.deletedAt) <= 0) {
+    if (compareIso(hydratedExam.updatedAt, tombstone.value.deletedAt) <= 0) {
       continue
     }
 
-    conflicts.push(examDeleteVsUpdateConflict(exam, tombstone))
-    kept.push(applyFileTombstones(exam, fileTombstones, conflicts))
+    conflicts.push(examDeleteVsUpdateConflict({ ...exam, value: hydratedExam }, tombstone))
+    kept.push(
+      applyFileTombstones(
+        { ...exam, value: hydratedExam },
+        fileTombstones,
+        conflicts,
+      ),
+    )
   }
 
   return sortById(kept)
+}
+
+function hydrateLegacyExamDates(
+  selected: SyncExamRecord,
+  fallback: SyncExamRecord | undefined,
+): SyncExamRecord {
+  if (selected.examDates !== undefined) {
+    return selected
+  }
+
+  return {
+    ...selected,
+    examDates: fallback?.examDates ?? [],
+  }
 }
 
 function examDeleteVsUpdateConflict(

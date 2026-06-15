@@ -792,18 +792,21 @@ export async function importMergedSyncState(
 ): Promise<void> {
   const db = await getDB()
   const currentMetadata = await getSyncMetadata()
+  const existingEsamiById = new Map((await db.getAll('esami')).map((esame) => [esame.id, esame]))
   const normalizedEsami: Esame[] = state.data.esami.map(
-    ({ id, name, createdAt, files, attachments, examDates }) => ({
-      id,
-      name,
-      createdAt,
+    (record) => ({
+      id: record.id,
+      name: record.name,
+      createdAt: record.createdAt,
       files: {
-        ...(files.riassunto ? { riassunto: decodeFileRecord(files.riassunto) } : {}),
-        ...(files.quiz ? { quiz: decodeFileRecord(files.quiz) } : {}),
-        ...(files.flashcard ? { flashcard: decodeFileRecord(files.flashcard) } : {}),
+        ...(record.files.riassunto ? { riassunto: decodeFileRecord(record.files.riassunto) } : {}),
+        ...(record.files.quiz ? { quiz: decodeFileRecord(record.files.quiz) } : {}),
+        ...(record.files.flashcard ? { flashcard: decodeFileRecord(record.files.flashcard) } : {}),
       },
-      attachments: (attachments ?? []).map((attachment) => decodeExamAttachment(attachment)),
-      examDates: normalizeExamDates(examDates),
+      attachments: (record.attachments ?? []).map((attachment) => decodeExamAttachment(attachment)),
+      examDates: Object.prototype.hasOwnProperty.call(record, 'examDates')
+        ? normalizeExamDates(record.examDates)
+        : normalizeExamDates(existingEsamiById.get(record.id)?.examDates),
     }),
   )
   const esamiMetadata: LocalSyncRecordMetadata[] = state.data.esami.map(

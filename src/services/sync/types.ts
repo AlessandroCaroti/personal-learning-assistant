@@ -34,7 +34,7 @@ export interface EncodedExamAttachment extends Omit<ExamAttachment, 'data'> {
 export interface SyncExamRecord extends Omit<Esame, 'files' | 'attachments' | 'examDates'> {
   files: Partial<Record<SyncFileSlot, EncodedFileRecord>>
   attachments: EncodedExamAttachment[]
-  examDates: NonNullable<Esame['examDates']>
+  examDates?: NonNullable<Esame['examDates']>
   updatedAt: string
   updatedByDeviceId: string
 }

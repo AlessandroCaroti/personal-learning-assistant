@@ -1358,6 +1358,54 @@ describe('storageService', () => {
     })
   })
 
+  it('preserves local exam dates when importing a legacy sync payload that omits examDates', async () => {
+    const localExam = {
+      ...exam,
+      name: 'Local dated exam',
+      examDates: [
+        makeExamDate({
+          id: 'written',
+          date: '2026-07-15',
+          label: 'Scritto',
+          notes: 'Aula 3',
+        }),
+      ],
+    }
+    const syncedAt = '2026-06-14T12:00:00.000Z'
+
+    await saveEsame(localExam)
+
+    const legacyRemoteState = {
+      syncVersion: SYNC_SCHEMA_VERSION,
+      updatedAt: syncedAt,
+      writerDeviceId: 'legacy-device',
+      data: {
+        esami: [
+          {
+            id: localExam.id,
+            name: 'Legacy remote exam',
+            createdAt: localExam.createdAt,
+            files: {},
+            attachments: [],
+            updatedAt: syncedAt,
+            updatedByDeviceId: 'legacy-device',
+          },
+        ],
+        quizSessions: [],
+        questionStats: [],
+        flashcardStats: [],
+      },
+      tombstones: [],
+    } as unknown as RemoteSyncState
+
+    await importMergedSyncState(legacyRemoteState, 'remote-revision-legacy-dates', syncedAt)
+
+    await expect(getEsame(localExam.id)).resolves.toEqual({
+      ...localExam,
+      name: 'Legacy remote exam',
+    })
+  })
+
   it('preserves paused sessions while importing merged sync state', async () => {
     const pausedQuiz = makePausedQuiz({ id: 'local-exam__quiz', examId: 'local-exam' })
     const remoteState: RemoteSyncState = {
