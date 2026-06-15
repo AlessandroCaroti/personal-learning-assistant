@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import * as storageService from '../services/storageService'
-import type { Esame } from '../types'
+import type { Esame, FlashcardStats, QuestionStats, QuizSession } from '../types'
 
 export function StatisticsPage() {
   const { examId } = useParams<{ examId: string }>()
   const navigate = useNavigate()
   const [esame, setEsame] = useState<Esame | null>(null)
+  const [quizSessions, setQuizSessions] = useState<QuizSession[]>([])
+  const [questionStats, setQuestionStats] = useState<QuestionStats[]>([])
+  const [flashcardStats, setFlashcardStats] = useState<FlashcardStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -18,6 +21,10 @@ export function StatisticsPage() {
 
     setLoading(true)
     setError(null)
+    setEsame(null)
+    setQuizSessions([])
+    setQuestionStats([])
+    setFlashcardStats([])
 
     try {
       const currentExam = await storageService.getEsame(examId)
@@ -26,13 +33,16 @@ export function StatisticsPage() {
         return
       }
 
-      await Promise.all([
+      const [loadedQuizSessions, loadedQuestionStats, loadedFlashcardStats] = await Promise.all([
         storageService.getQuizSessions(examId),
         storageService.getQuestionStats(examId),
         storageService.getFlashcardStats(examId),
       ])
 
       setEsame(currentExam)
+      setQuizSessions(loadedQuizSessions)
+      setQuestionStats(loadedQuestionStats)
+      setFlashcardStats(loadedFlashcardStats)
     } catch (loadError) {
       setError(errorMessage(loadError))
     } finally {
@@ -93,17 +103,21 @@ export function StatisticsPage() {
       </header>
 
       <div style={sectionsGridStyle}>
-        <StatisticsSection title="Date esame" />
-        <StatisticsSection title="Quiz" />
-        <StatisticsSection title="Flashcard" />
+        <StatisticsSection title="Date esame" itemCount={esame.examDates?.length ?? 0} />
+        <StatisticsSection title="Quiz" itemCount={quizSessions.length + questionStats.length} />
+        <StatisticsSection title="Flashcard" itemCount={flashcardStats.length} />
       </div>
     </div>
   )
 }
 
-function StatisticsSection({ title }: { title: string }) {
+function StatisticsSection({ title, itemCount }: { title: string; itemCount: number }) {
   return (
-    <section aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-title`} style={sectionStyle}>
+    <section
+      aria-labelledby={`${title.toLowerCase().replace(/\s+/g, '-')}-title`}
+      data-item-count={itemCount}
+      style={sectionStyle}
+    >
       <h2 id={`${title.toLowerCase().replace(/\s+/g, '-')}-title`} style={sectionTitleStyle}>
         {title}
       </h2>

@@ -9,6 +9,9 @@ import type { Esame, PausedSession } from '../types'
 const getEsame = vi.fn()
 const saveEsame = vi.fn()
 const getPausedSession = vi.fn()
+const getQuizSessions = vi.fn()
+const getQuestionStats = vi.fn()
+const getFlashcardStats = vi.fn()
 const replaceQuizFileForExam = vi.fn()
 const replaceFlashcardFileForExam = vi.fn()
 const getExamBackupSourceBundle = vi.fn()
@@ -21,6 +24,9 @@ vi.mock('../services/storageService', () => ({
   getEsame,
   saveEsame,
   getPausedSession,
+  getQuizSessions,
+  getQuestionStats,
+  getFlashcardStats,
   replaceQuizFileForExam,
   replaceFlashcardFileForExam,
   getExamBackupSourceBundle,
@@ -39,6 +45,7 @@ vi.mock('../services/examBackupService', () => ({
 }))
 
 const { DashboardPage } = await import('./DashboardPage')
+const { StatisticsPage } = await import('./StatisticsPage')
 
 function encodeText(value: string): ArrayBuffer {
   const bytes = new TextEncoder().encode(value)
@@ -92,7 +99,7 @@ function renderDashboard(path = '/esame/exam-1') {
         <Route path="/" element={<h1>Tutti gli esami</h1>} />
         <Route path="/esame/:examId" element={<DashboardPage />} />
         <Route path="/esame/:examId/archivio" element={<h1>Archivio esame</h1>} />
-        <Route path="/esame/:examId/statistiche" element={<h1>Statistiche</h1>} />
+        <Route path="/esame/:examId/statistiche" element={<StatisticsPage />} />
         <Route path="/esame/:examId/quiz/config" element={<LocationStateView />} />
         <Route path="/esame/:examId/quiz/sessione" element={<LocationStateView />} />
         <Route path="/esame/:examId/flashcard/sessione" element={<LocationStateView />} />
@@ -131,6 +138,9 @@ describe('DashboardPage', () => {
     vi.clearAllMocks()
     getEsame.mockResolvedValue(makeExam())
     getPausedSession.mockResolvedValue(undefined)
+    getQuizSessions.mockResolvedValue([])
+    getQuestionStats.mockResolvedValue([])
+    getFlashcardStats.mockResolvedValue([])
     saveEsame.mockResolvedValue(undefined)
     replaceQuizFileForExam.mockResolvedValue(undefined)
     replaceFlashcardFileForExam.mockResolvedValue(undefined)
@@ -305,6 +315,8 @@ describe('DashboardPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Statistiche' }))
 
     expect(await screen.findByRole('heading', { name: 'Statistiche' })).not.toBeNull()
+    expect(screen.getByText('Analisi 1')).not.toBeNull()
+    expect(screen.getByRole('heading', { name: 'Date esame' })).not.toBeNull()
   })
 
   it('shows an export error when backup generation fails', async () => {
