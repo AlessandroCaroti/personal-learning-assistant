@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   MemoryRouter,
@@ -311,6 +312,78 @@ describe('StatisticsPage', () => {
     })
     expect(await screen.findByRole('heading', { name: 'Statistiche' })).not.toBeNull()
     expect(screen.getByText('Analisi 1')).not.toBeNull()
+  })
+
+  it('adds an exam date with optional label and notes', async () => {
+    const user = userEvent.setup()
+    const current = makeEsame({ examDates: [] })
+    getEsame.mockResolvedValue(current)
+
+    renderStatisticsPage()
+
+    await user.type(await screen.findByLabelText('Data'), '2026-07-15')
+    await user.type(screen.getByLabelText('Etichetta'), 'Scritto')
+    await user.type(screen.getByLabelText('Note'), 'Aula 3')
+    await user.click(screen.getByRole('button', { name: 'Aggiungi data' }))
+
+    await waitFor(() => {
+      expect(saveEsame).toHaveBeenCalledWith({
+        ...current,
+        examDates: [
+          {
+            id: expect.any(String),
+            date: '2026-07-15',
+            label: 'Scritto',
+            notes: 'Aula 3',
+            createdAt: expect.any(String),
+          },
+        ],
+      })
+    })
+  })
+
+  it('edits and deletes an exam date', async () => {
+    const user = userEvent.setup()
+    const originalDate = makeExamDate({ id: 'date-1', date: '2026-07-15', label: 'Scritto' })
+    const current = makeEsame({ examDates: [originalDate] })
+    getEsame.mockResolvedValue(current)
+
+    renderStatisticsPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Modifica Scritto' }))
+    await user.clear(screen.getByLabelText('Etichetta'))
+    await user.type(screen.getByLabelText('Etichetta'), 'Orale')
+    await user.click(screen.getByRole('button', { name: 'Salva data' }))
+
+    await waitFor(() => {
+      expect(saveEsame).toHaveBeenCalledWith({
+        ...current,
+        examDates: [{ ...originalDate, label: 'Orale' }],
+      })
+    })
+
+    saveEsame.mockClear()
+
+    await user.click(screen.getByRole('button', { name: 'Elimina Orale' }))
+    await user.click(screen.getByRole('button', { name: 'Conferma eliminazione' }))
+
+    await waitFor(() => {
+      expect(saveEsame).toHaveBeenCalledWith({
+        ...current,
+        examDates: [],
+      })
+    })
+  })
+
+  it('shows validation feedback for invalid date input', async () => {
+    const user = userEvent.setup()
+
+    renderStatisticsPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Aggiungi data' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Inserisci una data valida.')
+    expect(saveEsame).not.toHaveBeenCalled()
   })
 
   it('clears stale exam content while loading a different exam route', async () => {

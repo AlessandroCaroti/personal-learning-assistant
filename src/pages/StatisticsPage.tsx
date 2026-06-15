@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { countdownLabel } from '../services/examDateService'
+import { v4 as uuidv4 } from 'uuid'
+import { countdownLabel, sortExamDates, validateExamDateInput } from '../services/examDateService'
 import * as storageService from '../services/storageService'
 import {
   buildFlashcardSummary,
@@ -11,7 +12,7 @@ import {
   weakMacroargomenti,
   weakQuizQuestions,
 } from '../services/statisticsService'
-import type { Esame, FlashcardStats, QuestionStats, QuizSession } from '../types'
+import type { Esame, ExamDate, FlashcardStats, QuestionStats, QuizSession } from '../types'
 
 export function StatisticsPage() {
   const { examId } = useParams<{ examId: string }>()
@@ -22,6 +23,10 @@ export function StatisticsPage() {
   const [flashcardStats, setFlashcardStats] = useState<FlashcardStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [dateForm, setDateForm] = useState({ date: '', label: '', notes: '' })
+  const [editingDateId, setEditingDateId] = useState<string | null>(null)
+  const [deleteDateId, setDeleteDateId] = useState<string | null>(null)
+  const [dateError, setDateError] = useState<string | null>(null)
   const loadSequence = useRef(0)
 
   const loadStatistics = useCallback(async () => {
@@ -39,6 +44,10 @@ export function StatisticsPage() {
     setQuizSessions([])
     setQuestionStats([])
     setFlashcardStats([])
+    setDateForm({ date: '', label: '', notes: '' })
+    setEditingDateId(null)
+    setDeleteDateId(null)
+    setDateError(null)
 
     try {
       const currentExam = await storageService.getEsame(examId)
@@ -72,6 +81,71 @@ export function StatisticsPage() {
   useEffect(() => {
     void loadStatistics()
   }, [loadStatistics])
+
+  async function saveExamDates(nextDates: ExamDate[]) {
+    if (!esame) return
+
+    const updated = { ...esame, examDates: sortExamDates(nextDates) }
+    await storageService.saveEsame(updated)
+    setEsame(updated)
+  }
+
+  async function submitDateForm() {
+    if (!esame) return
+
+    const result = validateExamDateInput(dateForm)
+    if (!result.valid) {
+      setDateError(result.error)
+      return
+    }
+
+    setDateError(null)
+
+    if (editingDateId) {
+      await saveExamDates(
+        (esame.examDates ?? []).map((examDate) =>
+          examDate.id === editingDateId ? { ...examDate, ...result.value } : examDate,
+        ),
+      )
+    } else {
+      await saveExamDates([
+        ...(esame.examDates ?? []),
+        {
+          id: uuidv4(),
+          ...result.value,
+          createdAt: new Date().toISOString(),
+        },
+      ])
+    }
+
+    setDateForm({ date: '', label: '', notes: '' })
+    setEditingDateId(null)
+  }
+
+  function startEditDate(examDate: ExamDate) {
+    setEditingDateId(examDate.id)
+    setDateForm({
+      date: examDate.date,
+      label: examDate.label ?? '',
+      notes: examDate.notes ?? '',
+    })
+    setDeleteDateId(null)
+    setDateError(null)
+  }
+
+  async function confirmDeleteDate() {
+    if (!esame || !deleteDateId) return
+
+    await saveExamDates((esame.examDates ?? []).filter((examDate) => examDate.id !== deleteDateId))
+
+    if (editingDateId === deleteDateId) {
+      setEditingDateId(null)
+      setDateForm({ date: '', label: '', notes: '' })
+    }
+
+    setDeleteDateId(null)
+    setDateError(null)
+  }
 
   if (loading && !esame) {
     return <p style={mutedTextStyle}>Caricamento...</p>
@@ -148,10 +222,86 @@ export function StatisticsPage() {
                   <span>{countdownLabel(examDate.date)}</span>
                   <span>{examDate.date}</span>
                   {examDate.notes && <span>{examDate.notes}</span>}
+                  <div style={actionRowStyle}>
+                    <button
+                      type="button"
+                      onClick={() => startEditDate(examDate)}
+                      style={secondaryButtonStyle}
+                    >
+                      Modifica {examDate.label ?? examDate.date}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteDateId(examDate.id)}
+                      style={secondaryButtonStyle}
+                    >
+                      Elimina {examDate.label ?? examDate.date}
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
+          <div style={formGridStyle}>
+            <label style={fieldStyle}>
+              <span>Data</span>
+              <input
+                type="date"
+                value={dateForm.date}
+                onChange={(event) => {
+                  setDateForm((form) => ({ ...form, date: event.target.value }))
+                  if (dateError) setDateError(null)
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={fieldStyle}>
+              <span>Etichetta</span>
+              <input
+                type="text"
+                value={dateForm.label}
+                onChange={(event) => {
+                  setDateForm((form) => ({ ...form, label: event.target.value }))
+                  if (dateError) setDateError(null)
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={fieldStyle}>
+              <span>Note</span>
+              <textarea
+                value={dateForm.notes}
+                onChange={(event) => {
+                  setDateForm((form) => ({ ...form, notes: event.target.value }))
+                  if (dateError) setDateError(null)
+                }}
+                style={textareaStyle}
+              />
+            </label>
+            {dateError && (
+              <p role="alert" style={{ ...mutedTextStyle, color: 'var(--danger)', margin: 0 }}>
+                {dateError}
+              </p>
+            )}
+            <div style={actionRowStyle}>
+              <button type="button" onClick={() => void submitDateForm()} style={primaryButtonStyle}>
+                {editingDateId ? 'Salva data' : 'Aggiungi data'}
+              </button>
+              {editingDateId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingDateId(null)
+                    setDateForm({ date: '', label: '', notes: '' })
+                    setDateError(null)
+                  }}
+                  style={secondaryButtonStyle}
+                >
+                  Annulla modifica
+                </button>
+              )}
+            </div>
+          </div>
         </StatisticsSection>
 
         <StatisticsSection title="Quiz">
@@ -244,6 +394,22 @@ export function StatisticsPage() {
           )}
         </StatisticsSection>
       </div>
+
+      {deleteDateId && (
+        <div role="dialog" aria-modal="true" aria-labelledby="delete-date-title" style={dialogStyle}>
+          <h2 id="delete-date-title" style={sectionTitleStyle}>
+            Conferma eliminazione
+          </h2>
+          <div style={actionRowStyle}>
+            <button type="button" onClick={() => void confirmDeleteDate()} style={primaryButtonStyle}>
+              Conferma eliminazione
+            </button>
+            <button type="button" onClick={() => setDeleteDateId(null)} style={secondaryButtonStyle}>
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -379,12 +545,70 @@ const itemStyle = {
   background: 'var(--bg-elevated)',
 }
 
+const actionRowStyle = {
+  display: 'flex',
+  flexWrap: 'wrap' as const,
+  gap: '0.75rem',
+}
+
+const primaryButtonStyle = {
+  minHeight: '44px',
+  padding: '0.6rem 1.2rem',
+  borderRadius: '8px',
+  background: 'var(--accent)',
+  color: '#fff',
+  fontWeight: 600,
+}
+
 const secondaryButtonStyle = {
   minHeight: '44px',
   padding: '0.6rem 1.2rem',
   borderRadius: '8px',
   background: 'var(--bg-elevated)',
   color: 'var(--text)',
+}
+
+const formGridStyle = {
+  display: 'grid',
+  gap: '0.75rem',
+}
+
+const fieldStyle = {
+  display: 'grid',
+  gap: '0.35rem',
+  fontWeight: 600,
+}
+
+const inputStyle = {
+  minHeight: '44px',
+  padding: '0.6rem 0.75rem',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  background: 'var(--bg)',
+  color: 'var(--text)',
+  font: 'inherit',
+}
+
+const textareaStyle = {
+  ...inputStyle,
+  minHeight: '96px',
+  resize: 'vertical' as const,
+}
+
+const dialogStyle = {
+  position: 'fixed' as const,
+  left: '50%',
+  top: '50%',
+  zIndex: 1000,
+  display: 'grid',
+  gap: '1rem',
+  width: 'min(360px, calc(100% - 2rem))',
+  transform: 'translate(-50%, -50%)',
+  padding: '1rem',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  background: 'var(--bg-surface)',
+  boxShadow: '0 16px 48px rgba(0, 0, 0, 0.35)',
 }
 
 const mutedTextStyle = {
